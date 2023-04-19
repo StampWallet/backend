@@ -1,0 +1,152 @@
+openapi: 3.0.3
+info:
+  title: StampWallet API Server
+  description: "lol"
+  contact:
+    email: fbstachura@gmail.com
+  version: 0.1.0
+
+paths:
+  /auth/account:
+    post:
+      tags:
+        - auth
+        - account
+      summary: Create a new account
+      description: Create a new account with specified password and email, send a confirmation email
+      operationId: createAccount
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostAccountRequest'
+        required: true
+      responses:
+        '201':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+        '400':
+          description: Invalid request format, email or password
+        '409':
+          description: Account with email already exists
+  /auth/account/emailConfirmation:
+    post:
+      tags:
+        - auth
+        - account
+      summary: Confirm email
+      description: When an account is created, the user receives an email with a link to a static website. That website simply posts it's parameters (unique to each email) to this endpoint.
+      operationId: confirmEmail
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostAccountEmailConfirmationRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+        '400':
+          description: Invalid request format
+        '404':
+          description: Token not found
+      security: 
+        - sessionToken: []
+  /auth/sessions:
+    post:
+      tags:
+        - auth
+        - sessions
+      summary: Login
+      description: This endpoint is used to exchange user credentials to temporary credentials that allow access to the API. 
+      operationId: login
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostAccountSessionRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+        '400':
+          description: Invalid request format
+        '401':
+          description: Invalid credentials
+    delete:
+      tags:
+        - auth
+        - sessions
+      summary: Logout
+      description: This endpoint invalidates used session token
+      operationId: logout
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+        '401':
+          description: Unauthorized, no credentials
+      security: 
+        - sessionToken: []
+components:
+  schemas:
+    PostAccountRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          example: test@example.com
+        password:
+          type: string
+          format: password
+          example: zaq1@WSX
+    PostAccountEmailConfirmationRequest:
+      type: object
+      properties:
+        token:
+          type: string
+    PostAccountSessionRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          example: test@example.com
+        password:
+          type: string
+          format: password
+          example: zaq1@WSX
+    DefaultResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+            - OK
+            - CREATED
+            - NOT_FOUND
+            - ALREADY_EXISTS
+            - UNAUTHORIZED
+        message:
+          type: string
+  securitySchemes:
+    sessionToken:
+      type: http
+      scheme: bearer
+      bearerFormat: Just the token string received from the API. In reality consists of the token id and the actual token, separated by a colon.
+
