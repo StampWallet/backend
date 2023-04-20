@@ -102,6 +102,39 @@ paths:
           description: Unauthorized, no credentials
       security: 
         - sessionToken: []
+# TODO
+
+# POST /business/account
+# GET /business/info
+# PATCH /business/info
+# GET /business/itemDefinitions
+# POST /business/itemDefinitions
+# PATCH /business/itemDefinitions/:DefinitionId
+# DELETE /business/itemDefinitions/:DefinitionId
+# GET /business/transaction/:transactionCode
+# POST /business/transaction/:transactionCode
+# 
+# GET /user/cards
+# 
+# POST /user/cards/local
+# GET /user/cards/local/types
+# DELETE /user/cards/local/:cardId
+# 
+# POST /user/cards/virtual
+# DELETE /user/cards/virtual/:businessId
+# GET /user/cards/virtual/:businessId
+# POST /user/cards/virtual/:businessId/items
+# DELETE /user/cards/virtual/:businessId/items/:DefinitionId
+# 
+# POST /user/cards/virtual/:businessId/transaction
+# GET /user/cards/virtual/:businessId/transaction/:transactionCode
+# 
+# GET /user/businesses?text=:text&location=:location
+# 
+# GET /file/:fileId
+# 
+# POST /file/:fileId
+
 components:
   schemas:
     PostAccountRequest:
