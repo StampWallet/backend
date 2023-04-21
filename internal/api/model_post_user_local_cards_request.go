@@ -10,9 +10,11 @@
 
 package api
 
-type PostAccountRequest struct {
+type PostUserLocalCardsRequest struct {
 
-	Email string `json:"email,omitempty"`
+	Name string `json:"name,omitempty"`
 
-	Password string `json:"password,omitempty"`
+	Type string `json:"type,omitempty"`
+
+	Code string `json:"code,omitempty"`
 }

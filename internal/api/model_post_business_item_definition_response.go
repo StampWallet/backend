@@ -10,9 +10,7 @@
 
 package api
 
-type PostAccountRequest struct {
+type PostBusinessItemDefinitionResponse struct {
 
-	Email string `json:"email,omitempty"`
-
-	Password string `json:"password,omitempty"`
+	PublicId string `json:"publicId,omitempty"`
 }

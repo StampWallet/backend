@@ -10,9 +10,7 @@
 
 package api
 
-type PostAccountRequest struct {
+type GetUserBusinessesSearchResponse struct {
 
-	Email string `json:"email,omitempty"`
-
-	Password string `json:"password,omitempty"`
+	Businesses []ShortBusinessDetailsApiModel `json:"businesses,omitempty"`
 }

@@ -10,9 +10,7 @@
 
 package api
 
-type PostAccountRequest struct {
+type PostUserVirtualCardItemResponse struct {
 
-	Email string `json:"email,omitempty"`
-
-	Password string `json:"password,omitempty"`
+	ItemId string `json:"itemId,omitempty"`
 }

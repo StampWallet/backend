@@ -10,9 +10,9 @@
 
 package api
 
-type PostAccountRequest struct {
+type TransactionItemDetailApiModel struct {
 
-	Email string `json:"email,omitempty"`
+	PublicId string `json:"publicId,omitempty"`
 
-	Password string `json:"password,omitempty"`
+	ItemDefinitionId string `json:"itemDefinitionId,omitempty"`
 }

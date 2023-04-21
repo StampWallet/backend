@@ -10,9 +10,9 @@
 
 package api
 
-type PostAccountRequest struct {
+type GetUserCardsResponse struct {
 
-	Email string `json:"email,omitempty"`
+	LocalCards []LocalCardApiModel `json:"localCards,omitempty"`
 
-	Password string `json:"password,omitempty"`
+	VirtualCards []ShortVirtualCardApiModel `json:"virtualCards,omitempty"`
 }

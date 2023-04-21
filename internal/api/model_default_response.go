@@ -1,7 +1,7 @@
 /*
  * StampWallet API Server
  *
- * lol
+ * StampWallet API Server REST Specification
  *
  * API version: 0.1.0
  * Contact: fbstachura@gmail.com
@@ -12,7 +12,7 @@ package api
 
 type DefaultResponse struct {
 
-	Status string `json:"status,omitempty"`
+	Status DefaultResponseStatusEnum `json:"status,omitempty"`
 
 	Message string `json:"message,omitempty"`
 }

@@ -10,9 +10,7 @@
 
 package api
 
-type PostAccountRequest struct {
+type PostAccountEmailRequest struct {
 
 	Email string `json:"email,omitempty"`
-
-	Password string `json:"password,omitempty"`
 }

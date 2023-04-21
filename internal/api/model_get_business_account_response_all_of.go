@@ -10,9 +10,13 @@
 
 package api
 
-type PostAccountRequest struct {
+type GetBusinessAccountResponseAllOf struct {
 
-	Email string `json:"email,omitempty"`
+	Nip string `json:"nip,omitempty"`
 
-	Password string `json:"password,omitempty"`
+	Krs string `json:"krs,omitempty"`
+
+	Regon string `json:"regon,omitempty"`
+
+	OwnerName string `json:"ownerName,omitempty"`
 }

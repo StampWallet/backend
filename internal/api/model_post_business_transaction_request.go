@@ -10,9 +10,9 @@
 
 package api
 
-type PostAccountRequest struct {
+type PostBusinessTransactionRequest struct {
 
-	Email string `json:"email,omitempty"`
+	AddedPoints int32 `json:"addedPoints,omitempty"`
 
-	Password string `json:"password,omitempty"`
+	ItemActions []ItemActionApiModel `json:"itemActions,omitempty"`
 }

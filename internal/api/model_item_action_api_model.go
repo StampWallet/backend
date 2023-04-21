@@ -10,9 +10,9 @@
 
 package api
 
-type PostAccountRequest struct {
+type ItemActionApiModel struct {
 
-	Email string `json:"email,omitempty"`
+	ItemId string `json:"itemId,omitempty"`
 
-	Password string `json:"password,omitempty"`
+	Action ItemActionTypeEnum `json:"action,omitempty"`
 }

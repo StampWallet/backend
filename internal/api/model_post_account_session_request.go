@@ -1,7 +1,7 @@
 /*
  * StampWallet API Server
  *
- * lol
+ * StampWallet API Server REST Specification
  *
  * API version: 0.1.0
  * Contact: fbstachura@gmail.com

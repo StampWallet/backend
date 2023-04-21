@@ -10,9 +10,11 @@
 
 package api
 
-type PostAccountRequest struct {
+type ItemActionTypeEnum string
 
-	Email string `json:"email,omitempty"`
-
-	Password string `json:"password,omitempty"`
-}
+// List of ItemActionTypeEnum
+const (
+	REDEEMED ItemActionTypeEnum = "REDEEMED"
+	RECALLED ItemActionTypeEnum = "RECALLED"
+	CANCELLED ItemActionTypeEnum = "CANCELLED"
+)
