@@ -1,8 +1,9 @@
-package manager
+package managers
 
 import (
     "time"
     . "github.com/StampWallet/backend/internal/database"
+    . "github.com/StampWallet/backend/internal/services"
 )
 
 type ItemDefinitionManager interface {
@@ -28,17 +29,17 @@ type ItemDefinitionManagerImpl struct {
 }
 
 func (manager *ItemDefinitionManagerImpl) AddItem(business *Business, details *ItemDetails) (*ItemDefinition, error) {
-
+    return nil, nil
 }
 
 func (manager *ItemDefinitionManagerImpl) ChangeItemDetails(item *ItemDefinition, details *ItemDetails) (*ItemDefinition, error) {
-
+    return nil, nil
 }
 
 func (manager *ItemDefinitionManagerImpl) WithdrawItem(item *ItemDefinition) error {
-
+    return nil
 }
 
 func (manager *ItemDefinitionManagerImpl) GetForBusiness(business *Business) ([]ItemDetails, error) {
-
+    return nil, nil
 }

@@ -1,7 +1,8 @@
-package manager
+package managers
 
 import (
     . "github.com/StampWallet/backend/internal/database"
+    . "github.com/StampWallet/backend/internal/services"
 )
 
 type BusinessManager interface {
@@ -26,15 +27,15 @@ type BusinessManagerImpl struct {
     fileStorageService *FileStorageService
 }
 
-func (manager *BusinessManagerImpl) Create(user *User, businessDetails *BusinessDetails) (Business, error) {
-
+func (manager *BusinessManagerImpl) Create(user *User, businessDetails *BusinessDetails) (*Business, error) {
+    return nil, nil
 }
 
-func (manager *BusinessManagerImpl) ChangeDetails(business *Business, businessDetails *BusinessDetails) (Business, error) {
-
+func (manager *BusinessManagerImpl) ChangeDetails(business *Business, businessDetails *BusinessDetails) (*Business, error) {
+    return nil, nil
 }
 
 //? not a fan
 func (manager *BusinessManagerImpl) Search(name string, location string, proximityInMeters uint64) ([]Business, error) {
-
+    return nil, nil
 }

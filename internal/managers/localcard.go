@@ -1,7 +1,8 @@
-package manager
+package managers
 
 import (
     . "github.com/StampWallet/backend/internal/database"
+    . "github.com/StampWallet/backend/internal/services"
 )
 
 type LocalCardManager interface { 
@@ -20,14 +21,14 @@ type LocalCardManagerImpl struct {
     baseServices *BaseServices
 }
 
-func (handler *LocalCardManagerImpl) Create(user *User, details *LocalCardDetails) (LocalCard, error) {
-
+func (handler *LocalCardManagerImpl) Create(user *User, details *LocalCardDetails) (*LocalCard, error) {
+    return nil, nil
 }
 
 func (handler *LocalCardManagerImpl) Remove(card *LocalCard) error {
-
+    return nil
 }
 
 func (handler *LocalCardManagerImpl) GetForUser(user *User) ([]LocalCard, error) {
-
+    return nil, nil
 }

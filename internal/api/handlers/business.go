@@ -1,13 +1,21 @@
-package handlers
+package api
+
+import (
+    "log"
+    "github.com/gin-gonic/gin"
+    . "github.com/StampWallet/backend/internal/managers"
+    . "github.com/StampWallet/backend/internal/database"
+)
 
 type BusinessHandlers struct {
-    businessManager BusinessManager
-    transactionManager TransactionManager
-    itemDefinitionHandlers ItemDefinitionHandlers
-    userAuthorizedAcessor UserAuthorizedAccessor
-    businessAuthorizedAccessor BusinessAuthorizedAccessor
-    authorizedTransactionAccessor AuthorizedTransactionAccessor
-    logger log.Logger
+    businessManager *BusinessManager
+    transactionManager *TransactionManager
+    itemDefinitionHandlers *ItemDefinitionHandlers
+    //this wont work
+    //userAuthorizedAcessor UserAuthorizedAccessor
+    //businessAuthorizedAccessor BusinessAuthorizedAccessor
+    authorizedTransactionAccessor *AuthorizedTransactionAccessor
+    logger *log.Logger
 }
 
 func (handler *BusinessHandlers) postAccountInfo(c *gin.Context) {
@@ -35,10 +43,10 @@ func (handler *BusinessHandlers) Connect(rg *gin.RouterGroup) {
 }
 
 type ItemDefinitionHandlers struct {
-    itemDefinitionManager ItemDefinitionManager
-    userAuthorizedAcessor UserAuthorizedAccessor
-    businessAuthorizedAccessor BusinessAuthorizedAccessor
-    logger log.Logger
+    itemDefinitionManager *ItemDefinitionManager
+    //userAuthorizedAcessor UserAuthorizedAccessor
+    //businessAuthorizedAccessor BusinessAuthorizedAccessor
+    logger *log.Logger
 }
 
 func (handler *ItemDefinitionHandlers) getItemDefinition(c *gin.Context) {
