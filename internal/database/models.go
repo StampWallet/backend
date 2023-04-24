@@ -27,7 +27,7 @@ type TokenPurposeEnum string
 
 const (
 	SessionTokenPurpose TokenPurposeEnum	= "SESSION"
-	EmailTokenPurpose						= "EMAIL"
+	EmailTokenPurpose TokenPurposeEnum		= "EMAIL"
 )
 
 type OwnedItemStatusEnum string
@@ -42,19 +42,19 @@ const (
 type LocalCard struct {
 	gorm.Model
 	PublicId string
-	OwnerId uint64
+	OwnerId uint
 	Type string
 	Code string
 	Name string
 }
 
-func (entity *LocalCard) GetUserId() uint64 {
+func (entity *LocalCard) GetUserId() uint {
 	return 0
 }
 
 type Token struct {
 	gorm.Model
-	OwnerId uint64
+	OwnerId uint
 	TokenId string
 	TokenHash string
 	Expires time.Time
@@ -63,18 +63,18 @@ type Token struct {
 	Recalled bool
 }
 
-func (entity *Token) GetUserId() uint64 {
+func (entity *Token) GetUserId() uint {
 	return 0
 }
 
 type FileMetadata struct {
 	gorm.Model
 	PublicId string
-	OwnerId uint64
+	OwnerId uint
 	Uploaded sql.NullTime
 }
 
-func (entity *FileMetadata) GetUserId() uint64 {
+func (entity *FileMetadata) GetUserId() uint {
 	return 0
 }
 
@@ -97,7 +97,7 @@ type User struct {
 type Business struct {
 	gorm.Model
 	PublicId string
-	OwnerId uint64
+	OwnerId uint
 	Name string
 	Description string
 	Address string
@@ -114,57 +114,57 @@ type Business struct {
 	VirtualCards []VirtualCard
 }
 
-func (entity *Business) GetUserId() uint64 {
+func (entity *Business) GetUserId() uint {
 	return 0
 }
 
 type ItemDefinition struct {
 	gorm.Model
 	PublicId string
-	BusinessId uint64
+	BusinessId uint
 	Name string
-	Price uint64
+	Price uint
 	Description string
 	ImageId string
 	StartDate time.Time
 	EndDate time.Time
-	MaxAmount uint64
+	MaxAmount uint
 	Available bool
 }
 
-func (entity *Business) GetBusinessId() uint64 {
+func (entity *Business) GetBusinessId() uint {
 	return 0
 }
 
 type MenuItem struct {
 	gorm.Model
-	BusinessId uint64
-	FileId uint64
+	BusinessId uint
+	FileId uint
 }
 
-func (entity *MenuItem) GetBusinessId() uint64 {
+func (entity *MenuItem) GetBusinessId() uint {
 	return 0
 }
 
 type OwnedItem struct {
 	gorm.Model
 	PublicId string
-	DefinitionId uint64
-	VirtualCardId uint64
+	DefinitionId uint
+	VirtualCardId uint
 	Used sql.NullTime
 	Status OwnedItemStatusEnum
 }
 
-func (entity *OwnedItem) GetUserId() uint64 {
+func (entity *OwnedItem) GetUserId() uint {
 	return 0
 }
 
 type VirtualCard struct {
 	gorm.Model
-	OwnerId uint64
+	OwnerId uint
 	PublicId string
-	BusinessId uint64
-	Points uint64
+	BusinessId uint
+	Points uint
 
 	Transactions []Transaction
 	OwnedItems []OwnedItem
@@ -173,17 +173,17 @@ type VirtualCard struct {
 type Transaction struct {
 	gorm.Model
 	PublicId string
-	VirtualCardId uint64
+	VirtualCardId uint
 	Code string
 	State TransactionStateEnum
-	AddedPoints uint64
+	AddedPoints uint
 
 	TransactionsDetails []TransactionDetails
 }
 
 type TransactionDetails struct {
 	gorm.Model
-	TransactionId uint64
-	ItemId uint64
+	TransactionId uint
+	ItemId uint
 	Action ActionTypeEnum
 }
