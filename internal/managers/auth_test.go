@@ -262,12 +262,12 @@ func TestAuthManagerCreateWithExistingEmail(t *testing.T) {
     } 
 }
 
-func mockExampleUser(database *MockGormDB) User {
+func getExampleUser() User {
     hash, err := bcrypt.GenerateFromPassword([]byte("zaq1@WSX"), 10)
     if err != nil {
         panic(err)
     }
-    user := User{
+    return User{
         Model: gorm.Model {
             ID: 1, 
             CreatedAt: time.Now(),
@@ -284,7 +284,10 @@ func mockExampleUser(database *MockGormDB) User {
         PasswordHash: string(hash),
         EmailVerified: false,
     }
+}
 
+func mockExampleUser(database *MockGormDB) User {
+    user := getExampleUser()
     database.
         EXPECT().
         First(gomock.Any(), &StructMatcher{UserMatcher{ 
@@ -336,7 +339,7 @@ func mockExampleUserEmailVerificationToken(database *MockGormDB) Token {
     return token
 }
 
-func mockExampleUserLogin(database *MockGormDB) Token {
+func mockExampleUserLogin(tokenService *MockTokenService) Token {
     hash, err := bcrypt.GenerateFromPassword([]byte("test_hash"), 10)
     if err != nil {
         panic(err)
@@ -358,15 +361,10 @@ func mockExampleUserLogin(database *MockGormDB) Token {
         Used: true,
         Recalled: false,
     }
-    database.
+    tokenService.
         EXPECT().
-        First(gomock.Any(), &StructMatcher{TokenMatcher{ 
-            TokenId: Ptr("test_login"),
-        }}).
-        Do(func(arg *Token) (GormDB) {
-            *arg = token
-            return database
-        })
+        Check("test_login", "test_hash").
+        Return(getExampleUser(), token, nil)
     return token
 }
 
@@ -380,14 +378,11 @@ func TestAuthManagerLogin(t *testing.T) {
     manager, _ := getAuthManager(ctrl)
 
     mockUser := mockExampleUser(manager.baseServices.Database.(*MockGormDB))
-    manager.baseServices.Database.(*MockGormDB).
+    manager.tokenService.(*MockTokenService).
         EXPECT().
-        Create(TokenMatcher {
-            OwnerId: &mockUser.ID,
-            TokenPurpose: (*TokenPurposeEnum)(Ptr(string(SessionTokenPurpose))),
-            Used: Ptr(false),
-            Recalled: Ptr(false),
-        }).
+        Create(UserMatcher {
+                ID: &mockUser.ID,
+            }, SessionTokenPurpose, TimeGreaterThanNow{time.Now().Add(time.Hour)}).
         DoAndReturn(returnArg)
 
     user, token, err := manager.Login("test@example.com", "zaq1@WSX")
@@ -454,17 +449,11 @@ func TestAuthManagerLogout(t *testing.T) {
     manager, _ := getAuthManager(ctrl)
 
     mockExampleUser(manager.baseServices.Database.(*MockGormDB))
-    token := mockExampleUserLogin(manager.baseServices.Database.(*MockGormDB))
-    manager.baseServices.Database.(*MockGormDB).
-        EXPECT().
-        Save(StructMatcher{&TokenMatcher{
-            TokenId: Ptr(token.TokenId),
-            Recalled: Ptr(true),
-        }})
+    token := mockExampleUserLogin(manager.tokenService.(*MockTokenService))
 
-    manager.baseServices.Database.(*MockGormDB).
+    manager.tokenService.(*MockTokenService).
         EXPECT().
-        Commit()
+        Invalidate(token.TokenId)
 
     logoutUser, logoutToken, err := manager.Logout("test", "test_hash")
     if err != nil {
@@ -489,7 +478,10 @@ func TestAuthManagerInvalidLogoutHash(t *testing.T) {
     manager, _ := getAuthManager(ctrl)
 
     mockExampleUser(manager.baseServices.Database.(*MockGormDB))
-    mockExampleUserLogin(manager.baseServices.Database.(*MockGormDB))
+    manager.tokenService.(*MockTokenService).
+        EXPECT().
+        Check("test", "test_hah").
+        Return(nil, nil, InvalidToken)
 
     logoutUser, logoutToken, err := manager.Logout("test", "test_hah")
     if err != InvalidToken {
@@ -509,20 +501,10 @@ func TestAuthManagerInvalidLogoutValue(t *testing.T) {
     manager, _ := getAuthManager(ctrl)
 
     mockExampleUser(manager.baseServices.Database.(*MockGormDB))
-    mockExampleUserLogin(manager.baseServices.Database.(*MockGormDB))
-    manager.baseServices.Database.(*MockGormDB).
+    manager.tokenService.(*MockTokenService).
         EXPECT().
-        First(gomock.Any(), StructMatcher{&TokenMatcher{
-            TokenId: Ptr("test_invalid"),
-        }}).
-        DoAndReturn(func (token *Token, _ interface{}) *GormDB {
-            *token = Token{}
-            manager.baseServices.Database.(*MockGormDB).
-                EXPECT().
-                GetError().
-                Return(gormlogger.ErrRecordNotFound)
-            return &manager.baseServices.Database
-        })
+        Check("test_invalid", "test_hash").
+        Return(nil, nil, InvalidToken)
 
     logoutUser, logoutToken, err := manager.Logout("test_invalid", "test_hash")
     if err != InvalidToken {
@@ -543,15 +525,17 @@ func TestAuthManagerConfirmEmail(t *testing.T) {
     manager, _ := getAuthManager(ctrl)
 
     user := mockExampleUser(manager.baseServices.Database.(*MockGormDB))
-    mockExampleUserLogin(manager.baseServices.Database.(*MockGormDB))
     token := mockExampleUserEmailVerificationToken(manager.baseServices.Database.(*MockGormDB))
 
-    manager.baseServices.Database.(*MockGormDB).
+    manager.tokenService.(*MockTokenService).
         EXPECT().
-        Save(StructMatcher{&TokenMatcher{
-            TokenId: Ptr(token.TokenId),
-            Used: Ptr(true),
-        }})
+        Check("test_email", "test_hash").
+        Return(user, token, nil)
+
+    manager.tokenService.(*MockTokenService).
+        EXPECT().
+        Invalidate(StructMatcher{&TokenMatcher{ TokenId: Ptr("test_email") }}).
+        Return(user, token, nil)
 
     manager.baseServices.Database.(*MockGormDB).
         EXPECT().
@@ -579,23 +563,14 @@ func TestAuthManagerConfirmEmailInvalidId(t *testing.T) {
     manager, _ := getAuthManager(ctrl)
 
     mockExampleUser(manager.baseServices.Database.(*MockGormDB))
-    manager.baseServices.Database.(*MockGormDB).
+    manager.tokenService.(*MockTokenService).
         EXPECT().
-        First(gomock.Any(), StructMatcher{&TokenMatcher{
-            TokenId: Ptr("test_invalid"),
-        }}).
-        DoAndReturn(func (token *Token, _ interface{}) *GormDB {
-            *token = Token{}
-            manager.baseServices.Database.(*MockGormDB).
-                EXPECT().
-                GetError().
-                Return(gormlogger.ErrRecordNotFound)
-            return &manager.baseServices.Database
-        })
+        Check("invalid_id", "test_hash").
+        Return(nil, nil, UnknownToken)
 
     _, err := manager.ConfirmEmail("invalid_id", "test_hash")
-    if err != InvalidToken {
-        t.Errorf("ConfirmEmail did not return InvalidToken %s", err)
+    if err != UnknownToken {
+        t.Errorf("ConfirmEmail did not return UnknownToken %s", err)
     }
 }
 
@@ -605,18 +580,12 @@ func TestAuthManagerConfirmEmailInvalidHash(t *testing.T) {
     manager, _ := getAuthManager(ctrl)
 
     mockExampleUser(manager.baseServices.Database.(*MockGormDB))
-    mockExampleUserLogin(manager.baseServices.Database.(*MockGormDB))
-    token := mockExampleUserEmailVerificationToken(manager.baseServices.Database.(*MockGormDB))
-    manager.baseServices.Database.(*MockGormDB).
+    mockExampleUserLogin(manager.tokenService.(*MockTokenService))
+    mockExampleUserEmailVerificationToken(manager.baseServices.Database.(*MockGormDB))
+    manager.tokenService.(*MockTokenService).
         EXPECT().
-        Save(StructMatcher{&TokenMatcher{
-            TokenId: Ptr(token.TokenId),
-            Used: Ptr(true),
-        }})
-
-    manager.baseServices.Database.(*MockGormDB).
-        EXPECT().
-        Commit()
+        Check("test_email", "invalid_hash").
+        Return(nil, nil, UnknownToken)
 
     _, err := manager.ConfirmEmail("test_email", "invalid_hash")
     if err != InvalidToken {
