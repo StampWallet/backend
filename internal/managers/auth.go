@@ -1,9 +1,13 @@
 package managers
 
 import (
+    "errors"
     . "github.com/StampWallet/backend/internal/database"
     . "github.com/StampWallet/backend/internal/services"
 )
+
+var InvalidEmail = errors.New("Invalid email")
+var InvalidLogin = errors.New("Invalid email")
 
 type AuthManager interface {
     Create(userDetails UserDetails) (User, error)
@@ -21,21 +25,24 @@ type UserDetails struct {
 
 type AuthManagerImpl struct {
     baseServices *BaseServices
-    emailService *EmailService
-    tokenService *TokenService
+    emailService EmailService
+    tokenService TokenService
 }
 
 func (manager *AuthManagerImpl) Create(userDetails UserDetails) (*User, error) {
+    manager.baseServices.Database.Create(&User{ Email: userDetails.Email, PasswordHash: userDetails.Password })
+    manager.baseServices.Database.Commit()
     return nil, nil
 }              
                
 func (manager *AuthManagerImpl) Login(email string, password string) (*User, *Token, error) {
+    var user User
+    manager.baseServices.Database.First(&user, User{ Email: email })
     return nil, nil, nil
 }              
                
 func (manager *AuthManagerImpl) Logout(tokenId string, token string) (*User, *Token, error) {
     return nil, nil, nil
-               
 }              
                
 func (manager *AuthManagerImpl) ConfirmEmail(user User, tokenId string, token string) error {

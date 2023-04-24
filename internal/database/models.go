@@ -27,7 +27,7 @@ type TokenPurposeEnum string
 
 const (
 	SessionTokenPurpose TokenPurposeEnum	= "SESSION"
-	EmailTokemMPurpose						= "EMAIL"
+	EmailTokenPurpose						= "EMAIL"
 )
 
 type OwnedItemStatusEnum string
@@ -87,11 +87,11 @@ type User struct {
 	PasswordHash string
 	EmailVerified bool
 
-	Tokens []Token
-	LocalCards []LocalCard
-	VirtualCards []VirtualCard
-	FilesMetadata []FileMetadata
-	Business Business
+	Tokens []Token `gorm:"foreignkey:OwnerId"`
+	LocalCards []LocalCard `gorm:"foreignkey:OwnerId"`
+	VirtualCards []VirtualCard `gorm:"foreignkey:OwnerId"`
+	FilesMetadata []FileMetadata `gorm:"foreignkey:OwnerId"`
+	Business Business `gorm:"foreignkey:OwnerId"`
 }
 
 type Business struct {

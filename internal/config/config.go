@@ -1,12 +1,16 @@
 package config
 
-import (
-    "github.com/StampWallet/backend/internal/services"
-)
+type SMTPConfig struct {
+    ServerHostname string
+    ServerPort uint16
+    Username string
+    Password string
+    SenderEmail string 
+}
 
 type Config struct {
     DatabaseUrl string
-    SmtpConfig services.SMTPConfig
+    SmtpConfig SMTPConfig
     ServerPort uint16
     StoragePath string
     BackendDomain string
