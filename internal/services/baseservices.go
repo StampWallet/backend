@@ -14,5 +14,10 @@ type BaseServices struct {
 }
 
 func getDatabase(config Config) (GormDB, error) {
-    return gorm.Open(postgres.Open(config.DatabaseUrl), &gorm.Config{})
+    db, err := gorm.Open(postgres.Open(config.DatabaseUrl), &gorm.Config{})
+    if db != nil && err != nil {
+        return &GormDBImpl{Db: db}, nil
+    } else {
+        return nil, err
+    }
 }

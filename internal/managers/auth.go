@@ -14,14 +14,15 @@ var InvalidEmail = errors.New("Invalid email")
 var InvalidLogin = errors.New("Invalid login")
 var EmailExists = errors.New("Email exists")
 var UnknownError = errors.New("Email exists")
+var InvalidToken = errors.New("Invalid token")
 
 type AuthManager interface {
-    Create(userDetails UserDetails) (User, Token, error)
-    Login(email string, password string) (User, Token, error)
-    Logout(tokenId string, token string) (User, Token, error)
-    ConfirmEmail(user User, tokenId string, token string) error
-    ChangePassword(user User, oldPassword string, newPassword string) error
-    ChangeEmail(user User, newEmail string) (User, error)
+    Create(userDetails UserDetails) (*User, *Token, error)
+    Login(email string, password string) (*User, *Token, error)
+    Logout(tokenId string, token string) (*User, *Token, error)
+    ConfirmEmail(tokenId string, token string) (*User, error)
+    ChangePassword(user User, oldPassword string, newPassword string) (*User, error)
+    ChangeEmail(user User, newEmail string) (*User, error)
 }
 
 type UserDetails struct {
@@ -82,12 +83,12 @@ func (manager *AuthManagerImpl) Logout(tokenId string, token string) (*User, *To
     return nil, nil, nil
 }              
                
-func (manager *AuthManagerImpl) ConfirmEmail(user User, tokenId string, token string) error {
-    return nil
+func (manager *AuthManagerImpl) ConfirmEmail(tokenId string, token string) (*User, error) {
+    return nil, nil
 }              
                
-func (manager *AuthManagerImpl) ChangePassword(user User, oldPassword string, newPassword string) error {
-    return nil
+func (manager *AuthManagerImpl) ChangePassword(user User, oldPassword string, newPassword string) (*User, error) {
+    return nil, nil
 }              
                
 func (manager *AuthManagerImpl) ChangeEmail(user User, newEmail string) (*User, error) {
