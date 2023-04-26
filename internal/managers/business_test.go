@@ -16,7 +16,7 @@ import (
 	. "github.com/StampWallet/backend/internal/testutils"
 )
 
-func getBusinessManager(ctrl *gomock.Controller) *BusinessManagerImpl {
+func GetBusinessManager(ctrl *gomock.Controller) *BusinessManagerImpl {
     return &BusinessManagerImpl {
         &BaseServices {
             Logger: log.Default(),
@@ -29,10 +29,18 @@ func getBusinessManager(ctrl *gomock.Controller) *BusinessManagerImpl {
 func TestBusinessManagerCreate(t *testing.T) {
     ctrl := gomock.NewController(t)
     defer ctrl.Finish()
-    manager := getBusinessManager(ctrl)
-    user := getTestUser(manager.baseServices.Database)
-    bannerImage := MockStorage(user, manager.fileStorageService.(*MockFileStorageService))
-    iconImage := MockStorage(user, manager.fileStorageService.(*MockFileStorageService))
+    manager := GetBusinessManager(ctrl)
+    user := GetTestUser(manager.baseServices.Database)
+    bannerImage := GetTestFileMetadata(manager.baseServices.Database, user)
+    manager.fileStorageService.(*MockFileStorageService).
+        EXPECT().
+        CreateStub(&user).
+        Return(bannerImage)
+    iconImage := GetTestFileMetadata(manager.baseServices.Database, user)
+    manager.fileStorageService.(*MockFileStorageService).
+        EXPECT().
+        CreateStub(&user).
+        Return(iconImage)
     details := BusinessDetails{
 	Name: "test business",
 	Description: "Description",
@@ -56,9 +64,9 @@ func TestBusinessManagerCreate(t *testing.T) {
 func TestBusinessManagerCreateAccountAlreadyExists(t *testing.T) {
     ctrl := gomock.NewController(t)
     defer ctrl.Finish()
-    manager := getBusinessManager(ctrl)
-    user := getTestUser(manager.baseServices.Database)
-    business := getTestBusiness(manager.baseServices.Database, user)
+    manager := GetBusinessManager(ctrl)
+    user := GetTestUser(manager.baseServices.Database)
+    business := GetTestBusiness(manager.baseServices.Database, user)
     details := BusinessDetails{
 	Name: "test business",
 	Description: "Description",
@@ -78,9 +86,9 @@ func TestBusinessManagerCreateAccountAlreadyExists(t *testing.T) {
 func TestBusinessManagerChangeDetails(t *testing.T) {
     ctrl := gomock.NewController(t)
     defer ctrl.Finish()
-    manager := getBusinessManager(ctrl)
-    user := getTestUser(manager.baseServices.Database)
-    business := getTestBusiness(manager.baseServices.Database, user)
+    manager := GetBusinessManager(ctrl)
+    user := GetTestUser(manager.baseServices.Database)
+    business := GetTestBusiness(manager.baseServices.Database, user)
     details := ChangeableBusinessDetails{
 	Name: "new test business",
 	Description: "new test description",
@@ -100,9 +108,9 @@ func TestBusinessManagerChangeDetails(t *testing.T) {
 func TestBusinessManagerSearchExisting(t *testing.T) {
     ctrl := gomock.NewController(t)
     defer ctrl.Finish()
-    manager := getBusinessManager(ctrl)
-    user := getTestUser(manager.baseServices.Database)
-    business := getTestBusiness(manager.baseServices.Database, user) 
+    manager := GetBusinessManager(ctrl)
+    user := GetTestUser(manager.baseServices.Database)
+    business := GetTestBusiness(manager.baseServices.Database, user) 
     result, err := manager.Search(business.Name, "", 0, 0, 5)
     require.Equalf(t, err, nil, "BusinessManager.Search returned an error")
     require.Equalf(t, len(result), 1, "BusinessManager.Search returned more or less than one result")

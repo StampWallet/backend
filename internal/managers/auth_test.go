@@ -18,7 +18,7 @@ import (
 	. "github.com/StampWallet/backend/internal/testutils"
 )
 
-func getAuthManager(ctrl *gomock.Controller) (*AuthManagerImpl, error) {
+func GetAuthManager(ctrl *gomock.Controller) (*AuthManagerImpl, error) {
     //db, mock, err := sqlmock.New()
     //if err != nil {
     //    ctrl.T.Errorf("failed to init sqlmock %s", err)
@@ -55,7 +55,7 @@ type TokenMatcher struct {
 func TestAuthManagerCreate(t *testing.T) {
     ctrl := gomock.NewController(t)
     defer ctrl.Finish()
-    manager, _ := getAuthManager(ctrl)
+    manager, _ := GetAuthManager(ctrl)
 
     userMatcher := &StructMatcher{UserMatcher{
         Email: Ptr("test@example.com"),
@@ -154,7 +154,7 @@ func TestAuthManagerCreate(t *testing.T) {
 func TestAuthManagerCreateWithInvalidEmail(t *testing.T) {
     ctrl := gomock.NewController(t)
     defer ctrl.Finish()
-    manager, _ := getAuthManager(ctrl)
+    manager, _ := GetAuthManager(ctrl)
 
     user, _, err := manager.Create(
         UserDetails{
@@ -174,7 +174,7 @@ func TestAuthManagerCreateWithInvalidEmail(t *testing.T) {
 func TestAuthManagerCreateWithExistingEmail(t *testing.T) {
     ctrl := gomock.NewController(t)
     defer ctrl.Finish()
-    manager, _ := getAuthManager(ctrl)
+    manager, _ := GetAuthManager(ctrl)
 
     manager.baseServices.Database.(*MockGormDB).
         EXPECT().
@@ -202,7 +202,7 @@ func TestAuthManagerCreateWithExistingEmail(t *testing.T) {
     } 
 }
 
-func getExampleUser() User {
+func GetExampleUser() User {
     hash, err := bcrypt.GenerateFromPassword([]byte("zaq1@WSX"), 10)
     if err != nil {
         panic(err)
@@ -227,7 +227,7 @@ func getExampleUser() User {
 }
 
 func mockExampleUser(database *MockGormDB) User {
-    user := getExampleUser()
+    user := GetExampleUser()
     database.
         EXPECT().
         First(gomock.Any(), &StructMatcher{UserMatcher{ 
@@ -304,14 +304,14 @@ func mockExampleUserLogin(tokenService *MockTokenService) Token {
     tokenService.
         EXPECT().
         Check("test_login", "test_hash").
-        Return(getExampleUser(), token, nil)
+        Return(GetExampleUser(), token, nil)
     return token
 }
 
 func TestAuthManagerLogin(t *testing.T) {
     ctrl := gomock.NewController(t)
     defer ctrl.Finish()
-    manager, _ := getAuthManager(ctrl)
+    manager, _ := GetAuthManager(ctrl)
 
     mockUser := mockExampleUser(manager.baseServices.Database.(*MockGormDB))
     manager.tokenService.(*MockTokenService).
@@ -356,7 +356,7 @@ func assertInvalidLogin(t *testing.T, user *User, token *Token, err error) {
 func TestAuthManagerInvalidPassword(t *testing.T) {
     ctrl := gomock.NewController(t)
     defer ctrl.Finish()
-    manager, _ := getAuthManager(ctrl)
+    manager, _ := GetAuthManager(ctrl)
     mockExampleUser(manager.baseServices.Database.(*MockGormDB))
 
     user, token, err := manager.Login("test@example.com", "invalid_password")
@@ -366,7 +366,7 @@ func TestAuthManagerInvalidPassword(t *testing.T) {
 func TestAuthManagerInvalidEmail(t *testing.T) {
     ctrl := gomock.NewController(t)
     defer ctrl.Finish()
-    manager, _ := getAuthManager(ctrl)
+    manager, _ := GetAuthManager(ctrl)
     manager.baseServices.Database.(*MockGormDB).
         EXPECT().
         First(gomock.Any(), StructMatcher{&UserMatcher{
@@ -382,7 +382,7 @@ func TestAuthManagerInvalidEmail(t *testing.T) {
 func TestAuthManagerLogout(t *testing.T) {
     ctrl := gomock.NewController(t)
     defer ctrl.Finish()
-    manager, _ := getAuthManager(ctrl)
+    manager, _ := GetAuthManager(ctrl)
 
     mockExampleUser(manager.baseServices.Database.(*MockGormDB))
     token := mockExampleUserLogin(manager.tokenService.(*MockTokenService))
@@ -411,7 +411,7 @@ func TestAuthManagerLogout(t *testing.T) {
 func TestAuthManagerInvalidLogoutHash(t *testing.T) {
     ctrl := gomock.NewController(t)
     defer ctrl.Finish()
-    manager, _ := getAuthManager(ctrl)
+    manager, _ := GetAuthManager(ctrl)
 
     mockExampleUser(manager.baseServices.Database.(*MockGormDB))
     manager.tokenService.(*MockTokenService).
@@ -434,7 +434,7 @@ func TestAuthManagerInvalidLogoutHash(t *testing.T) {
 func TestAuthManagerInvalidLogoutValue(t *testing.T) {
     ctrl := gomock.NewController(t)
     defer ctrl.Finish()
-    manager, _ := getAuthManager(ctrl)
+    manager, _ := GetAuthManager(ctrl)
 
     mockExampleUser(manager.baseServices.Database.(*MockGormDB))
     manager.tokenService.(*MockTokenService).
@@ -458,7 +458,7 @@ func TestAuthManagerInvalidLogoutValue(t *testing.T) {
 func TestAuthManagerConfirmEmail(t *testing.T) {
     ctrl := gomock.NewController(t)
     defer ctrl.Finish()
-    manager, _ := getAuthManager(ctrl)
+    manager, _ := GetAuthManager(ctrl)
 
     user := mockExampleUser(manager.baseServices.Database.(*MockGormDB))
     token := mockExampleUserEmailVerificationToken(manager.baseServices.Database.(*MockGormDB))
@@ -496,7 +496,7 @@ func TestAuthManagerConfirmEmail(t *testing.T) {
 func TestAuthManagerConfirmEmailInvalidId(t *testing.T) {
     ctrl := gomock.NewController(t)
     defer ctrl.Finish()
-    manager, _ := getAuthManager(ctrl)
+    manager, _ := GetAuthManager(ctrl)
 
     mockExampleUser(manager.baseServices.Database.(*MockGormDB))
     manager.tokenService.(*MockTokenService).
@@ -513,7 +513,7 @@ func TestAuthManagerConfirmEmailInvalidId(t *testing.T) {
 func TestAuthManagerConfirmEmailInvalidHash(t *testing.T) {
     ctrl := gomock.NewController(t)
     defer ctrl.Finish()
-    manager, _ := getAuthManager(ctrl)
+    manager, _ := GetAuthManager(ctrl)
 
     mockExampleUser(manager.baseServices.Database.(*MockGormDB))
     mockExampleUserLogin(manager.tokenService.(*MockTokenService))
@@ -533,7 +533,7 @@ func TestAuthManagerConfirmEmailInvalidHash(t *testing.T) {
 func TestAuthManagerChangePassword(t *testing.T) {
     ctrl := gomock.NewController(t)
     defer ctrl.Finish()
-    manager, _ := getAuthManager(ctrl)
+    manager, _ := GetAuthManager(ctrl)
 
     var hash string
     user := mockExampleUser(manager.baseServices.Database.(*MockGormDB))
@@ -564,7 +564,7 @@ func TestAuthManagerChangePassword(t *testing.T) {
 func TestAuthManagerChangePasswordInvalid(t *testing.T) {
     ctrl := gomock.NewController(t)
     defer ctrl.Finish()
-    manager, _ := getAuthManager(ctrl)
+    manager, _ := GetAuthManager(ctrl)
 
     user := mockExampleUser(manager.baseServices.Database.(*MockGormDB))
 
@@ -577,7 +577,7 @@ func TestAuthManagerChangePasswordInvalid(t *testing.T) {
 func TestAuthManagerChangeEmail(t *testing.T) {
     ctrl := gomock.NewController(t)
     defer ctrl.Finish()
-    manager, _ := getAuthManager(ctrl)
+    manager, _ := GetAuthManager(ctrl)
 
     user := mockExampleUser(manager.baseServices.Database.(*MockGormDB))
     manager.tokenService.(*MockTokenService).

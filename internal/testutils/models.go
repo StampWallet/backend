@@ -1,4 +1,4 @@
-package managers
+package testutils
 
 import (
 	"database/sql"
@@ -11,10 +11,10 @@ import (
 
 	. "github.com/StampWallet/backend/internal/database"
 	//. "github.com/StampWallet/backend/internal/database/mocks"
-	. "github.com/StampWallet/backend/internal/services/mocks"
+	//. "github.com/StampWallet/backend/internal/services/mocks"
 )
 
-func getTestUser(db GormDB) *User {
+func GetTestUser(db GormDB) *User {
     user := User {
 	PublicId: "test",
 	FirstName: "first",
@@ -30,7 +30,7 @@ func getTestUser(db GormDB) *User {
     return &user
 }
 
-func getTestBusiness(db GormDB, user *User) *Business {
+func GetTestBusiness(db GormDB, user *User) *Business {
     business := Business{
 	PublicId: shortuuid.New(),
 	OwnerId: user.ID,
@@ -50,7 +50,7 @@ func getTestBusiness(db GormDB, user *User) *Business {
     return &business
 }
 
-func MockStorage(user *User, storage *MockFileStorageService) FileMetadata {
+func GetTestFileMetadata(db GormDB, user *User) *FileMetadata {
     file := FileMetadata {
 	Model: gorm.Model {
 	    ID: uint(rand.Uint32()),
@@ -58,14 +58,14 @@ func MockStorage(user *User, storage *MockFileStorageService) FileMetadata {
 	PublicId: shortuuid.New(),
 	OwnerId: user.ID,
     }
-    storage.
-	EXPECT().
-	CreateStub(&user).
-	Return(file)
-    return file
+    tx := db.Create(&file)
+    if err := tx.GetError(); err != nil {
+	panic(fmt.Errorf("failed to create Business %w", err))
+    }
+    return &file
 }
 
-func getTestItemDefinition(db GormDB, business *Business, metadata FileMetadata) *ItemDefinition {
+func GetTestItemDefinition(db GormDB, business *Business, metadata FileMetadata) *ItemDefinition {
     definition := ItemDefinition{
 	PublicId: shortuuid.New(),
 	BusinessId: business.ID,
@@ -85,7 +85,7 @@ func getTestItemDefinition(db GormDB, business *Business, metadata FileMetadata)
     return &definition
 }
 
-func getTestVirtualCard(db GormDB, user *User, business *Business) *VirtualCard {
+func GetTestVirtualCard(db GormDB, user *User, business *Business) *VirtualCard {
     virtualCard := VirtualCard {
 	PublicId: shortuuid.New(),
 	OwnerId: user.ID,
@@ -99,7 +99,7 @@ func getTestVirtualCard(db GormDB, user *User, business *Business) *VirtualCard 
     return &virtualCard
 }
 
-func getTestOwnedItem(db GormDB, itemDefinition *ItemDefinition, card *VirtualCard) *OwnedItem {
+func GetTestOwnedItem(db GormDB, itemDefinition *ItemDefinition, card *VirtualCard) *OwnedItem {
     ownedItem := OwnedItem {
 	PublicId: shortuuid.New(),
 	DefinitionId: itemDefinition.ID,
@@ -114,11 +114,11 @@ func getTestOwnedItem(db GormDB, itemDefinition *ItemDefinition, card *VirtualCa
     return &ownedItem
 }
 
-func getTestLocalCard(db GormDB, user *User) *LocalCard {
+func GetTestLocalCard(db GormDB, user *User) *LocalCard {
     localCard := LocalCard {
 	PublicId: shortuuid.New(),
 	OwnerId: user.ID,
-	Type: CardTypes[0].PublicId,
+	Type: "test type",
 	Code: "012345678901",
 	Name: "test card",
     }

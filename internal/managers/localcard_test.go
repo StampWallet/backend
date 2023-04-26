@@ -13,7 +13,7 @@ import (
 	. "github.com/StampWallet/backend/internal/testutils"
 )
 
-func getLocalCardManager(ctrl *gomock.Controller) *LocalCardManagerImpl {
+func GetLocalCardManager(ctrl *gomock.Controller) *LocalCardManagerImpl {
     return &LocalCardManagerImpl {
         &BaseServices {
             Logger: log.Default(),
@@ -25,8 +25,8 @@ func getLocalCardManager(ctrl *gomock.Controller) *LocalCardManagerImpl {
 func TestLocalCardManagerCreate(t *testing.T) {
     ctrl := gomock.NewController(t)
     defer ctrl.Finish()
-    manager := getLocalCardManager(ctrl)
-    user := getTestUser(manager.baseServices.Database)
+    manager := GetLocalCardManager(ctrl)
+    user := GetTestUser(manager.baseServices.Database)
     localCard, err := manager.Create(user, &LocalCardDetails{
 	Type: "s7lJTYHX",
 	Code: "012345678901",
@@ -49,8 +49,8 @@ func TestLocalCardManagerCreate(t *testing.T) {
 func TestLocalCardManagerCreateInvalidType(t *testing.T) {
     ctrl := gomock.NewController(t)
     defer ctrl.Finish()
-    manager := getLocalCardManager(ctrl)
-    user := getTestUser(manager.baseServices.Database)
+    manager := GetLocalCardManager(ctrl)
+    user := GetTestUser(manager.baseServices.Database)
     localCard, err := manager.Create(user, &LocalCardDetails{
 	Type: "invalid type lol",
 	Code: "012345678901",
@@ -63,9 +63,9 @@ func TestLocalCardManagerCreateInvalidType(t *testing.T) {
 func TestLocalCardManagerRemove(t *testing.T) {
     ctrl := gomock.NewController(t)
     defer ctrl.Finish()
-    manager := getLocalCardManager(ctrl)
-    user := getTestUser(manager.baseServices.Database)
-    localCard := getTestLocalCard(manager.baseServices.Database, user)
+    manager := GetLocalCardManager(ctrl)
+    user := GetTestUser(manager.baseServices.Database)
+    localCard := GetTestLocalCard(manager.baseServices.Database, user)
 
     err := manager.Remove(localCard) 
     require.Equalf(t, err, nil, "LocalCard.Remove returned an error %w", err)
@@ -83,9 +83,9 @@ func TestLocalCardManagerRemove(t *testing.T) {
 func TestLocalCardManagerGetForUser(t *testing.T) {
     ctrl := gomock.NewController(t)
     defer ctrl.Finish()
-    manager := getLocalCardManager(ctrl)
-    user := getTestUser(manager.baseServices.Database)
-    localCard := getTestLocalCard(manager.baseServices.Database, user)
+    manager := GetLocalCardManager(ctrl)
+    user := GetTestUser(manager.baseServices.Database)
+    localCard := GetTestLocalCard(manager.baseServices.Database, user)
 
     localCards, err := manager.GetForUser(user) 
     require.Equalf(t, err, nil, "LocalCard.GetForUser returned an error %w", err)

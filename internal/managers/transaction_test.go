@@ -13,7 +13,7 @@ import (
 	. "github.com/StampWallet/backend/internal/testutils"
 )
 
-func getTransactionManager(ctrl *gomock.Controller) *TransactionManagerImpl {
+func GetTransactionManager(ctrl *gomock.Controller) *TransactionManagerImpl {
     return &TransactionManagerImpl {
         &BaseServices {
             Logger: log.Default(),
@@ -25,15 +25,18 @@ func getTransactionManager(ctrl *gomock.Controller) *TransactionManagerImpl {
 func TestTransactionManagerStart(t *testing.T) {
     //ctrl := gomock.NewController(t)
     //defer ctrl.Finish()
-    //manager := getTransactionManager(ctrl)
-    //user := getTestUser(manager.baseServices.Database)
-    //businessUser := getTestUser(manager.baseServices.Database)
-    //business := getTestBusiness(manager.baseServices.Database, businessUser)
-    //virtualCard := getTestVirtualCard(manager.baseServices.Database, user, business)
+    //manager := GetTransactionManager(ctrl)
+    //db := manager.baseServices.Database
+    //user := GetTestUser(db)
+    //businessUser := GetTestUser(db)
+    //business := GetTestBusiness(db, businessUser)
+    //itemDefinition := GetTestItemDefinition(db, business, *GetTestFileMetadata(db, user))
+    //virtualCard := GetTestVirtualCard(db, user, business)
+    //ownedItem := GetTestOwnedItem(db, itemDefinition, virtualCard)
 }
 
 func TestTransactionManagerFinalize(t *testing.T) {
     //ctrl := gomock.NewController(t)
     //defer ctrl.Finish()
-    //manager := getTransactionManager(ctrl)
+    //manager := GetTransactionManager(ctrl)
 }

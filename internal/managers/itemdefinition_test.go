@@ -16,7 +16,7 @@ import (
 	. "github.com/StampWallet/backend/internal/testutils"
 )
 
-func getItemDefinitionManager(ctrl *gomock.Controller) *ItemDefinitionManagerImpl {
+func GetItemDefinitionManager(ctrl *gomock.Controller) *ItemDefinitionManagerImpl {
     return &ItemDefinitionManagerImpl {
         &BaseServices {
             Logger: log.Default(),
@@ -29,10 +29,15 @@ func getItemDefinitionManager(ctrl *gomock.Controller) *ItemDefinitionManagerImp
 func TestItemDefinitionAddItem(t *testing.T) {
     ctrl := gomock.NewController(t)
     defer ctrl.Finish()
-    manager := getItemDefinitionManager(ctrl)
-    user := getTestUser(manager.baseServices.Database)
-    business := getTestBusiness(manager.baseServices.Database, user)
-    imageFile := MockStorage(user, manager.fileStorageService.(*MockFileStorageService))
+    manager := GetItemDefinitionManager(ctrl)
+    user := GetTestUser(manager.baseServices.Database)
+    business := GetTestBusiness(manager.baseServices.Database, user)
+    imageFile := GetTestFileMetadata(manager.baseServices.Database, user)
+    manager.fileStorageService.(*MockFileStorageService).
+        EXPECT().
+        CreateStub(&user).
+        Return(imageFile)
+
     details := &ItemDetails {
 	Name: "test item",
 	Price: Ptr(uint(50)),
@@ -55,11 +60,15 @@ func TestItemDefinitionAddItem(t *testing.T) {
 func TestItemDefinitionChangeItemDetails(t *testing.T) {
     ctrl := gomock.NewController(t)
     defer ctrl.Finish()
-    manager := getItemDefinitionManager(ctrl)
-    user := getTestUser(manager.baseServices.Database)
-    business := getTestBusiness(manager.baseServices.Database, user)
-    definition := getTestItemDefinition(manager.baseServices.Database, business, 
-	MockStorage(user, manager.fileStorageService.(*MockFileStorageService)))
+    manager := GetItemDefinitionManager(ctrl)
+    user := GetTestUser(manager.baseServices.Database)
+    business := GetTestBusiness(manager.baseServices.Database, user)
+    imageFile := GetTestFileMetadata(manager.baseServices.Database, user)
+    definition := GetTestItemDefinition(manager.baseServices.Database, business, *imageFile)
+    manager.fileStorageService.(*MockFileStorageService).
+        EXPECT().
+        CreateStub(&user).
+        Return(imageFile)
 
     newDetails := ItemDetails{
 	Name: "new item details",
@@ -84,13 +93,18 @@ func TestItemDefinitionChangeItemDetails(t *testing.T) {
 func TestItemDefinitionWithdrawItem(t *testing.T) {
     ctrl := gomock.NewController(t)
     defer ctrl.Finish()
-    manager := getItemDefinitionManager(ctrl)
-    user := getTestUser(manager.baseServices.Database)
-    business := getTestBusiness(manager.baseServices.Database, user)
-    definition := getTestItemDefinition(manager.baseServices.Database, business, 
-	MockStorage(user, manager.fileStorageService.(*MockFileStorageService)))
-    virtualCard := getTestVirtualCard(manager.baseServices.Database, user, business)
-    ownedItem := getTestOwnedItem(manager.baseServices.Database, definition, virtualCard)
+    manager := GetItemDefinitionManager(ctrl)
+    user := GetTestUser(manager.baseServices.Database)
+    business := GetTestBusiness(manager.baseServices.Database, user)
+    imageFile := GetTestFileMetadata(manager.baseServices.Database, user)
+    definition := GetTestItemDefinition(manager.baseServices.Database, business, *imageFile)
+	
+    manager.fileStorageService.(*MockFileStorageService).
+        EXPECT().
+        CreateStub(&user).
+        Return(imageFile)
+    virtualCard := GetTestVirtualCard(manager.baseServices.Database, user, business)
+    ownedItem := GetTestOwnedItem(manager.baseServices.Database, definition, virtualCard)
 
     newDefinition, err := manager.WithdrawItem(definition)
     require.Equalf(t, err, nil, "WithdrawItem returned an error")
@@ -115,11 +129,16 @@ func TestItemDefinitionWithdrawItem(t *testing.T) {
 func TestItemDefinitionGetForBusiness(t *testing.T) {
     ctrl := gomock.NewController(t)
     defer ctrl.Finish()
-    manager := getItemDefinitionManager(ctrl)
-    user := getTestUser(manager.baseServices.Database)
-    business := getTestBusiness(manager.baseServices.Database, user)
-    definition := getTestItemDefinition(manager.baseServices.Database, business, 
-	MockStorage(user, manager.fileStorageService.(*MockFileStorageService)))
+    manager := GetItemDefinitionManager(ctrl)
+    user := GetTestUser(manager.baseServices.Database)
+    business := GetTestBusiness(manager.baseServices.Database, user)
+    iconImage := GetTestFileMetadata(manager.baseServices.Database, user)
+    definition := GetTestItemDefinition(manager.baseServices.Database, business, 
+	*iconImage) 
+    manager.fileStorageService.(*MockFileStorageService).
+        EXPECT().
+        CreateStub(&user).
+        Return(iconImage)
 
     returnedDefinitions, err := manager.GetForBusiness(business)
     require.Equalf(t, err, nil, "GetForBusiness returned an error")
