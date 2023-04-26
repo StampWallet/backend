@@ -16,7 +16,7 @@ Requires [Go 1.20](https://go.dev/doc/install)
 
 ## Test
 
-Test require a working Postgres database. Two environment variables are required to configure the tests:
+Tests require a working Postgres database. Two environment variables are required to configure the tests:
 
 * TEST_DATABASE_URL - Database URL, for example `postgres://postgres@localhost/stampwallet`
 * TEST_DATABASE_NAME - Test database name, for example `stampwallet`. NOTE: This database will be dropped and recreated repeatedly. All data from this database *WILL* be lost.
