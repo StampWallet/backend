@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/rand"
 	"time"
+	"strconv"
 
 	"github.com/lithammer/shortuuid/v4"
 	"gorm.io/gorm"
@@ -116,15 +117,43 @@ func GetTestOwnedItem(db GormDB, itemDefinition *ItemDefinition, card *VirtualCa
 
 func GetTestLocalCard(db GormDB, user *User) *LocalCard {
     localCard := LocalCard {
-	PublicId: shortuuid.New(),
-	OwnerId: user.ID,
-	Type: "test type",
-	Code: "012345678901",
-	Name: "test card",
+        PublicId: shortuuid.New(),
+        OwnerId: user.ID,
+        Type: "test type",
+        Code: "012345678901",
+        Name: "test card",
     }
     tx := db.Create(&localCard)
     if err := tx.GetError(); err != nil {
-	panic(fmt.Errorf("failed to create LocalCard %w", err))
+        panic(fmt.Errorf("failed to create LocalCard %w", err))
     }
     return &localCard
+}
+
+func GetTestTransaction(db GormDB, virtualCard *VirtualCard, items []OwnedItem) (*Transaction, []TransactionDetail) {
+    transaction := Transaction {
+        PublicId: shortuuid.New(),
+        VirtualCardId: virtualCard.ID,
+        Code: strconv.Itoa(rand.Intn(100)),
+        State: TransactionStateStarted,
+        AddedPoints: 0,
+    }
+    tx := db.Create(&transaction)
+    if err := tx.GetError(); err != nil {
+        panic(fmt.Errorf("failed to create Transaction %w", err))
+    }
+    var details []TransactionDetail
+    for _, item := range items {
+        transactionDetail := TransactionDetail {
+            TransactionId: transaction.ID,
+            ItemId: item.ID,
+            Action: NoActionType,
+        }
+        tx := db.Create(&transactionDetail)
+        details = append(details, transactionDetail)
+        if err := tx.GetError(); err != nil {
+            panic(fmt.Errorf("failed to create TransactionDetail %w", err))
+        }
+    }
+    return &transaction, details
 }

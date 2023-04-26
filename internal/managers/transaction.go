@@ -1,13 +1,17 @@
 package managers
 
 import (
+    "errors"
+
     . "github.com/StampWallet/backend/internal/database"
     . "github.com/StampWallet/backend/internal/services"
 )
 
+var InvalidItem = errors.New("Invalid item")
+
 //TODO
 type ItemWithAction struct {
-    PublicId string
+    Item *OwnedItem
     Action ActionTypeEnum
 }
 
@@ -24,6 +28,6 @@ func (manager *TransactionManagerImpl) Start(card *VirtualCard, items []OwnedIte
     return nil, nil
 }
 
-func (manager *TransactionManagerImpl) Finalize(transaction *Transaction, items []ItemWithAction, points uint64) (*Transaction, error) {
+func (manager *TransactionManagerImpl) Finalize(transaction *Transaction, items []ItemWithAction, points uint) (*Transaction, error) {
     return nil, nil
 }

@@ -8,8 +8,11 @@ import (
 
 type ActionTypeEnum string
 
+//TODO inconsistent naming. recalled vs withdrawn
+
 const (
-	RedeemedActionType ActionTypeEnum	= "REDEEMED"
+	NoActionType		ActionTypeEnum	= "NO_ACTION"
+	RedeemedActionType					= "REDEEMED"
 	RecalledActionType					= "RECALLED"
 	CancelledActionType					= "CANCELLED"
 )
@@ -18,7 +21,7 @@ type TransactionStateEnum string
 
 const (
 	TransactionStateStarted TransactionStateEnum	= "STARTED"
-	TransactionStateProcessed						= "PROCESSED"
+	TransactionStateProcesing						= "PROCESSING"
 	TransactionStateFinished						= "FINISHED"
 	TransactionStateExpired							= "EXPIRED"
 )
@@ -160,6 +163,10 @@ func (entity *OwnedItem) GetUserId() uint {
 	return 0
 }
 
+func (entity *OwnedItem) GetBusinessId() uint {
+	return 0
+}
+
 type VirtualCard struct {
 	gorm.Model
 	OwnerId uint
@@ -179,10 +186,10 @@ type Transaction struct {
 	State TransactionStateEnum
 	AddedPoints uint
 
-	TransactionsDetails []TransactionDetails
+	TransactionsDetails []TransactionDetail
 }
 
-type TransactionDetails struct {
+type TransactionDetail struct {
 	gorm.Model
 	TransactionId uint
 	ItemId uint

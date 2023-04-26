@@ -12,6 +12,6 @@ func AutoMigrate(db GormDB) error {
 		&OwnedItem{},
 		&VirtualCard{},
 		&Transaction{},
-		&TransactionDetails{},
+		&TransactionDetail{},
 	)
 }

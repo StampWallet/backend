@@ -52,3 +52,7 @@ type UserOwnedEntity interface {
 type BusinessOwnedEntity interface {
 	GetBusinessId() uint64
 }
+
+type TransactionOwnedEntity interface {
+	GetTransactionId() uint64
+}
