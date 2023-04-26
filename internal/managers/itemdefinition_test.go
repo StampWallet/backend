@@ -36,7 +36,7 @@ func TestItemDefinitionAddItem(t *testing.T) {
 	manager.fileStorageService.(*MockFileStorageService).
 		EXPECT().
 		CreateStub(&user).
-		Return(imageFile)
+		Return(*imageFile, nil)
 
 	details := &ItemDetails{
 		Name:        "test item",
@@ -49,12 +49,12 @@ func TestItemDefinitionAddItem(t *testing.T) {
 	}
 	definition, err := manager.AddItem(business, details)
 	require.Truef(t, MatchEntities(details, definition), "entities do not match")
-	require.Equalf(t, err, nil, "additem retuned an error")
-	require.Equalf(t, definition.ImageId, imageFile.PublicId, "additem retuned an error")
+	require.Equalf(t, nil, err, "additem retuned an error")
+	require.Equalf(t, imageFile.PublicId, definition.ImageId, "additem retuned an error")
 	var dbDetails ItemDefinition
 	tx := manager.baseServices.Database.Find(&dbDetails, ItemDefinition{Model: gorm.Model{ID: definition.ID}})
-	require.Equalf(t, tx.GetError(), nil, "database find returned an error")
-	require.Equalf(t, dbDetails.Name, definition.Name, "database find returned invalid data")
+	require.Equalf(t, nil, tx.GetError(), "database find returned an error")
+	require.Equalf(t, definition.Name, dbDetails.Name, "database find returned invalid data")
 }
 
 func TestItemDefinitionChangeItemDetails(t *testing.T) {
@@ -68,7 +68,7 @@ func TestItemDefinitionChangeItemDetails(t *testing.T) {
 	manager.fileStorageService.(*MockFileStorageService).
 		EXPECT().
 		CreateStub(&user).
-		Return(imageFile)
+		Return(*imageFile, nil)
 
 	newDetails := ItemDetails{
 		Name:        "new item details",
@@ -82,12 +82,12 @@ func TestItemDefinitionChangeItemDetails(t *testing.T) {
 	newDefinition, err := manager.ChangeItemDetails(definition, &newDetails)
 
 	require.Truef(t, MatchEntities(newDetails, newDefinition), "entities do not match")
-	require.Equalf(t, err, nil, "ChangeItemDetails retuned an error")
+	require.Equalf(t, nil, err, "ChangeItemDetails retuned an error")
 
 	var dbDetails ItemDefinition
 	tx := manager.baseServices.Database.Find(&dbDetails, ItemDefinition{Model: gorm.Model{ID: definition.ID}})
-	require.Equalf(t, tx.GetError(), nil, "database find returned an error")
-	require.Equalf(t, dbDetails.Name, newDetails.Name, "database find returned invalid data")
+	require.Equalf(t, nil, tx.GetError(), "database find returned an error")
+	require.Equalf(t, newDetails.Name, dbDetails.Name, "database find returned invalid data")
 }
 
 func TestItemDefinitionWithdrawItem(t *testing.T) {
@@ -102,28 +102,28 @@ func TestItemDefinitionWithdrawItem(t *testing.T) {
 	manager.fileStorageService.(*MockFileStorageService).
 		EXPECT().
 		CreateStub(&user).
-		Return(imageFile)
+		Return(*imageFile, nil)
 	virtualCard := GetTestVirtualCard(manager.baseServices.Database, user, business)
 	ownedItem := GetTestOwnedItem(manager.baseServices.Database, definition, virtualCard)
 
 	newDefinition, err := manager.WithdrawItem(definition)
-	require.Equalf(t, err, nil, "WithdrawItem returned an error")
+	require.Equalf(t, nil, err, "WithdrawItem returned an error")
 
 	var dbItemDefinition ItemDefinition
 	var dbOwnedItem OwnedItem
 	var dbVirtualCard VirtualCard
 
 	tx := manager.baseServices.Database.Find(&dbItemDefinition, ItemDefinition{Model: gorm.Model{ID: definition.ID}})
-	require.Equalf(t, tx.GetError(), nil, "db ItemDefinition find returned an error")
+	require.Equalf(t, nil, tx.GetError(), "db ItemDefinition find returned an error")
 	tx = manager.baseServices.Database.Find(&dbOwnedItem, OwnedItem{Model: gorm.Model{ID: ownedItem.ID}})
-	require.Equalf(t, tx.GetError(), nil, "db OwnedItem find returned an error")
+	require.Equalf(t, nil, tx.GetError(), "db OwnedItem find returned an error")
 	tx = manager.baseServices.Database.Find(&dbVirtualCard, VirtualCard{Model: gorm.Model{ID: virtualCard.ID}})
-	require.Equalf(t, tx.GetError(), nil, "db VirtualCard find returned an error")
+	require.Equalf(t, nil, tx.GetError(), "db VirtualCard find returned an error")
 
-	require.Equalf(t, dbItemDefinition.Withdrawn, true, "db item definition is not withdrawn")
-	require.Equalf(t, newDefinition.Withdrawn, true, "new item definition is not withdrawn")
-	require.Equalf(t, dbOwnedItem.Status, OwnedItemStatusWithdrawn, "new owned item status is not withdrawn")
-	require.Equalf(t, dbVirtualCard.Points, virtualCard.Points+definition.Price, "db virtual card did not regain points")
+	require.Equalf(t, true, dbItemDefinition.Withdrawn, "db item definition is not withdrawn")
+	require.Equalf(t, true, newDefinition.Withdrawn, "new item definition is not withdrawn")
+	require.Equalf(t, OwnedItemStatusWithdrawn, dbOwnedItem.Status, "new owned item status is not withdrawn")
+	require.Equalf(t, virtualCard.Points+definition.Price, dbVirtualCard.Points, "db virtual card did not regain points")
 }
 
 func TestItemDefinitionGetForBusiness(t *testing.T) {
@@ -138,10 +138,10 @@ func TestItemDefinitionGetForBusiness(t *testing.T) {
 	manager.fileStorageService.(*MockFileStorageService).
 		EXPECT().
 		CreateStub(&user).
-		Return(iconImage)
+		Return(*iconImage, nil)
 
 	returnedDefinitions, err := manager.GetForBusiness(business)
-	require.Equalf(t, err, nil, "GetForBusiness returned an error")
-	require.Equalf(t, len(returnedDefinitions), 1, "GetForBusiness returned more or less than one result")
+	require.Equalf(t, nil, err, "GetForBusiness returned an error")
+	require.Equalf(t, 1, len(returnedDefinitions), "GetForBusiness returned more or less than one result")
 	require.Equalf(t, returnedDefinitions[0].PublicId, definition.PublicId, "GetForBusiness returned definition name does not match whats expected")
 }

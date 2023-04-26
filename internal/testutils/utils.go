@@ -10,7 +10,11 @@ func MatchEntities(matcher interface{}, Obj interface{}) bool {
 	o := reflect.ValueOf(Obj)
 	m := reflect.ValueOf(matcher)
 	if o.Kind() == reflect.Pointer {
-		return MatchEntities(matcher, o.Elem().Interface())
+		if o.IsNil() {
+			return false
+		} else {
+			return MatchEntities(matcher, o.Elem().Interface())
+		}
 	} else if m.Kind() == reflect.Pointer {
 		return MatchEntities(m.Elem().Interface(), o)
 	} else {

@@ -92,7 +92,7 @@ func TestAuthManagerCreate(t *testing.T) {
 			gomock.Eq(TokenPurposeEmail),
 			&TimeGreaterThanNow{time.Now().Add(24 * time.Hour)},
 		).
-		Return(Token{
+		Return(&Token{
 			TokenPurpose: TokenPurposeEmail,
 			Used:         false,
 			Recalled:     false,
@@ -105,7 +105,7 @@ func TestAuthManagerCreate(t *testing.T) {
 			gomock.Eq(TokenPurposeSession),
 			&TimeGreaterThanNow{time.Now().Add(time.Hour)},
 		).
-		Return(Token{
+		Return(&Token{
 			TokenPurpose: TokenPurposeSession,
 			Used:         true,
 			Recalled:     false,
@@ -132,7 +132,7 @@ func TestAuthManagerCreate(t *testing.T) {
 	}
 
 	if user != nil {
-		assert.Equal(t, user.Email, "test@example.com", "User email is expected")
+		assert.Equal(t, "test@example.com", user.Email, "User email is expected")
 		err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte("zaq1@WSX"))
 		if err != nil {
 			t.Errorf("CompareHashAndPassword retruned an error %s", err)
@@ -142,10 +142,10 @@ func TestAuthManagerCreate(t *testing.T) {
 	}
 
 	if token != nil {
-		assert.Equal(t, token.TokenPurpose, TokenPurposeSession)
-		assert.Equal(t, token.OwnerId, user.ID)
-		assert.Equal(t, token.Used, true)
-		assert.Equal(t, token.Recalled, false)
+		assert.Equal(t, TokenPurposeSession, token.TokenPurpose)
+		assert.Equal(t, user.ID, token.OwnerId)
+		assert.Equal(t, true, token.Used)
+		assert.Equal(t, false, token.Recalled)
 	} else {
 		t.Errorf("Token is nil")
 	}
@@ -164,7 +164,7 @@ func TestAuthManagerCreateWithInvalidEmail(t *testing.T) {
 	)
 
 	if err != InvalidEmail {
-		t.Errorf("Expected an InvalidEmail error")
+		t.Errorf("Expected an InvalidEmail error %s", err)
 	}
 	if user != nil {
 		t.Errorf("User is not nil")
@@ -195,7 +195,7 @@ func TestAuthManagerCreateWithExistingEmail(t *testing.T) {
 	)
 
 	if err != EmailExists {
-		t.Errorf("Expected an ExistingEmail error")
+		t.Errorf("Expected an ExistingEmail error %s", err)
 	}
 	if user != nil {
 		t.Errorf("User is not nil")
@@ -233,7 +233,7 @@ func mockExampleUser(database *MockGormDB) User {
 		First(gomock.Any(), &StructMatcher{UserMatcher{
 			Email: Ptr("test@example.com"),
 		}}).
-		Do(func(arg *User) GormDB {
+		Do(func(arg *User, conds ...interface{}) GormDB {
 			*arg = user
 			return database
 		})
@@ -301,10 +301,11 @@ func mockExampleUserLogin(tokenService *MockTokenService) Token {
 		Used:         true,
 		Recalled:     false,
 	}
+	user := GetExampleUser()
 	tokenService.
 		EXPECT().
 		Check("test_login", "test_hash").
-		Return(GetExampleUser(), token, nil)
+		Return(&user, &token, nil)
 	return token
 }
 
@@ -328,7 +329,7 @@ func TestAuthManagerLogin(t *testing.T) {
 	if user == nil {
 		t.Errorf("User is nil")
 	} else {
-		assert.Equal(t, user.Email, "test@example.com", "Invalid user email")
+		assert.Equal(t, "test@example.com", user.Email, "Invalid user email")
 		if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte("zaq1@WSX")); err != nil {
 			t.Errorf("bcrypt did not return nil %s", err)
 		}
@@ -336,8 +337,8 @@ func TestAuthManagerLogin(t *testing.T) {
 	if token == nil {
 		t.Errorf("User is nil")
 	} else {
-		assert.Equal(t, token.OwnerId, user.ID, "Invalid token owner id")
-		assert.Equal(t, token.TokenPurpose, TokenPurposeSession, "Invalid token purpose")
+		assert.Equal(t, user.ID, token.OwnerId, "Invalid token owner id")
+		assert.Equal(t, TokenPurposeSession, token.TokenPurpose, "Invalid token purpose")
 	}
 }
 
@@ -396,13 +397,13 @@ func TestAuthManagerLogout(t *testing.T) {
 	if logoutUser == nil {
 		t.Errorf("logoutUser is nil")
 	} else {
-		assert.Equal(t, logoutUser.ID, 1, "Logout user does not match")
+		assert.Equal(t, 1, logoutUser.ID, "Logout user does not match")
 	}
 	if logoutToken == nil {
 		t.Errorf("logoutToken is nil")
 	} else {
-		assert.Equal(t, logoutToken.ID, 1, "Logout token id does not match")
-		assert.Equal(t, logoutToken.Recalled, true, "Logout token recalled does not match")
+		assert.Equal(t, 1, logoutToken.ID, "Logout token id does not match")
+		assert.Equal(t, true, logoutToken.Recalled, "Logout token recalled does not match")
 	}
 }
 
@@ -463,12 +464,12 @@ func TestAuthManagerConfirmEmail(t *testing.T) {
 	manager.tokenService.(*MockTokenService).
 		EXPECT().
 		Check("test_email", "test_hash").
-		Return(user, token, nil)
+		Return(&user, &token, nil)
 
 	manager.tokenService.(*MockTokenService).
 		EXPECT().
 		Invalidate(StructMatcher{&TokenMatcher{TokenId: Ptr("test_email")}}).
-		Return(user, token, nil)
+		Return(&user, &token, nil)
 
 	manager.baseServices.Database.(*MockGormDB).
 		EXPECT().
@@ -553,7 +554,7 @@ func TestAuthManagerChangePassword(t *testing.T) {
 	}
 	bcryptErr := bcrypt.CompareHashAndPassword([]byte(hash), []byte("nu9AhYoo"))
 	if bcryptErr != nil {
-		t.Errorf("bcrypt did not return nil %s", err)
+		t.Errorf("bcrypt did not return nil %s", bcryptErr)
 	}
 }
 
@@ -586,7 +587,7 @@ func TestAuthManagerChangeEmail(t *testing.T) {
 			gomock.Eq(TokenPurposeEmail),
 			&TimeGreaterThanNow{time.Now().Add(24 * time.Hour)},
 		).
-		Return(Token{
+		Return(&Token{
 			TokenPurpose: TokenPurposeEmail,
 			Used:         false,
 			Recalled:     false,

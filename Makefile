@@ -1,0 +1,19 @@
+generate:
+	go generate -v ./...
+
+format:
+	go fmt ./...
+
+lint:
+	${GOPATH}/bin/staticcheck ./...
+
+vet:
+	go vet ./...
+
+test:
+	go test ./...
+
+build: generate format lint vet test
+	go build -v ./...
+
+all: format test vet lint generate build

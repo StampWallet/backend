@@ -10,6 +10,11 @@ type EmailService interface {
 	Send(email string, subject string, body string) error
 }
 
+type asdasd struct {
+	test  log.Logger
+	test3 SMTPConfig
+}
+
 type EmailServiceImpl struct {
 	mailClient mail.Client
 	smtpConfig SMTPConfig

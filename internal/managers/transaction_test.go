@@ -35,31 +35,34 @@ func TestTransactionManagerStart(t *testing.T) {
 	ownedItem := GetTestOwnedItem(db, itemDefinition, virtualCard)
 
 	transaction, err := manager.Start(virtualCard, []OwnedItem{*ownedItem})
-	require.Equalf(t, err, nil, "transaction start returned an error %w", err)
-	require.Equalf(t, transaction, nil, "TransactionManager.Start returned nil transacition")
-	require.Equalf(t, transaction.State, TransactionStateStarted, "TransactionManager.Start returned transaction with invalid state %s", transaction.State)
-	require.NotEqualf(t, transaction.AddedPoints, 0, "TransactionManager.Start returned transaction with more than 0 points")
-	require.NotEqualf(t, transaction.Code, nil, "TransactionManager.Start returned transaction with nil code")
+	require.Equalf(t, nil, err, "transaction start returned an error %w", err)
+	if transaction == nil {
+		t.Errorf("transacition is nil")
+		return
+	}
+	require.Equalf(t, TransactionStateStarted, transaction.State, "TransactionManager.Start returned transaction with invalid state %s", transaction.State)
+	require.NotEqualf(t, 0, transaction.AddedPoints, "TransactionManager.Start returned transaction with more than 0 points")
+	require.NotEqualf(t, nil, transaction.Code, "TransactionManager.Start returned transaction with nil code")
 
 	var dbTransaction []Transaction
 	tx := db.Find(&transaction, Transaction{Model: gorm.Model{ID: transaction.ID}})
 	err = tx.GetError()
-	require.Equalf(t, err, nil, "transaction find returned an error %w", err)
-	require.Equalf(t, dbTransaction[0], nil, "TransactionManager.Start returned nil transacition")
-	require.Equalf(t, dbTransaction[0].State, TransactionStateStarted, "TransactionManager.Start returned transaction with invalid state %s", dbTransaction[0].State)
-	require.NotEqualf(t, dbTransaction[0].AddedPoints, 0, "TransactionManager.Start returned transaction with more than 0 points")
-	require.NotEqualf(t, dbTransaction[0].Code, nil, "TransactionManager.Start returned transaction with nil code")
+	require.Equalf(t, nil, err, "transaction find returned an error %w", err)
+	require.Equalf(t, nil, dbTransaction[0], "TransactionManager.Start returned nil transacition")
+	require.Equalf(t, TransactionStateStarted, dbTransaction[0].State, "TransactionManager.Start returned transaction with invalid state %s", dbTransaction[0].State)
+	require.NotEqualf(t, 0, dbTransaction[0].AddedPoints, "TransactionManager.Start returned transaction with more than 0 points")
+	require.NotEqualf(t, nil, dbTransaction[0].Code, "TransactionManager.Start returned transaction with nil code")
 
 	var transactionDetails []TransactionDetail
 	tx = db.Find(&transactionDetails, TransactionDetail{TransactionId: transaction.ID})
 	err = tx.GetError()
-	require.Equalf(t, err, nil, "database find for TransactionDetails returned an error %w", err)
-	require.Equalf(t, len(transactionDetails), 1,
+	require.Equalf(t, nil, err, "database find for TransactionDetails returned an error %w", err)
+	require.Equalf(t, 1, len(transactionDetails),
 		"database find for TransactionDetails returned less or more than 1 row %d", len(transactionDetails))
-	require.Equalf(t, transactionDetails[0].ItemId, ownedItem.ID,
+	require.Equalf(t, ownedItem.ID, transactionDetails[0].ItemId,
 		"database find for TransactionDetails returned an invalid item %d != %d",
 		ownedItem.ID, transactionDetails[0].ItemId)
-	require.Equalf(t, transactionDetails[0].Action, NoActionType,
+	require.Equalf(t, NoActionType, transactionDetails[0].Action,
 		"database find for TransactionDetails returned invalid action for itmem %s",
 		transactionDetails[0].Action)
 }
@@ -87,27 +90,31 @@ func TestTransactionManagerFinalize(t *testing.T) {
 		{ownedItemToRecall, RecalledActionType},
 		{ownedItemToCancel, CancelledActionType},
 	}, 10)
-	require.Equalf(t, err, nil, "transaction finalize returned an error %w", err)
-	require.Equalf(t, transaction.AddedPoints, 10, "transaction has a different number of added points. Expected: %d, got %d", 10, transaction.AddedPoints)
-	require.Equalf(t, transaction.State, TransactionStateFinished, "transaction has a different state (%s) than expected (%s)", transaction.State, TransactionStateFinished)
+	require.Equalf(t, nil, err, "transaction finalize returned an error %w", err)
+	if transaction == nil {
+		t.Errorf("transaction is nil")
+		return
+	}
+	require.Equalf(t, 10, transaction.AddedPoints, "transaction has a different number of added points. Expected: %d, got %d", 10, transaction.AddedPoints)
+	require.Equalf(t, TransactionStateFinished, transaction.State, "transaction has a different state (%s) than expected (%s)", transaction.State, TransactionStateFinished)
 
 	var dbTransaction Transaction
 	tx := db.First(&dbTransaction, Transaction{Model: gorm.Model{ID: transaction.ID}})
 	err = tx.GetError()
-	require.Equalf(t, err, nil, "database find for Transaction returned an error %w", err)
-	require.Equalf(t, dbTransaction.AddedPoints, 10, "db transaction has a different number of added points. Expected: %d, got %d", 10, dbTransaction.AddedPoints)
-	require.Equalf(t, dbTransaction.State, TransactionStateFinished, "transaction has a different state (%s) than expected (%s)", dbTransaction.State, TransactionStateFinished)
+	require.Equalf(t, nil, err, "database find for Transaction returned an error %w", err)
+	require.Equalf(t, 10, dbTransaction.AddedPoints, "db transaction has a different number of added points. Expected: %d, got %d", 10, dbTransaction.AddedPoints)
+	require.Equalf(t, TransactionStateFinished, dbTransaction.State, "transaction has a different state (%s) than expected (%s)", dbTransaction.State, TransactionStateFinished)
 
 	var dbTransactionDetails []TransactionDetail
 	tx = db.Find(&dbTransaction, TransactionDetail{TransactionId: transaction.ID})
 	err = tx.GetError()
-	require.Equalf(t, err, nil, "database find for TransactionDetails returned an error %w", err)
-	require.Equalf(t, len(dbTransactionDetails), 3, "db returned a different number of transaction details than expected. Expected: %d, got %d", 3, len(dbTransactionDetails))
+	require.Equalf(t, nil, err, "database find for TransactionDetails returned an error %w", err)
+	require.Equalf(t, 3, len(dbTransactionDetails), "db returned a different number of transaction details than expected. Expected: %d, got %d", 3, len(dbTransactionDetails))
 	for _, d := range dbTransactionDetails {
 		var dbOwnedItem OwnedItem
 		tx := db.Find(&dbOwnedItem, OwnedItem{Model: gorm.Model{ID: d.ItemId}})
 		err := tx.GetError()
-		require.Equalf(t, err, nil, "database find for OwnedItem returned an error %w", err)
+		require.Equalf(t, nil, err, "database find for OwnedItem returned an error %w", err)
 
 		var expectedActionType ActionTypeEnum
 		switch d.ItemId {
@@ -122,24 +129,24 @@ func TestTransactionManagerFinalize(t *testing.T) {
 			continue
 		}
 
-		require.Equalf(t, d.Action, expectedActionType, "invalid action type %s != %s",
+		require.Equalf(t, expectedActionType, d.Action, "invalid action type %s != %s",
 			d.Action, expectedActionType)
 		if expectedActionType == RedeemedActionType {
 			require.Truef(t, dbOwnedItem.Used.Valid, "owned item used time not valid")
-			require.Equalf(t, dbOwnedItem.Status, OwnedItemStatusUsed,
-				"owned item status does not equal OwnedItemStatusUsed but %s", dbOwnedItem.Status)
+			require.Equalf(t, OwnedItemStatusUsed,
+				dbOwnedItem.Status, "owned item status does not equal OwnedItemStatusUsed but %s", dbOwnedItem.Status)
 		} else if expectedActionType == RecalledActionType {
 			require.Truef(t, dbOwnedItem.Used.Valid, "owned item used time not valid")
-			require.Equalf(t, dbOwnedItem.Status, OwnedItemStatusWithdrawn,
-				"owned item status does not equal OwnedItemStatusWithdrawn but %s", dbOwnedItem.Status)
+			require.Equalf(t, OwnedItemStatusWithdrawn,
+				dbOwnedItem.Status, "owned item status does not equal OwnedItemStatusWithdrawn but %s", dbOwnedItem.Status)
 		}
 	}
 
 	var dbVirtualCard VirtualCard
 	tx = db.First(&dbVirtualCard, VirtualCard{Model: gorm.Model{ID: virtualCard.ID}})
 	err = tx.GetError()
-	require.Equalf(t, err, nil, "database find for TransactionDetails returned an error %w", err)
-	require.Equalf(t, dbVirtualCard.Points, virtualCard.Points+itemDefinition.Price+10,
+	require.Equalf(t, nil, err, "database find for TransactionDetails returned an error %w", err)
+	require.Equalf(t, virtualCard.Points+itemDefinition.Price+10, dbVirtualCard.Points,
 		"virtual card has a wrong number of points. Expected: %d Got: %d",
 		virtualCard.Points+itemDefinition.Price+10, dbVirtualCard.Points)
 }
@@ -162,19 +169,19 @@ func TestTransactionManagerFinalizeWithItemsNotFromTransaction(t *testing.T) {
 	transaction, err := manager.Finalize(transaction, []ItemWithAction{
 		{ownedItemFromOutside, RedeemedActionType},
 	}, 10)
-	require.Equalf(t, err, InvalidItem, "TransactionManager.Finalize did not return InvalidItemError %w",
+	require.Equalf(t, InvalidItem, err, "TransactionManager.Finalize did not return InvalidItemError %w",
 		InvalidItem)
 
 	var dbTransaction Transaction
 	tx := db.First(&dbTransaction, Transaction{Model: gorm.Model{ID: transaction.ID}})
 	err = tx.GetError()
-	require.Equalf(t, err, nil, "database find for Transaction returned an error %w", err)
-	require.Equalf(t, dbTransaction.State, TransactionStateStarted, "dbTransaction state is not TransactionStateStarted %s", dbTransaction.State)
+	require.Equalf(t, nil, err, "database find for Transaction returned an error %w", err)
+	require.Equalf(t, TransactionStateStarted, dbTransaction.State, "dbTransaction state is not TransactionStateStarted %s", dbTransaction.State)
 
 	var dbTransactionDetail TransactionDetail
 	tx = db.First(&dbTransactionDetail, TransactionDetail{TransactionId: transaction.ID})
 	err = tx.GetError()
-	require.Equalf(t, err, nil, "database find for TransactionDetail returned an error %w", err)
-	require.Equalf(t, dbTransactionDetail.Action, NoActionType,
+	require.Equalf(t, nil, err, "database find for TransactionDetail returned an error %w", err)
+	require.Equalf(t, NoActionType, dbTransactionDetail.Action,
 		"dbTransactionDetail action is not NoActionType %s", dbTransactionDetail.Action)
 }
