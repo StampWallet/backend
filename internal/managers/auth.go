@@ -17,80 +17,80 @@ var UnknownError = errors.New("Email exists")
 var InvalidToken = errors.New("Invalid token")
 
 type AuthManager interface {
-    Create(userDetails UserDetails) (*User, *Token, error)
-    Login(email string, password string) (*User, *Token, error)
-    Logout(tokenId string, token string) (*User, *Token, error)
-    ConfirmEmail(tokenId string, token string) (*User, error)
-    ChangePassword(user User, oldPassword string, newPassword string) (*User, error)
-    ChangeEmail(user User, newEmail string) (*User, error)
+	Create(userDetails UserDetails) (*User, *Token, error)
+	Login(email string, password string) (*User, *Token, error)
+	Logout(tokenId string, token string) (*User, *Token, error)
+	ConfirmEmail(tokenId string, token string) (*User, error)
+	ChangePassword(user User, oldPassword string, newPassword string) (*User, error)
+	ChangeEmail(user User, newEmail string) (*User, error)
 }
 
 type UserDetails struct {
-    FirstName string
-    LastName string
-    Email string
-    Password string
+	FirstName string
+	LastName  string
+	Email     string
+	Password  string
 }
 
 type AuthManagerImpl struct {
-    baseServices *BaseServices
-    emailService EmailService
-    tokenService TokenService
+	baseServices *BaseServices
+	emailService EmailService
+	tokenService TokenService
 }
 
 func (manager *AuthManagerImpl) Create(userDetails UserDetails) (*User, *Token, error) {
-    //var existingUser *User
-    //manager.baseServices.Database.Find(&existingUser, &User{ 
-    //    Email: userDetails.Email,
-    //})
-    //if existingUser != nil {
-    //    return nil, nil, EmailExists
-    //}
-    //hash, bcryptErr := bcrypt.GenerateFromPassword([]byte(userDetails.Password), 10)
-    //if bcryptErr != nil {
-    //    return nil, nil, bcryptErr
-    //}
-    //user := User{ 
-    //    PublicId: shortuuid.New(),
-    //    Email: userDetails.Email, 
-    //    PasswordHash: string(hash),
-    //    FirstName: userDetails.FirstName,
-    //    LastName: userDetails.LastName,
-    //    EmailVerified: false,
-    //}
-    //manager.baseServices.Database.Create(&user)
-    //manager.baseServices.Database.Commit()
-    //_, err := manager.tokenService.Create(user, EmailTokenPurpose, time.Now().Add(24*time.Hour))
-    //if err != nil {
-    //    return nil, nil, err
-    //}
-    //sessionToken, err := manager.tokenService.Create(user, SessionTokenPurpose, time.Now().Add(time.Hour))
-    //if err != nil {
-    //    return nil, nil, err
-    //}
-    //manager.emailService.Send(userDetails.Email, "test", "test")
-    //return &user, &sessionToken, nil
-    return nil, nil, nil
-}              
-               
+	//var existingUser *User
+	//manager.baseServices.Database.Find(&existingUser, &User{
+	//    Email: userDetails.Email,
+	//})
+	//if existingUser != nil {
+	//    return nil, nil, EmailExists
+	//}
+	//hash, bcryptErr := bcrypt.GenerateFromPassword([]byte(userDetails.Password), 10)
+	//if bcryptErr != nil {
+	//    return nil, nil, bcryptErr
+	//}
+	//user := User{
+	//    PublicId: shortuuid.New(),
+	//    Email: userDetails.Email,
+	//    PasswordHash: string(hash),
+	//    FirstName: userDetails.FirstName,
+	//    LastName: userDetails.LastName,
+	//    EmailVerified: false,
+	//}
+	//manager.baseServices.Database.Create(&user)
+	//manager.baseServices.Database.Commit()
+	//_, err := manager.tokenService.Create(user, EmailTokenPurpose, time.Now().Add(24*time.Hour))
+	//if err != nil {
+	//    return nil, nil, err
+	//}
+	//sessionToken, err := manager.tokenService.Create(user, SessionTokenPurpose, time.Now().Add(time.Hour))
+	//if err != nil {
+	//    return nil, nil, err
+	//}
+	//manager.emailService.Send(userDetails.Email, "test", "test")
+	//return &user, &sessionToken, nil
+	return nil, nil, nil
+}
+
 func (manager *AuthManagerImpl) Login(email string, password string) (*User, *Token, error) {
-    var user User
-    manager.baseServices.Database.First(&user, User{ Email: email })
-    return nil, nil, nil
-}              
-               
+	var user User
+	manager.baseServices.Database.First(&user, User{Email: email})
+	return nil, nil, nil
+}
+
 func (manager *AuthManagerImpl) Logout(tokenId string, token string) (*User, *Token, error) {
-    return nil, nil, nil
-}              
-               
+	return nil, nil, nil
+}
+
 func (manager *AuthManagerImpl) ConfirmEmail(tokenId string, token string) (*User, error) {
-    return nil, nil
-}              
-               
+	return nil, nil
+}
+
 func (manager *AuthManagerImpl) ChangePassword(user User, oldPassword string, newPassword string) (*User, error) {
-    return nil, nil
-}              
-               
+	return nil, nil
+}
+
 func (manager *AuthManagerImpl) ChangeEmail(user User, newEmail string) (*User, error) {
-    return nil, nil
+	return nil, nil
 }

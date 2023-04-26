@@ -11,6 +11,5 @@
 package api
 
 type PostBusinessItemDefinitionResponse struct {
-
 	PublicId string `json:"publicId,omitempty"`
 }

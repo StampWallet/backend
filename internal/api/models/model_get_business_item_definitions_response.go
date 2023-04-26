@@ -11,6 +11,5 @@
 package api
 
 type GetBusinessItemDefinitionsResponse struct {
-
 	ItemDefinitions []ItemDefinitionApiModel `json:"itemDefinitions,omitempty"`
 }

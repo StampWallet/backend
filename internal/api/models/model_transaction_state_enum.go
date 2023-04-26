@@ -14,8 +14,8 @@ type TransactionStateEnum string
 
 // List of TransactionStateEnum
 const (
-	STARTED TransactionStateEnum = "STARTED"
+	STARTED    TransactionStateEnum = "STARTED"
 	PROCESSING TransactionStateEnum = "PROCESSING"
-	FINISHED TransactionStateEnum = "FINISHED"
-	EXPIRED TransactionStateEnum = "EXPIRED"
+	FINISHED   TransactionStateEnum = "FINISHED"
+	EXPIRED    TransactionStateEnum = "EXPIRED"
 )

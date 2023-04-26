@@ -11,7 +11,6 @@
 package api
 
 type OwnedItemApiModel struct {
-
 	PublicId string `json:"publicId,omitempty"`
 
 	DefinitionId string `json:"definitionId,omitempty"`

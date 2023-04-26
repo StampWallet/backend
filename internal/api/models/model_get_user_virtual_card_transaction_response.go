@@ -11,7 +11,6 @@
 package api
 
 type GetUserVirtualCardTransactionResponse struct {
-
 	ItemId string `json:"itemId,omitempty"`
 
 	State TransactionStateEnum `json:"state,omitempty"`

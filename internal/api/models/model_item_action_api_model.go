@@ -11,7 +11,6 @@
 package api
 
 type ItemActionApiModel struct {
-
 	ItemId string `json:"itemId,omitempty"`
 
 	Action ItemActionTypeEnum `json:"action,omitempty"`

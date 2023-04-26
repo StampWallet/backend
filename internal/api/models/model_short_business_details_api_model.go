@@ -11,7 +11,6 @@
 package api
 
 type ShortBusinessDetailsApiModel struct {
-
 	PublicId string `json:"publicId,omitempty"`
 
 	Name string `json:"name,omitempty"`

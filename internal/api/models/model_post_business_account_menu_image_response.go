@@ -11,6 +11,5 @@
 package api
 
 type PostBusinessAccountMenuImageResponse struct {
-
 	ImageId string `json:"imageId,omitempty"`
 }

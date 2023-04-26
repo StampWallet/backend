@@ -15,7 +15,6 @@ import (
 )
 
 type ItemDefinitionApiModel struct {
-
 	PublicId string `json:"publicId,omitempty"`
 
 	Name string `json:"name,omitempty"`

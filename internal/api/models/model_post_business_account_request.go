@@ -11,7 +11,6 @@
 package api
 
 type PostBusinessAccountRequest struct {
-
 	Name string `json:"name,omitempty"`
 
 	Address string `json:"address,omitempty"`

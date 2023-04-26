@@ -11,7 +11,6 @@
 package api
 
 type PostBusinessAccountResponse struct {
-
 	PublicId string `json:"publicId,omitempty"`
 
 	BannerImageId string `json:"bannerImageId,omitempty"`

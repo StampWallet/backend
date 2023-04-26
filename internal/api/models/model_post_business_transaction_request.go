@@ -11,7 +11,6 @@
 package api
 
 type PostBusinessTransactionRequest struct {
-
 	AddedPoints int32 `json:"addedPoints,omitempty"`
 
 	ItemActions []ItemActionApiModel `json:"itemActions,omitempty"`

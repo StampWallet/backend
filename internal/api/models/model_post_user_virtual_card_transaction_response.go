@@ -11,7 +11,6 @@
 package api
 
 type PostUserVirtualCardTransactionResponse struct {
-
 	PublicId string `json:"publicId,omitempty"`
 
 	Code string `json:"Code,omitempty"`

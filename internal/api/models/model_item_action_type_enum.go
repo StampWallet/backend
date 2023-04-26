@@ -14,7 +14,7 @@ type ItemActionTypeEnum string
 
 // List of ItemActionTypeEnum
 const (
-	REDEEMED ItemActionTypeEnum = "REDEEMED"
-	RECALLED ItemActionTypeEnum = "RECALLED"
+	REDEEMED  ItemActionTypeEnum = "REDEEMED"
+	RECALLED  ItemActionTypeEnum = "RECALLED"
 	CANCELLED ItemActionTypeEnum = "CANCELLED"
 )

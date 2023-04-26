@@ -11,7 +11,6 @@
 package api
 
 type GetBusinessAccountResponseAllOf struct {
-
 	Nip string `json:"nip,omitempty"`
 
 	Krs string `json:"krs,omitempty"`

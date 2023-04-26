@@ -11,6 +11,5 @@
 package api
 
 type PostAccountEmailConfirmationRequest struct {
-
 	Token string `json:"token,omitempty"`
 }

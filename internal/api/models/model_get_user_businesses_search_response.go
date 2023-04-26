@@ -11,6 +11,5 @@
 package api
 
 type GetUserBusinessesSearchResponse struct {
-
 	Businesses []ShortBusinessDetailsApiModel `json:"businesses,omitempty"`
 }

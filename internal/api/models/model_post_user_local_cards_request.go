@@ -11,7 +11,6 @@
 package api
 
 type PostUserLocalCardsRequest struct {
-
 	Name string `json:"name,omitempty"`
 
 	Type string `json:"type,omitempty"`

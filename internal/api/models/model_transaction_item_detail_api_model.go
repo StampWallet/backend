@@ -11,7 +11,6 @@
 package api
 
 type TransactionItemDetailApiModel struct {
-
 	PublicId string `json:"publicId,omitempty"`
 
 	ItemDefinitionId string `json:"itemDefinitionId,omitempty"`

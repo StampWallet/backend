@@ -11,6 +11,5 @@
 package api
 
 type PostAccountSessionResponse struct {
-
 	Token string `json:"token,omitempty"`
 }

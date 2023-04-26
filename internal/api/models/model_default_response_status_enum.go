@@ -14,12 +14,12 @@ type DefaultResponseStatusEnum string
 
 // List of DefaultResponseStatusEnum
 const (
-	OK DefaultResponseStatusEnum = "OK"
-	CREATED DefaultResponseStatusEnum = "CREATED"
-	NOT_FOUND DefaultResponseStatusEnum = "NOT_FOUND"
-	FORBIDDEN DefaultResponseStatusEnum = "FORBIDDEN"
-	ALREADY_EXISTS DefaultResponseStatusEnum = "ALREADY_EXISTS"
-	UNAUTHORIZED DefaultResponseStatusEnum = "UNAUTHORIZED"
+	OK              DefaultResponseStatusEnum = "OK"
+	CREATED         DefaultResponseStatusEnum = "CREATED"
+	NOT_FOUND       DefaultResponseStatusEnum = "NOT_FOUND"
+	FORBIDDEN       DefaultResponseStatusEnum = "FORBIDDEN"
+	ALREADY_EXISTS  DefaultResponseStatusEnum = "ALREADY_EXISTS"
+	UNAUTHORIZED    DefaultResponseStatusEnum = "UNAUTHORIZED"
 	INVALID_REQUEST DefaultResponseStatusEnum = "INVALID_REQUEST"
-	CONFLICT DefaultResponseStatusEnum = "CONFLICT"
+	CONFLICT        DefaultResponseStatusEnum = "CONFLICT"
 )

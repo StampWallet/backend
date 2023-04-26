@@ -11,6 +11,5 @@
 package api
 
 type PostUserVirtualCardTransactionRequest struct {
-
 	ItemIds []string `json:"itemIds,omitempty"`
 }

@@ -11,7 +11,6 @@
 package api
 
 type PostAccountPasswordRequest struct {
-
 	Password string `json:"password,omitempty"`
 
 	OldPassword string `json:"oldPassword,omitempty"`

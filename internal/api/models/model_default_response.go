@@ -11,7 +11,6 @@
 package api
 
 type DefaultResponse struct {
-
 	Status DefaultResponseStatusEnum `json:"status,omitempty"`
 
 	Message string `json:"message,omitempty"`

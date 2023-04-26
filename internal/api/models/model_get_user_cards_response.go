@@ -11,7 +11,6 @@
 package api
 
 type GetUserCardsResponse struct {
-
 	LocalCards []LocalCardApiModel `json:"localCards,omitempty"`
 
 	VirtualCards []ShortVirtualCardApiModel `json:"virtualCards,omitempty"`

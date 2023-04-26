@@ -11,7 +11,6 @@
 package api
 
 type GetBusinessTransactionResponse struct {
-
 	PublicId string `json:"publicId,omitempty"`
 
 	VirtualCardId int32 `json:"virtualCardId,omitempty"`
