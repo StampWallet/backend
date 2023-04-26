@@ -1,9 +1,14 @@
 package managers
 
 import (
+    "errors"
+
     . "github.com/StampWallet/backend/internal/database"
     . "github.com/StampWallet/backend/internal/services"
 )
+
+var InvalidCardType = errors.New("Invalid card type")
+var CardDoesNotExist = errors.New("Invalid card type")
 
 type LocalCardManager interface { 
     Create(user *User, details *LocalCardDetails) (LocalCard, error)

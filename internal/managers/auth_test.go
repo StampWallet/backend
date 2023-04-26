@@ -1,9 +1,7 @@
 package managers
 
 import (
-	"database/sql/driver"
 	"log"
-	"reflect"
 	"testing"
 	"time"
 
@@ -17,6 +15,7 @@ import (
 	. "github.com/StampWallet/backend/internal/database/mocks"
 	. "github.com/StampWallet/backend/internal/services"
 	. "github.com/StampWallet/backend/internal/services/mocks"
+	. "github.com/StampWallet/backend/internal/testutils"
 )
 
 func getAuthManager(ctrl *gomock.Controller) (*AuthManagerImpl, error) {
@@ -35,11 +34,6 @@ func getAuthManager(ctrl *gomock.Controller) (*AuthManagerImpl, error) {
     }, nil
 }
 
-type Anything struct {}
-func (Anything) Match(v driver.Value) bool {
-	return true
-}
-
 type UserMatcher struct {
     ID *uint
     Email *string
@@ -56,60 +50,6 @@ type TokenMatcher struct {
     TokenPurpose *TokenPurposeEnum
     Used *bool
     Recalled *bool
-}
-
-func matchEntities(matcher interface{}, obj interface{}) bool {
-    o := reflect.ValueOf(obj)
-    m := reflect.ValueOf(matcher)
-    if o.Kind() == reflect.Pointer {
-        return matchEntities(matcher, o.Elem().Interface())
-    } else if m.Kind() == reflect.Pointer {
-        return matchEntities(m.Elem().Interface(), o)
-    } else {
-        mt := reflect.TypeOf(matcher)
-        for i := 0; i < mt.NumField(); i++ {
-            mtf := mt.Field(i)
-            of := o.FieldByName(mtf.Name)
-            mf := m.FieldByName(mtf.Name)
-            if !mf.IsNil() && !of.Equal(mf.Elem()) {
-                return false
-            }
-        }
-        return true
-    }
-}
-
-type StructMatcher struct {
-    obj interface{} 
-}
-
-func (matcher StructMatcher) Matches(x interface{}) bool {
-    return matchEntities(matcher.obj, x)
-}
-
-func (StructMatcher) String() string {
-    return "StructMatcher"
-}
-
-
-type TimeGreaterThanNow struct {
-    Time time.Time
-}
-
-func (matcher TimeGreaterThanNow) Matches(x interface{}) bool {
-    return matcher.Time.Before(x.(time.Time))
-}
-
-func (TimeGreaterThanNow) String() string {
-    return "TimeGreaterThanNow"
-}
-
-type copyable interface {
-    uint64 | uint | string | bool
-}
-
-func Ptr[T copyable](s T) *T {
-    return &s
 }
 
 func TestAuthManagerCreate(t *testing.T) {
@@ -149,11 +89,11 @@ func TestAuthManagerCreate(t *testing.T) {
         EXPECT().
         Create(
             userMatcher,
-            gomock.Eq(EmailTokenPurpose),
+            gomock.Eq(TokenPurposeEmail),
             &TimeGreaterThanNow{time.Now().Add(24*time.Hour)},
         ).
         Return(Token{
-            TokenPurpose: EmailTokenPurpose,
+            TokenPurpose: TokenPurposeEmail,
             Used: false,
             Recalled: false,
         }, nil)
@@ -162,11 +102,11 @@ func TestAuthManagerCreate(t *testing.T) {
         EXPECT().
         Create(
             userMatcher,
-            gomock.Eq(SessionTokenPurpose),
+            gomock.Eq(TokenPurposeSession),
             &TimeGreaterThanNow{time.Now().Add(time.Hour)},
         ).
         Return(Token{
-            TokenPurpose: SessionTokenPurpose,
+            TokenPurpose: TokenPurposeSession,
             Used: true,
             Recalled: false,
         }, nil)
@@ -202,7 +142,7 @@ func TestAuthManagerCreate(t *testing.T) {
     }
 
     if token != nil {
-        assert.Equal(t, token.TokenPurpose, SessionTokenPurpose)
+        assert.Equal(t, token.TokenPurpose, TokenPurposeSession)
         assert.Equal(t, token.OwnerId, user.ID)
         assert.Equal(t, token.Used, true)
         assert.Equal(t, token.Recalled, false)
@@ -326,7 +266,7 @@ func createExampleToken(tokenId string, tokenPurpose TokenPurposeEnum) Token {
 }
 
 func mockExampleUserEmailVerificationToken(database *MockGormDB) Token {
-    token := createExampleToken("test_email", EmailTokenPurpose)
+    token := createExampleToken("test_email", TokenPurposeEmail)
     database.
         EXPECT().
         Find(gomock.Any(), &StructMatcher{TokenMatcher{ 
@@ -357,7 +297,7 @@ func mockExampleUserLogin(tokenService *MockTokenService) Token {
         TokenId: "test_login",
         TokenHash: string(hash),
         Expires: time.Now().Add(time.Hour),
-        TokenPurpose: SessionTokenPurpose,
+        TokenPurpose: TokenPurposeSession,
         Used: true,
         Recalled: false,
     }
@@ -366,10 +306,6 @@ func mockExampleUserLogin(tokenService *MockTokenService) Token {
         Check("test_login", "test_hash").
         Return(getExampleUser(), token, nil)
     return token
-}
-
-func returnArg(arg interface{}) interface{} {
-    return arg
 }
 
 func TestAuthManagerLogin(t *testing.T) {
@@ -382,8 +318,8 @@ func TestAuthManagerLogin(t *testing.T) {
         EXPECT().
         Create(UserMatcher {
                 ID: &mockUser.ID,
-            }, SessionTokenPurpose, TimeGreaterThanNow{time.Now().Add(time.Hour)}).
-        DoAndReturn(returnArg)
+            }, TokenPurposeSession, TimeGreaterThanNow{time.Now().Add(time.Hour)}).
+        DoAndReturn(ReturnArg)
 
     user, token, err := manager.Login("test@example.com", "zaq1@WSX")
     if err != nil {
@@ -401,7 +337,7 @@ func TestAuthManagerLogin(t *testing.T) {
         t.Errorf("User is nil")
     }  else {
         assert.Equal(t, token.OwnerId, user.ID, "Invalid token owner id")
-        assert.Equal(t, token.TokenPurpose, SessionTokenPurpose, "Invalid token purpose")
+        assert.Equal(t, token.TokenPurpose, TokenPurposeSession, "Invalid token purpose")
     }
 }
 
@@ -651,11 +587,11 @@ func TestAuthManagerChangeEmail(t *testing.T) {
                 Email: Ptr("test@example.com"),
                 EmailVerified: Ptr(true),
             }} ,
-            gomock.Eq(EmailTokenPurpose),
+            gomock.Eq(TokenPurposeEmail),
             &TimeGreaterThanNow{time.Now().Add(24*time.Hour)},
         ).
         Return(Token{
-            TokenPurpose: EmailTokenPurpose,
+            TokenPurpose: TokenPurposeEmail,
             Used: false,
             Recalled: false,
         }, nil)

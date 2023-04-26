@@ -9,23 +9,23 @@ import (
 type ItemDefinitionManager interface {
     AddItem(business *Business, details *ItemDetails) (*ItemDefinition, error)
     ChangeItemDetails(item *ItemDefinition, details *ItemDetails) (*ItemDefinition, error)
-    WithdrawItem(item *ItemDefinition) error
-    GetForBusiness(business *Business) ([]ItemDetails, error)
+    WithdrawItem(item *ItemDefinition) (*ItemDefinition, error)
+    GetForBusiness(business *Business) ([]ItemDefinition, error)
 }
 
 type ItemDetails struct {
     Name string
-    Price *uint64
+    Price *uint
     Description string
-    ImageId string
     StartDate *time.Time
     EndDate *time.Time
-    MaxAmount *uint64
+    MaxAmount *uint
     Available *bool
 }
 
 type ItemDefinitionManagerImpl struct {
     baseServices *BaseServices
+    fileStorageService FileStorageService
 }
 
 func (manager *ItemDefinitionManagerImpl) AddItem(business *Business, details *ItemDetails) (*ItemDefinition, error) {
@@ -36,10 +36,10 @@ func (manager *ItemDefinitionManagerImpl) ChangeItemDetails(item *ItemDefinition
     return nil, nil
 }
 
-func (manager *ItemDefinitionManagerImpl) WithdrawItem(item *ItemDefinition) error {
-    return nil
+func (manager *ItemDefinitionManagerImpl) WithdrawItem(item *ItemDefinition) (*ItemDefinition, error) {
+    return nil, nil
 }
 
-func (manager *ItemDefinitionManagerImpl) GetForBusiness(business *Business) ([]ItemDetails, error) {
+func (manager *ItemDefinitionManagerImpl) GetForBusiness(business *Business) ([]ItemDefinition, error) {
     return nil, nil
 }

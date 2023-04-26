@@ -17,25 +17,25 @@ const (
 type TransactionStateEnum string
 
 const (
-	StartedTransactionState TransactionStateEnum	= "STARTED"
-	ProcessedTransactionState						= "PROCESSED"
-	FinishedTransactionState						= "FINISHED"
-	ExpiredTransactionState							= "EXPIRED"
+	TransactionStateStarted TransactionStateEnum	= "STARTED"
+	TransactionStateProcessed						= "PROCESSED"
+	TransactionStateFinished						= "FINISHED"
+	TransactionStateExpired							= "EXPIRED"
 )
 
 type TokenPurposeEnum string
 
 const (
-	SessionTokenPurpose TokenPurposeEnum	= "SESSION"
-	EmailTokenPurpose TokenPurposeEnum		= "EMAIL"
+	TokenPurposeSession TokenPurposeEnum	= "SESSION"
+	TokenPurposeEmail TokenPurposeEnum		= "EMAIL"
 )
 
 type OwnedItemStatusEnum string
 
 const (
-	OwnedItemStatus OwnedItemStatusEnum	= "OWNED"
-	UsedItemStatus						= "USED"
-	RecalledItemStatus					= "RECALLED"
+	OwnedItemStatusOwned OwnedItemStatusEnum	= "OWNED"
+	OwnedItemStatusUsed							= "USED"
+	OwnedItemStatusWithdrawn					= "WITHDRAWN"
 )
 
 
@@ -130,6 +130,7 @@ type ItemDefinition struct {
 	EndDate time.Time
 	MaxAmount uint
 	Available bool
+	Withdrawn bool
 }
 
 func (entity *Business) GetBusinessId() uint {

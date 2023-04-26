@@ -144,7 +144,7 @@ func (m *MockFileStorageService) EXPECT() *MockFileStorageServiceMockRecorder {
 }
 
 // CreateStub mocks base method.
-func (m *MockFileStorageService) CreateStub(arg0 database.User) (database.FileMetadata, error) {
+func (m *MockFileStorageService) CreateStub(arg0 *database.User) (database.FileMetadata, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateStub", arg0)
 	ret0, _ := ret[0].(database.FileMetadata)

@@ -6,7 +6,7 @@ import (
 )
 
 type FileStorageService interface {
-    CreateStub(user User) (FileMetadata, error)
+    CreateStub(user *User) (FileMetadata, error)
     GetData(id string) (*os.File, error)
     Upload(fileMetadata FileMetadata, data os.File, mimetype string) (string, error)
     Remove(fileMetadata FileMetadata) error
