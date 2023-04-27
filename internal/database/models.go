@@ -135,8 +135,8 @@ type ItemDefinition struct {
 	Withdrawn   bool
 }
 
-func (entity *Business) GetBusinessId() uint {
-	return 0
+func (entity *ItemDefinition) GetBusinessId() uint {
+	return entity.BusinessId
 }
 
 type MenuItem struct {
@@ -146,7 +146,7 @@ type MenuItem struct {
 }
 
 func (entity *MenuItem) GetBusinessId() uint {
-	return 0
+	return entity.BusinessId
 }
 
 type OwnedItem struct {
@@ -185,7 +185,7 @@ type Transaction struct {
 	State         TransactionStateEnum
 	AddedPoints   uint
 
-	TransactionsDetails []TransactionDetail
+	TransactionDetails []TransactionDetail
 }
 
 type TransactionDetail struct {
