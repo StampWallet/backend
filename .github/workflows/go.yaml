@@ -3,6 +3,14 @@ on: [push]
 jobs:
   build:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_HOST_AUTH_METHOD: trust  
+          POSTGRES_DB: stampwallet
+        ports:
+          - 5432:5432
     steps:
       - uses: actions/checkout@v3
       - name: Set up Go
@@ -14,5 +22,8 @@ jobs:
         run: go vet ./...
       - name: Test
         run: go test -v ./...
+        env: 
+          TEST_DATABASE_URL: "postgres://postgres@localhost/stampwallet"
+          TEST_DATABASE_NAME: "stampwallet"
       - name: Build
         run: go build -v ./...

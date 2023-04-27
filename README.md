@@ -21,7 +21,7 @@ Tests require a working Postgres database. Two environment variables are require
 * TEST_DATABASE_URL - Database URL, for example `postgres://postgres@localhost/stampwallet`
 * TEST_DATABASE_NAME - Test database name, for example `stampwallet`. NOTE: This database will be dropped and recreated repeatedly. All data from this database *WILL* be lost.
 
-To set up a complaint Postgres on docker (example): `sudo docker run -e POSTGRES_HOST_AUTH_METHOD=trust -p 5432:5432 postgres`
+To set up a Postgres database on docker (example): `sudo docker run -e POSTGRES_HOST_AUTH_METHOD=trust -p 5432:5432 postgres`
 
 1. `go test -v ./...` or `test . -run "^TestBusiness.*$"` to only run tests that match a string
 
