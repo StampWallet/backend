@@ -83,7 +83,7 @@ func TestBusinessManagerCreateAccountAlreadyExists(t *testing.T) {
 	}
 	business, err := manager.Create(user, &details)
 
-	require.Equalf(t, nil, business, "business is not nil")
+	require.Nilf(t, business, "business is not nil")
 	require.Equalf(t, BusinessAlreadyExists, err, "create err does not equal business already exists")
 }
 
@@ -99,7 +99,7 @@ func TestBusinessManagerChangeDetails(t *testing.T) {
 	}
 	business, err := manager.ChangeDetails(business, &details)
 
-	require.Equalf(t, nil, err, "BusinessManager.ChangeDetails returned an error")
+	require.Nilf(t, err, "BusinessManager.ChangeDetails returned an error")
 	if business == nil {
 		t.Errorf("business is nil")
 		return
@@ -120,10 +120,10 @@ func TestBusinessManagerSearchExisting(t *testing.T) {
 	user := GetTestUser(manager.baseServices.Database)
 	business := GetTestBusiness(manager.baseServices.Database, user)
 	result, err := manager.Search(business.Name, "", 0, 0, 5)
-	require.Equalf(t, nil, err, "BusinessManager.Search returned an error")
+	require.Nilf(t, err, "BusinessManager.Search returned an error")
 	require.Equalf(t, 1, len(result), "BusinessManager.Search returned more or less than one result")
 	require.Equalf(t, business.Name, result[0].Name, "BusinessManager.Search returned invalid busines")
 	resultNone, errNone := manager.Search("no such business", "", 0, 0, 5)
-	require.Equalf(t, nil, errNone, "BusinessManager.Search returned an error")
+	require.Nilf(t, errNone, "BusinessManager.Search returned an error")
 	require.Equalf(t, 0, len(resultNone), "BusinessManager.Search returned more than one result")
 }

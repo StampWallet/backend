@@ -32,7 +32,7 @@ func TestLocalCardManagerCreate(t *testing.T) {
 		Code: "012345678901",
 	})
 
-	require.Equalf(t, nil, err, "LocalCard.Create returned an error %w", err)
+	require.Nilf(t, err, "LocalCard.Create returned an error %w", err)
 	if localCard == nil {
 		t.Errorf("local card is nil")
 		return
@@ -45,7 +45,7 @@ func TestLocalCardManagerCreate(t *testing.T) {
 		Model: gorm.Model{ID: localCard.ID},
 	})
 	txErr := tx.GetError()
-	require.Equalf(t, nil, txErr, "database find returned an error %w", txErr)
+	require.Nilf(t, txErr, "database find returned an error %w", txErr)
 	require.Equalf(t, "s7lJTYHX", dbLocalCard.Type, "database has invalid card type")
 	require.Equalf(t, "012345678901", dbLocalCard.Code, "database has invalid card number")
 }
@@ -61,7 +61,7 @@ func TestLocalCardManagerCreateInvalidType(t *testing.T) {
 	})
 
 	require.Equalf(t, InvalidCardType, err, "LocalCard.Create did not return a InvalidCardType error %w", err)
-	require.Equalf(t, nil, localCard, "LocalCard.Create did not return nil LocalCard")
+	require.Nilf(t, localCard, "LocalCard.Create did not return nil LocalCard")
 }
 
 func TestLocalCardManagerRemove(t *testing.T) {
@@ -72,12 +72,12 @@ func TestLocalCardManagerRemove(t *testing.T) {
 	localCard := GetTestLocalCard(manager.baseServices.Database, user)
 
 	err := manager.Remove(localCard)
-	require.Equalf(t, nil, err, "LocalCard.Remove returned an error %w", err)
+	require.Nilf(t, err, "LocalCard.Remove returned an error %w", err)
 
 	var dbLocalCard []LocalCard
 	tx := manager.baseServices.Database.Find(&dbLocalCard, LocalCard{Model: gorm.Model{ID: localCard.ID}})
 	txErr := tx.GetError()
-	require.Equalf(t, nil, txErr, "database find returned an error %w", txErr)
+	require.Nilf(t, txErr, "database find returned an error %w", txErr)
 	require.Equalf(t, 0, len(dbLocalCard), "database find returned data when no data was expected")
 
 	nErr := manager.Remove(localCard)
@@ -92,7 +92,7 @@ func TestLocalCardManagerGetForUser(t *testing.T) {
 	localCard := GetTestLocalCard(manager.baseServices.Database, user)
 
 	localCards, err := manager.GetForUser(user)
-	require.Equalf(t, nil, err, "LocalCard.GetForUser returned an error %w", err)
+	require.Nilf(t, err, "LocalCard.GetForUser returned an error %w", err)
 	require.Equalf(t, 1, len(localCards), "LocalCard.GetForUser returned more or less than 1 %d",
 		len(localCards))
 	require.Equalf(t, localCard.PublicId, localCards[0].PublicId,

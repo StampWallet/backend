@@ -49,11 +49,11 @@ func TestItemDefinitionAddItem(t *testing.T) {
 	}
 	definition, err := manager.AddItem(business, details)
 	require.Truef(t, MatchEntities(details, definition), "entities do not match")
-	require.Equalf(t, nil, err, "additem retuned an error")
+	require.Nilf(t, err, "additem retuned an error")
 	require.Equalf(t, imageFile.PublicId, definition.ImageId, "additem retuned an error")
 	var dbDetails ItemDefinition
 	tx := manager.baseServices.Database.Find(&dbDetails, ItemDefinition{Model: gorm.Model{ID: definition.ID}})
-	require.Equalf(t, nil, tx.GetError(), "database find returned an error")
+	require.Nilf(t, tx.GetError(), "database find returned an error")
 	require.Equalf(t, definition.Name, dbDetails.Name, "database find returned invalid data")
 }
 
@@ -82,11 +82,11 @@ func TestItemDefinitionChangeItemDetails(t *testing.T) {
 	newDefinition, err := manager.ChangeItemDetails(definition, &newDetails)
 
 	require.Truef(t, MatchEntities(newDetails, newDefinition), "entities do not match")
-	require.Equalf(t, nil, err, "ChangeItemDetails retuned an error")
+	require.Nilf(t, err, "ChangeItemDetails retuned an error")
 
 	var dbDetails ItemDefinition
 	tx := manager.baseServices.Database.Find(&dbDetails, ItemDefinition{Model: gorm.Model{ID: definition.ID}})
-	require.Equalf(t, nil, tx.GetError(), "database find returned an error")
+	require.Nilf(t, tx.GetError(), "database find returned an error")
 	require.Equalf(t, newDetails.Name, dbDetails.Name, "database find returned invalid data")
 }
 
@@ -107,18 +107,18 @@ func TestItemDefinitionWithdrawItem(t *testing.T) {
 	ownedItem := GetTestOwnedItem(manager.baseServices.Database, definition, virtualCard)
 
 	newDefinition, err := manager.WithdrawItem(definition)
-	require.Equalf(t, nil, err, "WithdrawItem returned an error")
+	require.Nilf(t, err, "WithdrawItem returned an error")
 
 	var dbItemDefinition ItemDefinition
 	var dbOwnedItem OwnedItem
 	var dbVirtualCard VirtualCard
 
 	tx := manager.baseServices.Database.Find(&dbItemDefinition, ItemDefinition{Model: gorm.Model{ID: definition.ID}})
-	require.Equalf(t, nil, tx.GetError(), "db ItemDefinition find returned an error")
+	require.Nilf(t, tx.GetError(), "db ItemDefinition find returned an error")
 	tx = manager.baseServices.Database.Find(&dbOwnedItem, OwnedItem{Model: gorm.Model{ID: ownedItem.ID}})
-	require.Equalf(t, nil, tx.GetError(), "db OwnedItem find returned an error")
+	require.Nilf(t, tx.GetError(), "db OwnedItem find returned an error")
 	tx = manager.baseServices.Database.Find(&dbVirtualCard, VirtualCard{Model: gorm.Model{ID: virtualCard.ID}})
-	require.Equalf(t, nil, tx.GetError(), "db VirtualCard find returned an error")
+	require.Nilf(t, tx.GetError(), "db VirtualCard find returned an error")
 
 	require.Equalf(t, true, dbItemDefinition.Withdrawn, "db item definition is not withdrawn")
 	require.Equalf(t, true, newDefinition.Withdrawn, "new item definition is not withdrawn")
@@ -141,7 +141,7 @@ func TestItemDefinitionGetForBusiness(t *testing.T) {
 		Return(*iconImage, nil)
 
 	returnedDefinitions, err := manager.GetForBusiness(business)
-	require.Equalf(t, nil, err, "GetForBusiness returned an error")
+	require.Nilf(t, err, "GetForBusiness returned an error")
 	require.Equalf(t, 1, len(returnedDefinitions), "GetForBusiness returned more or less than one result")
 	require.Equalf(t, returnedDefinitions[0].PublicId, definition.PublicId, "GetForBusiness returned definition name does not match whats expected")
 }
