@@ -100,19 +100,27 @@ func GetTestVirtualCard(db GormDB, user *User, business *Business) *VirtualCard 
 	return &virtualCard
 }
 
-func GetTestOwnedItem(db GormDB, itemDefinition *ItemDefinition, card *VirtualCard) *OwnedItem {
-	ownedItem := OwnedItem{
+func GetDefaultOwnedItem(itemDefinition *ItemDefinition, card *VirtualCard) *OwnedItem {
+	return &OwnedItem{
 		PublicId:      shortuuid.New(),
 		DefinitionId:  itemDefinition.ID,
 		VirtualCardId: card.ID,
 		Used:          sql.NullTime{Valid: false},
 		Status:        OwnedItemStatusOwned,
 	}
-	tx := db.Create(&ownedItem)
+}
+
+func Save(db GormDB, item any) {
+	tx := db.Create(item)
 	if err := tx.GetError(); err != nil {
 		panic(fmt.Errorf("failed to create OwnedItem %w", err))
 	}
-	return &ownedItem
+}
+
+func GetTestOwnedItem(db GormDB, itemDefinition *ItemDefinition, card *VirtualCard) *OwnedItem {
+	ownedItem := GetDefaultOwnedItem(itemDefinition, card)
+	Save(db, ownedItem)
+	return ownedItem
 }
 
 func GetTestLocalCard(db GormDB, user *User) *LocalCard {
@@ -156,4 +164,26 @@ func GetTestTransaction(db GormDB, virtualCard *VirtualCard, items []OwnedItem) 
 		}
 	}
 	return &transaction, details
+}
+
+func GetDefaultItem(business *Business) ItemDefinition {
+	return ItemDefinition{
+		PublicId:    shortuuid.New(),
+		BusinessId:  business.ID,
+		Name:        "test item definition name",
+		Price:       10,
+		Description: "test item definition description",
+		ImageId:     "does not matter",
+		StartDate:   time.Now(),
+		EndDate:     time.Now().Add(time.Hour * 24),
+		MaxAmount:   10,
+		Available:   true,
+	}
+}
+
+func SaveItem(db GormDB, definition *ItemDefinition) {
+	tx := db.Create(&definition)
+	if err := tx.GetError(); err != nil {
+		panic(fmt.Errorf("failed to create ItemDefinition %w", err))
+	}
 }

@@ -39,6 +39,7 @@ const (
 	OwnedItemStatusOwned     OwnedItemStatusEnum = "OWNED"
 	OwnedItemStatusUsed                          = "USED"
 	OwnedItemStatusWithdrawn                     = "WITHDRAWN"
+	OwnedItemStatusReturned                      = "RETURNED"
 )
 
 type LocalCard struct {
