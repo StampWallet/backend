@@ -49,8 +49,8 @@ func TestItemDefinitionAddItem(t *testing.T) {
 	}
 	definition, err := manager.AddItem(business, details)
 	require.Truef(t, MatchEntities(details, definition), "entities do not match")
-	require.Nilf(t, err, "additem retuned an error")
-	require.Equalf(t, imageFile.PublicId, definition.ImageId, "additem retuned an error")
+	require.Nilf(t, err, "additem returned an error")
+	require.Equalf(t, imageFile.PublicId, definition.ImageId, "additem returned an error")
 	var dbDetails ItemDefinition
 	tx := manager.baseServices.Database.Find(&dbDetails, ItemDefinition{Model: gorm.Model{ID: definition.ID}})
 	require.Nilf(t, tx.GetError(), "database find returned an error")
@@ -82,7 +82,7 @@ func TestItemDefinitionChangeItemDetails(t *testing.T) {
 	newDefinition, err := manager.ChangeItemDetails(definition, &newDetails)
 
 	require.Truef(t, MatchEntities(newDetails, newDefinition), "entities do not match")
-	require.Nilf(t, err, "ChangeItemDetails retuned an error")
+	require.Nilf(t, err, "ChangeItemDetails returned an error")
 
 	var dbDetails ItemDefinition
 	tx := manager.baseServices.Database.Find(&dbDetails, ItemDefinition{Model: gorm.Model{ID: definition.ID}})

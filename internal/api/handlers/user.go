@@ -1,10 +1,10 @@
 package api
 
 import (
-	. "github.com/StampWallet/backend/internal/database"
+	"log"
+
 	. "github.com/StampWallet/backend/internal/managers"
 	"github.com/gin-gonic/gin"
-	"log"
 )
 
 type UserHandlers struct {
@@ -16,7 +16,7 @@ type UserHandlers struct {
 	localCardHandlers   *UserLocalCardHandlers
 	//this won't work at least not without reflection
 	//userAuthorizedAcessor UserAuthorizedAccessor
-	authorizedTransactionAccessor *AuthorizedTransactionAccessor
+	// authorizedTransactionAccessor *AuthorizedTransactionAccessor
 
 	logger *log.Logger
 }
@@ -38,8 +38,8 @@ type UserVirtualCardHandlers struct {
 	transactionManager    *TransactionManager
 	itemDefinitionManager *ItemDefinitionManager
 	//userAuthorizedAcessor UserAuthorizedAccessor
-	authorizedTransactionAccessor *AuthorizedTransactionAccessor
-	logger                        *log.Logger
+	// authorizedTransactionAccessor *AuthorizedTransactionAccessor
+	logger *log.Logger
 }
 
 func (handler *UserVirtualCardHandlers) postCard(c *gin.Context) {

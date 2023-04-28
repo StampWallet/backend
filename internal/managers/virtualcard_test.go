@@ -50,7 +50,7 @@ func setupBusiness(db GormDB) businessTest {
 	}
 }
 
-func setupVirualCardManagerTest(t *testing.T) virtualCardManagerTest {
+func setupVirtualCardManagerTest(t *testing.T) virtualCardManagerTest {
 	ctrl := gomock.NewController(t)
 	manager := GetTestVirtualCardManager(gomock.NewController(t))
 	db := manager.baseServices.Database
@@ -68,7 +68,7 @@ func setupVirualCardManagerTest(t *testing.T) virtualCardManagerTest {
 }
 
 func TestVirtualCardManagerCreate(t *testing.T) {
-	s := setupVirualCardManagerTest(t)
+	s := setupVirtualCardManagerTest(t)
 	virtualCard, err := s.manager.Create(*s.user, *s.business)
 	require.Nilf(t, err, "VirtualCardManager.Create should retrun a nil error")
 	require.NotNilf(t, virtualCard, "VirtualCardManager.Create shuold not return a nil virtual card")
@@ -85,7 +85,7 @@ func TestVirtualCardManagerCreate(t *testing.T) {
 }
 
 func TestVirtualCardManagerRemove(t *testing.T) {
-	s := setupVirualCardManagerTest(t)
+	s := setupVirtualCardManagerTest(t)
 	virtualCard := GetTestVirtualCard(s.db, s.user, s.business)
 	ownedItem := GetTestOwnedItem(s.db, s.itemDefinition, virtualCard)
 
@@ -101,14 +101,14 @@ func TestVirtualCardManagerRemove(t *testing.T) {
 }
 
 func TestVirtualCardManagerRemoveNotExisting(t *testing.T) {
-	s := setupVirualCardManagerTest(t)
+	s := setupVirtualCardManagerTest(t)
 
 	err := s.manager.Remove(&VirtualCard{Model: gorm.Model{ID: 123123}})
 	require.Equalf(t, NoSuchVirtualCard, err, "VirtualCardManager.Remove should retrun NoSuchVirtualCard error")
 }
 
 func TestVirtualCardManagerGetForUser(t *testing.T) {
-	s := setupVirualCardManagerTest(t)
+	s := setupVirtualCardManagerTest(t)
 	cards, err := s.manager.GetForUser(s.user)
 	require.Nilf(t, err, "VirtualCardManager.GetForUser should return a nil error")
 	require.Equalf(t, 0, len(cards), "VirtualCardManager.GetForUser should return zero cards")
@@ -119,7 +119,7 @@ func TestVirtualCardManagerGetForUser(t *testing.T) {
 	virtualCard2 := GetTestVirtualCard(s.db, s.user, anotherBusiness.business)
 	GetTestOwnedItem(s.db, s.itemDefinition, virtualCard)
 
-	//random virtual card that should not be present in resuls
+	//random virtual card that should not be present in results
 	GetTestVirtualCard(s.db, GetTestUser(s.db), s.business)
 
 	cards, err = s.manager.GetForUser(s.user)
@@ -137,7 +137,7 @@ func TestVirtualCardManagerGetForUser(t *testing.T) {
 }
 
 func TestVirtualCardManagerGetOwnedItems(t *testing.T) {
-	s := setupVirualCardManagerTest(t)
+	s := setupVirtualCardManagerTest(t)
 	virtualCard := GetTestVirtualCard(s.db, s.user, s.business)
 	ownedItem := GetTestOwnedItem(s.db, s.itemDefinition, virtualCard)
 
@@ -148,7 +148,7 @@ func TestVirtualCardManagerGetOwnedItems(t *testing.T) {
 }
 
 func TestVirtualCardManagerFilterOwnedItems(t *testing.T) {
-	s := setupVirualCardManagerTest(t)
+	s := setupVirtualCardManagerTest(t)
 	virtualCard := GetTestVirtualCard(s.db, s.user, s.business)
 	ownedItem := GetTestOwnedItem(s.db, s.itemDefinition, virtualCard)
 	GetTestOwnedItem(s.db, s.itemDefinition, virtualCard)
@@ -172,7 +172,7 @@ func TestVirtualCardManagerFilterOwnedItems(t *testing.T) {
 }
 
 func TestVirtualCardManagerBuyItem(t *testing.T) {
-	s := setupVirualCardManagerTest(t)
+	s := setupVirtualCardManagerTest(t)
 	virtualCard := GetTestVirtualCard(s.db, s.user, s.business)
 	itemDefinition := GetDefaultItem(s.business)
 	SaveItem(s.db, &itemDefinition)
@@ -195,7 +195,7 @@ func TestVirtualCardManagerBuyItem(t *testing.T) {
 }
 
 func TestVirtualCardManagerBuyItemAboveMaxAmount(t *testing.T) {
-	s := setupVirualCardManagerTest(t)
+	s := setupVirtualCardManagerTest(t)
 	virtualCard := GetTestVirtualCard(s.db, s.user, s.business)
 	itemDefinition := GetDefaultItem(s.business)
 	itemDefinition.MaxAmount = 1
@@ -211,7 +211,7 @@ func TestVirtualCardManagerBuyItemAboveMaxAmount(t *testing.T) {
 }
 
 func TestVirtualCardManagerBuyItemWithNotEnoughPoints(t *testing.T) {
-	s := setupVirualCardManagerTest(t)
+	s := setupVirtualCardManagerTest(t)
 	virtualCard := GetTestVirtualCard(s.db, s.user, s.business)
 	itemDefinition := GetDefaultItem(s.business)
 	itemDefinition.Price = virtualCard.Points + 1
@@ -223,7 +223,7 @@ func TestVirtualCardManagerBuyItemWithNotEnoughPoints(t *testing.T) {
 }
 
 func TestVirtualCardManagerBuyItemBeforeStartDate(t *testing.T) {
-	s := setupVirualCardManagerTest(t)
+	s := setupVirtualCardManagerTest(t)
 	virtualCard := GetTestVirtualCard(s.db, s.user, s.business)
 	itemDefinition := GetDefaultItem(s.business)
 	itemDefinition.StartDate = time.Now().Add(time.Hour * 24 * 24)
@@ -236,7 +236,7 @@ func TestVirtualCardManagerBuyItemBeforeStartDate(t *testing.T) {
 }
 
 func TestVirtualCardManagerBuyItemAfterEndDate(t *testing.T) {
-	s := setupVirualCardManagerTest(t)
+	s := setupVirtualCardManagerTest(t)
 	virtualCard := GetTestVirtualCard(s.db, s.user, s.business)
 	itemDefinition := GetDefaultItem(s.business)
 	itemDefinition.StartDate = time.Now().Add(-time.Hour * 24 * 24)
@@ -249,7 +249,7 @@ func TestVirtualCardManagerBuyItemAfterEndDate(t *testing.T) {
 }
 
 func TestVirtualCardManagerBuyItemUnavailable(t *testing.T) {
-	s := setupVirualCardManagerTest(t)
+	s := setupVirtualCardManagerTest(t)
 	virtualCard := GetTestVirtualCard(s.db, s.user, s.business)
 	itemDefinition := GetDefaultItem(s.business)
 	itemDefinition.Available = false
@@ -261,7 +261,7 @@ func TestVirtualCardManagerBuyItemUnavailable(t *testing.T) {
 }
 
 func TestVirtualCardManagerBuyItemWithdrawn(t *testing.T) {
-	s := setupVirualCardManagerTest(t)
+	s := setupVirtualCardManagerTest(t)
 	virtualCard := GetTestVirtualCard(s.db, s.user, s.business)
 	itemDefinition := GetDefaultItem(s.business)
 	itemDefinition.Withdrawn = false
@@ -273,7 +273,7 @@ func TestVirtualCardManagerBuyItemWithdrawn(t *testing.T) {
 }
 
 func TestVirtualCardManagerReturnItem(t *testing.T) {
-	s := setupVirualCardManagerTest(t)
+	s := setupVirtualCardManagerTest(t)
 	virtualCard := GetTestVirtualCard(s.db, s.user, s.business)
 	ownedItem := GetTestOwnedItem(s.db, s.itemDefinition, virtualCard)
 
