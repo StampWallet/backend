@@ -15,8 +15,8 @@ import (
 	//. "github.com/StampWallet/backend/internal/services/mocks"
 )
 
-func GetTestUser(db GormDB) *User {
-	user := User{
+func GetDefaultUser() *User {
+	return &User{
 		PublicId:      "test",
 		FirstName:     "first",
 		LastName:      "last",
@@ -24,11 +24,15 @@ func GetTestUser(db GormDB) *User {
 		PasswordHash:  "test",
 		EmailVerified: true,
 	}
-	tx := db.Create(&user)
+}
+
+func GetTestUser(db GormDB) *User {
+	userPtr := GetDefaultUser()
+	tx := db.Create(userPtr)
 	if err := tx.GetError(); err != nil {
 		panic(fmt.Errorf("failed to create Item %w", err))
 	}
-	return &user
+	return userPtr
 }
 
 func GetTestBusiness(db GormDB, user *User) *Business {
