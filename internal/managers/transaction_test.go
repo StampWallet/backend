@@ -107,6 +107,7 @@ func TestTransactionManagerStartWithInvalidItems(t *testing.T) {
 }
 
 //TODO transaction expiration? status exists
+//TODO transaction cancellation?
 
 func TestTransactionManagerFinalize(t *testing.T) {
 	s := setupTransactionTest(t)

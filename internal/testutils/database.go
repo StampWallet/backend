@@ -11,7 +11,7 @@ import (
 )
 
 func RecreateDatabase(db GormDB, databaseName string) error {
-	tx := db.Raw("DROP SCHEMA ? CASCADE; CREATE SCHEMA ?;", databaseName, databaseName)
+	tx := db.Raw("DROP DATABASE ?; CREATE DATABASE ?; create extension if not exists postgis;", databaseName, databaseName)
 	if err := tx.GetError(); err != nil {
 		return err
 	}
@@ -39,6 +39,6 @@ func GetDatabase() *GormDBImpl {
 	if err := RecreateDatabase(&GormDBImpl{Db: db}, os.Getenv("TEST_DATABASE_NAME")); err != nil {
 		panic(fmt.Errorf("failed to drop and recreate database %w", err))
 	}
-	db.Exec("SELECT 1")
+	db.Exec("SELECT 'Migration finished'")
 	return &GormDBImpl{Db: db}
 }

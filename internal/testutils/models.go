@@ -3,6 +3,7 @@ package testutils
 import (
 	"database/sql"
 	"fmt"
+	"math"
 	"math/rand"
 	"strconv"
 	"time"
@@ -17,11 +18,11 @@ import (
 
 func GetDefaultUser() *User {
 	return &User{
-		PublicId:      "test",
-		FirstName:     "first",
-		LastName:      "last",
-		Email:         "test@example.com",
-		PasswordHash:  "test",
+		PublicId:      shortuuid.New(),
+		FirstName:     shortuuid.New(),
+		LastName:      shortuuid.New(),
+		Email:         shortuuid.New() + "@example.com",
+		PasswordHash:  shortuuid.New(),
 		EmailVerified: true,
 	}
 }
@@ -42,11 +43,13 @@ func GetTestBusiness(db GormDB, user *User) *Business {
 		Name:           "test business",
 		Description:    "Description",
 		Address:        "test address",
-		GPSCoordinates: "+27.5916+086.5640+8850CRSWGS_84/",
-		NIP:            "1234567890",
-		KRS:            "1234567890",
-		REGON:          "1234567890",
+		GPSCoordinates: FromCoords(27.5916, 086.5640),
+		NIP:            strconv.Itoa(rand.Intn(math.MaxInt)),
+		KRS:            strconv.Itoa(rand.Intn(math.MaxInt)),
+		REGON:          strconv.Itoa(rand.Intn(math.MaxInt)),
 		OwnerName:      "test owner",
+		BannerImageId:  GetTestFileMetadata(db, user).PublicId,
+		IconImageId:    GetTestFileMetadata(db, user).PublicId,
 	}
 	tx := db.Create(&business)
 	if err := tx.GetError(); err != nil {
@@ -78,8 +81,8 @@ func GetTestItemDefinition(db GormDB, business *Business, metadata FileMetadata)
 		Price:       10,
 		Description: "test item definition description",
 		ImageId:     metadata.PublicId,
-		StartDate:   time.Now(),
-		EndDate:     time.Now().Add(time.Hour * 24),
+		StartDate:   sql.NullTime{Time: time.Now(), Valid: true},
+		EndDate:     sql.NullTime{Time: time.Now().Add(time.Hour * 24), Valid: true},
 		MaxAmount:   10,
 		Available:   true,
 	}
@@ -132,7 +135,7 @@ func GetTestLocalCard(db GormDB, user *User) *LocalCard {
 		PublicId: shortuuid.New(),
 		OwnerId:  user.ID,
 		Type:     "test type",
-		Code:     "012345678901",
+		Code:     strconv.Itoa(rand.Intn(math.MaxInt)),
 		Name:     "test card",
 	}
 	tx := db.Create(&localCard)
@@ -146,7 +149,7 @@ func GetTestTransaction(db GormDB, virtualCard *VirtualCard, items []OwnedItem) 
 	transaction := Transaction{
 		PublicId:      shortuuid.New(),
 		VirtualCardId: virtualCard.ID,
-		Code:          strconv.Itoa(rand.Intn(100)),
+		Code:          strconv.Itoa(rand.Intn(math.MaxInt)),
 		State:         TransactionStateStarted,
 		AddedPoints:   0,
 	}
@@ -178,8 +181,8 @@ func GetDefaultItem(business *Business) ItemDefinition {
 		Price:       10,
 		Description: "test item definition description",
 		ImageId:     "does not matter",
-		StartDate:   time.Now(),
-		EndDate:     time.Now().Add(time.Hour * 24),
+		StartDate:   sql.NullTime{Time: time.Now(), Valid: true},
+		EndDate:     sql.NullTime{Time: time.Now().Add(time.Hour * 24), Valid: true},
 		MaxAmount:   10,
 		Available:   true,
 	}

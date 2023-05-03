@@ -113,22 +113,27 @@ func setupAuthorizedTransactionAccessorTest(t *testing.T) (*gomock.Controller, *
 	ctrl := gomock.NewController(t)
 	accessor := GetTransactionAuthorizedAccessor(ctrl)
 	user := GetTestUser(accessor.database)
+
 	businessUser := GetTestUser(accessor.database)
 	business := GetTestBusiness(accessor.database, businessUser)
 	itemDefinition := GetTestItemDefinition(accessor.database, business,
 		*GetTestFileMetadata(accessor.database, businessUser))
+
 	virtualCard := GetTestVirtualCard(accessor.database, user, business)
-	GetTestOwnedItem(accessor.database, itemDefinition, virtualCard)
-	transaction, _ := GetTestTransaction(accessor.database, virtualCard, []OwnedItem{})
+	item := GetTestOwnedItem(accessor.database, itemDefinition, virtualCard)
+	transaction, _ := GetTestTransaction(accessor.database, virtualCard, []OwnedItem{*item})
 	return ctrl, accessor, user, businessUser, business, virtualCard, transaction
 }
 
 func TestTransactionAuthorizedAccessorValidFromUser(t *testing.T) {
 	_, accessor, user, _, _, _, transaction := setupAuthorizedTransactionAccessorTest(t)
 
+	//println("test virtualcard id ", card.ID, card.OwnerId)
+	//println("test user id ", user.ID)
+	//println("test transaction virtualcard id ", transaction.VirtualCardId)
 	result, err := accessor.GetForUser(user, transaction.Code)
-	require.NotNilf(t, result, "accessor returned nil")
 	require.Nilf(t, err, "accessor returned an error")
+	require.NotNilf(t, result, "accessor returned nil")
 	if result == nil {
 		return
 	}
@@ -157,8 +162,8 @@ func TestTransactionAuthorizedAccessorValidFromBusiness(t *testing.T) {
 	_, accessor, _, _, business, _, transaction := setupAuthorizedTransactionAccessorTest(t)
 
 	result, err := accessor.GetForBusiness(business, transaction.Code)
-	require.NotNilf(t, result, "accessor returned nil")
 	require.Nilf(t, err, "accessor returned an error")
+	require.NotNilf(t, result, "accessor returned nil")
 	if result == nil {
 		return
 	}
