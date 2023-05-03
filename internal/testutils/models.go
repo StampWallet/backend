@@ -3,6 +3,7 @@ package testutils
 import (
 	"database/sql"
 	"fmt"
+	"math"
 	"math/rand"
 	"strconv"
 	"time"
@@ -146,7 +147,7 @@ func GetTestTransaction(db GormDB, virtualCard *VirtualCard, items []OwnedItem) 
 	transaction := Transaction{
 		PublicId:      shortuuid.New(),
 		VirtualCardId: virtualCard.ID,
-		Code:          strconv.Itoa(rand.Intn(100)),
+		Code:          strconv.Itoa(rand.Intn(math.MaxInt)),
 		State:         TransactionStateStarted,
 		AddedPoints:   0,
 	}
