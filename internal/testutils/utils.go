@@ -5,6 +5,7 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"io"
+	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"path"
@@ -12,6 +13,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/StampWallet/backend/internal/database"
 	"github.com/gin-gonic/gin"
 )
 
@@ -86,12 +88,17 @@ type TestContextBuilder struct{ Context *gin.Context }
 
 func NewTestContextBuilder(w *httptest.ResponseRecorder) *TestContextBuilder {
 	ctx, _ := gin.CreateTestContext(w)
+	ctx.Request, _ = http.NewRequest("", "", nil)
 	return &TestContextBuilder{Context: ctx}
 }
 
-func (tc *TestContextBuilder) SetDefaultUser() *TestContextBuilder {
-	tc.Context.Set("user", GetDefaultUser())
+func (tc *TestContextBuilder) SetUser(u *database.User) *TestContextBuilder {
+	tc.Context.Set("user", u)
 	return tc
+}
+
+func (tc *TestContextBuilder) SetDefaultUser() *TestContextBuilder {
+	return tc.SetUser(GetDefaultUser())
 }
 
 func (tc *TestContextBuilder) SetUrl(argUrl *url.URL) *TestContextBuilder {
