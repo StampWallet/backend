@@ -95,7 +95,7 @@ func (accessor *AuthorizedTransactionAccessorImpl) GetForBusiness(business *Busi
 	var transaction Transaction
 	tx := accessor.database.Preload("TransactionDetails").First(&transaction, Transaction{
 		Code:        transactionCode,
-		VirtualCard: VirtualCard{Business: *business},
+		VirtualCard: &VirtualCard{Business: business},
 	})
 	if err := checkErr(tx); err != nil {
 		return nil, err
@@ -109,7 +109,7 @@ func (accessor *AuthorizedTransactionAccessorImpl) GetForUser(user *User, transa
 	var transaction Transaction
 	tx := accessor.database.Preload("TransactionDetails").First(&transaction, Transaction{
 		Code:        transactionCode,
-		VirtualCard: VirtualCard{User: *user},
+		VirtualCard: &VirtualCard{User: user},
 	})
 	if err := checkErr(tx); err != nil {
 		return nil, err
