@@ -104,9 +104,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DefaultResponse'
+                $ref: '#/components/schemas/PostAccountSessionResponse'
               example:
-                status: OK
+                token: ZWVnaDhhZWg4bGVpbDJhaXBlaW5nZWViNWFpU2hlaGUK
         '400':
           description: Invalid request format
           content:
