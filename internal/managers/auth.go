@@ -19,8 +19,8 @@ var InvalidToken = errors.New("Invalid token")
 type AuthManager interface {
 	Create(userDetails UserDetails) (*User, *Token, error)
 	Login(email string, password string) (*User, *Token, error)
-	Logout(tokenId string, token string) (*User, *Token, error)
-	ConfirmEmail(tokenId string, token string) (*User, error)
+	Logout(tokenId string, tokenSecret string) (*User, *Token, error)
+	ConfirmEmail(tokenId string, tokenSecret string) (*User, error)
 	ChangePassword(user User, oldPassword string, newPassword string) (*User, error)
 	ChangeEmail(user User, newEmail string) (*User, error)
 }
@@ -79,11 +79,11 @@ func (manager *AuthManagerImpl) Login(email string, password string) (*User, *To
 	return nil, nil, nil
 }
 
-func (manager *AuthManagerImpl) Logout(tokenId string, token string) (*User, *Token, error) {
+func (manager *AuthManagerImpl) Logout(tokenId string, tokenSecret string) (*User, *Token, error) {
 	return nil, nil, nil
 }
 
-func (manager *AuthManagerImpl) ConfirmEmail(tokenId string, token string) (*User, error) {
+func (manager *AuthManagerImpl) ConfirmEmail(tokenId string, tokensECRET string) (*User, error) {
 	return nil, nil
 }
 
