@@ -1,6 +1,7 @@
 package managers
 
 import (
+	"database/sql"
 	"log"
 	"testing"
 	"time"
@@ -226,8 +227,8 @@ func TestVirtualCardManagerBuyItemBeforeStartDate(t *testing.T) {
 	s := setupVirtualCardManagerTest(t)
 	virtualCard := GetTestVirtualCard(s.db, s.user, s.business)
 	itemDefinition := GetDefaultItem(s.business)
-	itemDefinition.StartDate = time.Now().Add(time.Hour * 24 * 24)
-	itemDefinition.EndDate = time.Now().Add(time.Hour * 24 * 25)
+	itemDefinition.StartDate = sql.NullTime{Time: time.Now().Add(time.Hour * 24 * 24), Valid: true}
+	itemDefinition.EndDate = sql.NullTime{Time: time.Now().Add(time.Hour * 24 * 25), Valid: true}
 	SaveItem(s.db, &itemDefinition)
 
 	ownedItem, err := s.manager.BuyItem(virtualCard, &itemDefinition)
@@ -239,8 +240,8 @@ func TestVirtualCardManagerBuyItemAfterEndDate(t *testing.T) {
 	s := setupVirtualCardManagerTest(t)
 	virtualCard := GetTestVirtualCard(s.db, s.user, s.business)
 	itemDefinition := GetDefaultItem(s.business)
-	itemDefinition.StartDate = time.Now().Add(-time.Hour * 24 * 24)
-	itemDefinition.EndDate = time.Now().Add(-time.Hour)
+	itemDefinition.StartDate = sql.NullTime{Time: time.Now().Add(-time.Hour * 24 * 24), Valid: true}
+	itemDefinition.EndDate = sql.NullTime{Time: time.Now().Add(-time.Hour), Valid: true}
 	SaveItem(s.db, &itemDefinition)
 
 	ownedItem, err := s.manager.BuyItem(virtualCard, &itemDefinition)
