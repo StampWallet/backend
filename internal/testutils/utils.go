@@ -10,7 +10,6 @@ import (
 	"net/url"
 	"path"
 	"reflect"
-	"testing"
 	"time"
 
 	"github.com/StampWallet/backend/internal/database"
@@ -127,12 +126,20 @@ func (tc *TestContextBuilder) SetHeader(headerKey string, headerValue string) *T
 	return tc
 }
 
+func (tc *TestContextBuilder) SetToken(token string) *TestContextBuilder {
+	return tc.SetHeader("Authorization", "Bearer "+token)
+}
+
+func (tc *TestContextBuilder) SetDefaultToken() *TestContextBuilder {
+	return tc.SetToken("012346789:ZWVnaDhhZWg4bGVpbDJhaXBlaW5nZWViNWFpU2hlaGUK")
+}
+
 func (tc *TestContextBuilder) SetBody(jsonBytes []byte) *TestContextBuilder {
 	tc.Context.Request.Body = io.NopCloser(bytes.NewBuffer(jsonBytes))
 	return tc
 }
 
-func ExtractResponse[T any](t *testing.T, w *httptest.ResponseRecorder) (*T, int, error) {
+func ExtractResponse[T any](w *httptest.ResponseRecorder) (*T, int, error) {
 	bodyBytes := w.Body.Bytes()
 	bodyPtr := new(T)
 	err := json.Unmarshal(bodyBytes, bodyPtr)

@@ -57,7 +57,7 @@ func TestHandleOk(t *testing.T) {
 		EXPECT().
 		Check(
 			gomock.Eq(testTokenId),
-			gomock.Eq(testToken),
+			gomock.Eq(testTokenSecret),
 		).
 		Return(
 			testUser,
@@ -96,7 +96,7 @@ func TestHandleNok_UnknownToken(t *testing.T) {
 
 	authMiddleware.Handle(context)
 
-	respBody, respCode, respParseErr := ExtractResponse[api.DefaultResponse](t, w)
+	respBody, respCode, respParseErr := ExtractResponse[api.DefaultResponse](w)
 
 	require.Nilf(t, respParseErr, "Failed to parse JSON response")
 	require.Equalf(t, respCode, int(401), "Response returned unexpected status code")

@@ -1,14 +1,15 @@
 package api
 
 import (
-	. "github.com/StampWallet/backend/internal/managers"
-	. "github.com/StampWallet/backend/internal/middleware"
-	"github.com/gin-gonic/gin"
 	"log"
+
+	"github.com/StampWallet/backend/internal/managers"
+	"github.com/StampWallet/backend/internal/middleware"
+	"github.com/gin-gonic/gin"
 )
 
 type AuthHandlers struct {
-	authManager *AuthManager
+	authManager managers.AuthManager
 	logger      *log.Logger
 }
 
@@ -36,6 +37,6 @@ func (handler *AuthHandlers) deleteSession(c *gin.Context) {
 
 }
 
-func (handler *AuthHandlers) Connect(rg *gin.RouterGroup, authMiddleware *AuthMiddleware) {
+func (handler *AuthHandlers) Connect(rg *gin.RouterGroup, authMiddleware middleware.AuthMiddleware) {
 
 }
