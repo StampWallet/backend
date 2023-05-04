@@ -227,14 +227,8 @@ func TestVirtualCardManagerBuyItemBeforeStartDate(t *testing.T) {
 	s := setupVirtualCardManagerTest(t)
 	virtualCard := GetTestVirtualCard(s.db, s.user, s.business)
 	itemDefinition := GetDefaultItem(s.business)
-	itemDefinition.StartDate = sql.NullTime{
-		Time:  time.Now().Add(time.Hour * 24 * 24),
-		Valid: true,
-	}
-	itemDefinition.EndDate = sql.NullTime{
-		Time:  time.Now().Add(time.Hour * 24 * 25),
-		Valid: true,
-	}
+	itemDefinition.StartDate = sql.NullTime{Time: time.Now().Add(time.Hour * 24 * 24), Valid: true}
+	itemDefinition.EndDate = sql.NullTime{Time: time.Now().Add(time.Hour * 24 * 25), Valid: true}
 	Save(s.db, itemDefinition)
 
 	ownedItem, err := s.manager.BuyItem(virtualCard, itemDefinition)
@@ -246,14 +240,8 @@ func TestVirtualCardManagerBuyItemAfterEndDate(t *testing.T) {
 	s := setupVirtualCardManagerTest(t)
 	virtualCard := GetTestVirtualCard(s.db, s.user, s.business)
 	itemDefinition := GetDefaultItem(s.business)
-	itemDefinition.StartDate = sql.NullTime{
-		Time:  time.Now().Add(-time.Hour * 24 * 24),
-		Valid: true,
-	}
-	itemDefinition.EndDate = sql.NullTime{
-		Time:  time.Now().Add(-time.Hour),
-		Valid: true,
-	}
+	itemDefinition.StartDate = sql.NullTime{Time: time.Now().Add(-time.Hour * 24 * 24), Valid: true}
+	itemDefinition.EndDate = sql.NullTime{Time: time.Now().Add(-time.Hour), Valid: true}
 	Save(s.db, itemDefinition)
 
 	ownedItem, err := s.manager.BuyItem(virtualCard, itemDefinition)

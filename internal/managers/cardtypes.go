@@ -14,7 +14,7 @@ type CardType struct {
 
 var CardTypes = []CardType{
 	{
-		PublicId: "s7lJTYHX",
+		PublicId: "test",
 		Name:     "Test card",
 		Code:     Ean13,
 	},
