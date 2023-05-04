@@ -2,12 +2,14 @@ package managers
 
 import (
 	"errors"
-	//"time"
+	"net/mail"
+	"time"
 
 	. "github.com/StampWallet/backend/internal/database"
 	. "github.com/StampWallet/backend/internal/services"
-	//"github.com/lithammer/shortuuid/v4"
-	//"golang.org/x/crypto/bcrypt"
+	"github.com/lithammer/shortuuid/v4"
+	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 )
 
 var InvalidEmail = errors.New("Invalid email")
@@ -38,45 +40,79 @@ type AuthManagerImpl struct {
 	tokenService TokenService
 }
 
-func (manager *AuthManagerImpl) Create(userDetails UserDetails) (*User, *Token, error) {
-	//var existingUser *User
-	//manager.baseServices.Database.Find(&existingUser, &User{
-	//    Email: userDetails.Email,
-	//})
-	//if existingUser != nil {
-	//    return nil, nil, EmailExists
-	//}
-	//hash, bcryptErr := bcrypt.GenerateFromPassword([]byte(userDetails.Password), 10)
-	//if bcryptErr != nil {
-	//    return nil, nil, bcryptErr
-	//}
-	//user := User{
-	//    PublicId: shortuuid.New(),
-	//    Email: userDetails.Email,
-	//    PasswordHash: string(hash),
-	//    FirstName: userDetails.FirstName,
-	//    LastName: userDetails.LastName,
-	//    EmailVerified: false,
-	//}
-	//manager.baseServices.Database.Create(&user)
-	//manager.baseServices.Database.Commit()
-	//_, err := manager.tokenService.Create(user, EmailTokenPurpose, time.Now().Add(24*time.Hour))
-	//if err != nil {
-	//    return nil, nil, err
-	//}
-	//sessionToken, err := manager.tokenService.Create(user, SessionTokenPurpose, time.Now().Add(time.Hour))
-	//if err != nil {
-	//    return nil, nil, err
-	//}
-	//manager.emailService.Send(userDetails.Email, "test", "test")
-	//return &user, &sessionToken, nil
-	return nil, nil, nil
+func (manager *AuthManagerImpl) Create(userDetails UserDetails) (*User, *Token, string, error) {
+	_, err := mail.ParseAddress(userDetails.Email)
+	if err != nil {
+		return nil, nil, "", InvalidEmail
+	}
+
+	var existingUser User
+	tx := manager.baseServices.Database.First(&existingUser, &User{
+		Email: userDetails.Email,
+	})
+	err = tx.GetError()
+	if err == nil {
+		return nil, nil, "", EmailExists
+	} else if err != nil && err != gorm.ErrRecordNotFound {
+		return nil, nil, "", err
+	}
+
+	hash, bcryptErr := bcrypt.GenerateFromPassword([]byte(userDetails.Password), 10)
+	if bcryptErr != nil {
+		return nil, nil, "", bcryptErr
+	}
+	user := User{
+		PublicId:      shortuuid.New(),
+		Email:         userDetails.Email,
+		PasswordHash:  string(hash),
+		FirstName:     userDetails.FirstName,
+		LastName:      userDetails.LastName,
+		EmailVerified: false,
+	}
+	tx = manager.baseServices.Database.Create(&user)
+	if err := tx.GetError(); err != nil {
+		return nil, nil, "", err
+	}
+	tx = manager.baseServices.Database.Commit()
+	if err := tx.GetError(); err != nil {
+		return nil, nil, "", err
+	}
+
+	emailToken, emailSecret, err := manager.tokenService.Create(user, TokenPurposeEmail, time.Now().Add(24*time.Hour))
+	if err != nil {
+		return nil, nil, "", err
+	}
+	sessionToken, sessionSecret, err := manager.tokenService.Create(user, TokenPurposeSession, time.Now().Add(time.Hour))
+	if err != nil {
+		return nil, nil, "", err
+	}
+	manager.emailService.Send(userDetails.Email, "test", "test "+emailToken.TokenId+":"+emailSecret)
+	return &user, sessionToken, sessionSecret, nil
 }
 
-func (manager *AuthManagerImpl) Login(email string, password string) (*User, *Token, error) {
+func (manager *AuthManagerImpl) Login(email string, password string) (*User, *Token, string, error) {
 	var user User
-	manager.baseServices.Database.First(&user, User{Email: email})
-	return nil, nil, nil
+	tx := manager.baseServices.Database.First(&user, User{Email: email})
+	err := tx.GetError()
+	if err == gorm.ErrRecordNotFound {
+		return nil, nil, "", InvalidLogin
+	} else if err != nil {
+		return nil, nil, "", err
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password))
+	if err == bcrypt.ErrMismatchedHashAndPassword {
+		return nil, nil, "", InvalidLogin
+	} else if err != nil {
+		return nil, nil, "", err
+	}
+
+	sessionToken, sessionSecret, err := manager.tokenService.Create(user, TokenPurposeSession, time.Now().Add(time.Hour))
+	if err != nil {
+		return nil, nil, "", err
+	}
+
+	return &user, sessionToken, sessionSecret, nil
 }
 
 func (manager *AuthManagerImpl) Logout(tokenId string, tokenSecret string) (*User, *Token, error) {

@@ -10,7 +10,7 @@ import (
 var UnknownToken = errors.New("Invalid token")
 
 type TokenService interface {
-	Create(user User, purpose TokenPurposeEnum, expiration time.Time) (*Token, error)
+	Create(user User, purpose TokenPurposeEnum, expiration time.Time) (*Token, string, error)
 	Check(tokenId string, tokenSecret string) (*User, *Token, error)
 	Invalidate(token Token) (*User, *Token, error)
 }
