@@ -51,7 +51,7 @@ func GetTestBusiness(db GormDB, user *User) *Business {
 		Description:    "Description",
 		Address:        "test address",
 		GPSCoordinates: FromCoords(27.5916, 086.5640),
-		NIP:            strconv.Itoa(rand.Intn(math.MaxInt)),
+		NIP:            strconv.Itoa(rand.Intn(math.MaxInt)), // TODO: this needs to generate valid codes for tests
 		KRS:            strconv.Itoa(rand.Intn(math.MaxInt)),
 		REGON:          strconv.Itoa(rand.Intn(math.MaxInt)),
 		OwnerName:      "test owner",

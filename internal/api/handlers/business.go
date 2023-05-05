@@ -11,14 +11,14 @@ import (
 type BusinessHandlers struct {
 	businessManager               BusinessManager
 	transactionManager            TransactionManager
-	itemDefinitionHandlers        ItemDefinitionHandlers
+	itemDefinitionManager         ItemDefinitionManager
 	userAuthorizedAcessor         UserAuthorizedAccessor
 	businessAuthorizedAccessor    BusinessAuthorizedAccessor
 	authorizedTransactionAccessor AuthorizedTransactionAccessor
 	logger                        *log.Logger
 }
 
-func (handler *BusinessHandlers) postAccountInfo(c *gin.Context) {
+func (handler *BusinessHandlers) postAccount(c *gin.Context) {
 
 }
 

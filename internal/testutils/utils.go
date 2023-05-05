@@ -91,6 +91,10 @@ func NewTestContextBuilder(w *httptest.ResponseRecorder) *TestContextBuilder {
 	return &TestContextBuilder{Context: ctx}
 }
 
+func TestContextCopy(c *gin.Context) *TestContextBuilder {
+	return &TestContextBuilder{Context: c.Copy()}
+}
+
 func (tc *TestContextBuilder) SetUser(u *database.User) *TestContextBuilder {
 	tc.Context.Set("user", u)
 	return tc
