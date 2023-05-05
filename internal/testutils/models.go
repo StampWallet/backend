@@ -58,6 +58,7 @@ func GetTestBusiness(db GormDB, user *User) *Business {
 		BannerImageId:  GetTestFileMetadata(db, user).PublicId,
 		IconImageId:    GetTestFileMetadata(db, user).PublicId,
 	}
+	user.Business = &business
 	Save(db, &business)
 	return &business
 }
@@ -157,7 +158,7 @@ func GetTestTransaction(db GormDB, virtualCard *VirtualCard, items []OwnedItem) 
 }
 
 func GetDefaultItem(business *Business) *ItemDefinition {
-	return &ItemDefinition{
+	itemDefinition := &ItemDefinition{
 		PublicId:    shortuuid.New(),
 		BusinessId:  business.ID,
 		Name:        "test item definition name",
@@ -169,4 +170,6 @@ func GetDefaultItem(business *Business) *ItemDefinition {
 		MaxAmount:   10,
 		Available:   true,
 	}
+	business.ItemDefinitions = append(business.ItemDefinitions, *itemDefinition)
+	return itemDefinition
 }
