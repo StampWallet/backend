@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	api "github.com/StampWallet/backend/internal/api/models"
 	"github.com/StampWallet/backend/internal/database"
@@ -14,6 +15,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/crypto/bcrypt"
 )
 
 func GetAuthHandlers(ctrl *gomock.Controller) *AuthHandlers {
@@ -23,18 +25,42 @@ func GetAuthHandlers(ctrl *gomock.Controller) *AuthHandlers {
 	}
 }
 
-func TestAuthHandlersPostAccount(t *testing.T) {
-	// data prep
-	gin.SetMode(gin.TestMode)
-	w := httptest.NewRecorder()
+func SetupAuthHandlersPostAccount() (
+	w *httptest.ResponseRecorder,
+	context *gin.Context,
+	userDetailsExpectedPtr *managers.UserDetails,
+	testUser *database.User,
+	testToken *database.Token,
+) {
+	testEmail := "test@example.com"
+	testPassword := "zaq1@WSX"
+
+	testUser = GetDefaultUser()
+	testUser.Email = testEmail
+	hash, _ := bcrypt.GenerateFromPassword([]byte(testPassword), 10)
+	testUser.PasswordHash = string(hash)
+	testUser.EmailVerified = false
+
+	testToken = &database.Token{
+		OwnerId:      testUser.ID,
+		TokenId:      "01234556789",
+		TokenHash:    "u8m932r98u3", // TODO: more fitting test value
+		Expires:      time.Now().Add(time.Hour * 24),
+		TokenPurpose: database.TokenPurposeEmail,
+		Used:         false,
+		Recalled:     false,
+	}
 
 	payload := api.PostAccountRequest{
-		Email:    "test@example.com",
-		Password: "zaq1@WSX",
+		Email:    testEmail,
+		Password: testPassword,
 	}
 	payloadJson, _ := json.Marshal(payload)
 
-	context := NewTestContextBuilder(w).
+	gin.SetMode(gin.TestMode)
+	w = httptest.NewRecorder()
+
+	context = NewTestContextBuilder(w).
 		SetDefaultUrl().
 		SetEndpoint("/auth/account").
 		SetMethod("POST").
@@ -44,10 +70,15 @@ func TestAuthHandlersPostAccount(t *testing.T) {
 		Context
 
 	userDetailsExpected := managers.UserDetails{
-		Email:    "test@example.com",
-		Password: "zaq1@WSX",
+		Email:    testEmail,
+		Password: testPassword,
 	}
 
+	return w, context, &userDetailsExpected, testUser, testToken
+}
+
+func TestAuthHandlersPostAccountOk(t *testing.T) {
+	w, context, userDetailsExpectedPtr, testUser, testToken := SetupAuthHandlersPostAccount()
 	respBodyExpected := api.DefaultResponse{Status: api.OK}
 
 	// test env prep
@@ -56,39 +87,88 @@ func TestAuthHandlersPostAccount(t *testing.T) {
 
 	handler.authManager.(*MockAuthManager).
 		EXPECT().
-		Create(gomock.Eq(userDetailsExpected))
+		Create(gomock.Eq(*userDetailsExpectedPtr)).
+		Return(
+			testUser,
+			testToken,
+			nil,
+		)
 
 	handler.postAccount(context)
 
-	respBody, respCode, err := ExtractResponse[api.DefaultResponse](t, w)
+	respBody, respCode, respParseErr := ExtractResponse[api.DefaultResponse](w)
 
-	require.Nilf(t, err, "Failed to parse JSON response")
+	require.Nilf(t, respParseErr, "Failed to parse JSON response")
 	require.Equalf(t, respCode, int(201), "Response returned unexpected status code")
-	require.Truef(t, MatchEntities(respBody, respBodyExpected), "Response returned unexpected body contents")
+	require.Truef(t, MatchEntities(respBodyExpected, respBody), "Response returned unexpected body contents")
+	// TODO: test MatchEntities and gomock.Eq
 }
 
-func TestAuthHandlersPostAccountEmail(t *testing.T) {
+func TestAuthHandlersPostAccountNok_DupMail(t *testing.T) {
+	w, context, userDetailsExpectedPtr, _, _ := SetupAuthHandlersPostAccount()
+	respBodyExpected := api.DefaultResponse{Status: api.CONFLICT}
+
+	// test env prep
+	ctrl := gomock.NewController(t)
+	handler := GetAuthHandlers(ctrl)
+
+	handler.authManager.(*MockAuthManager).
+		EXPECT().
+		Create(gomock.Eq(*userDetailsExpectedPtr)).
+		Return(
+			nil,
+			nil,
+			managers.EmailExists,
+		)
+
+	handler.postAccount(context)
+
+	respBody, respCode, respParseErr := ExtractResponse[api.DefaultResponse](w)
+
+	require.Nilf(t, respParseErr, "Failed to parse JSON response")
+	require.Equalf(t, respCode, int(409), "Response returned unexpected status code")
+	require.Truef(t, MatchEntities(respBodyExpected, respBody), "Response returned unexpected body contents")
+	// TODO: test MatchEntities and gomock.Eq
+}
+
+func SetupAuthHandlersPostAccountEmail() (
+	w *httptest.ResponseRecorder,
+	testUser *database.User,
+	testNewEmailPtr *string,
+	context *gin.Context,
+	testUserChangedEmail *database.User,
+) {
 	// data prep
 	gin.SetMode(gin.TestMode)
-	w := httptest.NewRecorder()
+	w = httptest.NewRecorder()
 
+	testUser = GetDefaultUser()
+	testNewEmail := "new_email_test@example.com"
 	payload := api.PostAccountEmailRequest{
-		Email: "test@example.com",
+		Email: testNewEmail,
 	}
 	payloadJson, _ := json.Marshal(payload)
 
-	context := NewTestContextBuilder(w).
+	context = NewTestContextBuilder(w).
 		SetDefaultUrl().
 		SetEndpoint("/auth/account/email").
-		SetDefaultUser().
+		SetUser(testUser).
 		SetMethod("POST").
 		SetHeader("Accept", "application/json").
 		SetHeader("Content-Type", "application/json").
+		SetDefaultToken().
 		SetBody(payloadJson).
 		Context
 
-	userExpected := GetDefaultUser()
-	newEmailExpected := "test@example.com"
+	testUserChangedEmail = testUser
+	testUserChangedEmail.Email = testNewEmail
+	testUserChangedEmail.EmailVerified = false
+
+	return w, testUser, &testNewEmail, context, testUserChangedEmail
+}
+
+func TestAuthHandlersPostAccountEmailOk(t *testing.T) {
+	w, testUser, testNewEmailPtr, context, testUserChangedEmail := SetupAuthHandlersPostAccountEmail()
 	respBodyExpected := api.DefaultResponse{Status: api.OK}
 
 	ctrl := gomock.NewController(t)
@@ -97,21 +177,50 @@ func TestAuthHandlersPostAccountEmail(t *testing.T) {
 	handler.authManager.(*MockAuthManager).
 		EXPECT().
 		ChangeEmail(
-			gomock.Eq(userExpected),
-			gomock.Eq(newEmailExpected),
+			gomock.Eq(testUser),
+			gomock.Eq(&testNewEmailPtr),
 		).
 		Return(
-			userExpected,
+			testUserChangedEmail,
 			nil,
 		)
 
 	handler.postAccountEmail(context)
 
-	respBody, respCode, err := ExtractResponse[api.DefaultResponse](t, w)
+	respBody, respCode, respParseErr := ExtractResponse[api.DefaultResponse](w)
 
-	require.Nilf(t, err, "Failed to parse JSON response")
+	require.Nilf(t, respParseErr, "Failed to parse JSON response")
 	require.Equalf(t, respCode, int(200), "Response returned unexpected status code")
-	require.Truef(t, MatchEntities(respBody, respBodyExpected), "Response returned unexpected body contents")
+	require.Truef(t, MatchEntities(respBodyExpected, respBody), "Response returned unexpected body contents")
+	// TODO: MatchEntities and gomock.Eq
+}
+
+func TestAuthHandlersPostAccountEmailNok_DupMail(t *testing.T) {
+	w, testUser, testNewEmailPtr, context, _ := SetupAuthHandlersPostAccountEmail()
+	respBodyExpected := api.DefaultResponse{Status: api.CONFLICT}
+
+	ctrl := gomock.NewController(t)
+	handler := GetAuthHandlers(ctrl)
+
+	handler.authManager.(*MockAuthManager).
+		EXPECT().
+		ChangeEmail(
+			gomock.Eq(testUser),
+			gomock.Eq(&testNewEmailPtr),
+		).
+		Return(
+			nil,
+			managers.EmailExists,
+		)
+
+	handler.postAccountEmail(context)
+
+	respBody, respCode, respParseErr := ExtractResponse[api.DefaultResponse](w)
+
+	require.Nilf(t, respParseErr, "Failed to parse JSON response")
+	require.Equalf(t, respCode, int(409), "Response returned unexpected status code")
+	require.Truef(t, MatchEntities(respBodyExpected, respBody), "Response returned unexpected body contents")
+	// TODO: MatchEntities and gomock.Eq
 }
 
 func TestAuthHandlersPostAccountPasswordOk(t *testing.T) {
@@ -119,25 +228,34 @@ func TestAuthHandlersPostAccountPasswordOk(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	w := httptest.NewRecorder()
 
+	oldPassword := "zaq1@WSX"
+	newPassword := "XSW@1qaz"
+
+	userOldPass := GetDefaultUser()
+	hash, _ := bcrypt.GenerateFromPassword([]byte(oldPassword), 10)
+	userOldPass.PasswordHash = string(hash)
+
+	userNewPass := userOldPass
+	hash, _ = bcrypt.GenerateFromPassword([]byte(newPassword), 10)
+	userNewPass.PasswordHash = string(hash)
+
 	payload := api.PostAccountPasswordRequest{
-		OldPassword: "zaq1@WSX",
-		Password:    "XSW@1qaz",
+		OldPassword: oldPassword,
+		Password:    newPassword,
 	}
 	payloadJson, _ := json.Marshal(payload)
 
 	context := NewTestContextBuilder(w).
 		SetDefaultUrl().
 		SetEndpoint("/auth/account/password").
-		SetDefaultUser().
+		SetUser(userOldPass).
 		SetMethod("POST").
 		SetHeader("Accept", "application/json").
 		SetHeader("Content-Type", "application/json").
+		SetDefaultToken().
 		SetBody(payloadJson).
 		Context
 
-	userExpected := GetDefaultUser()
-	oldPasswordExpected := "zaq1@WSX"
-	newPasswordExpected := "XSW@1qaz"
 	respBodyExpected := api.DefaultResponse{Status: api.OK}
 
 	ctrl := gomock.NewController(t)
@@ -146,32 +264,35 @@ func TestAuthHandlersPostAccountPasswordOk(t *testing.T) {
 	handler.authManager.(*MockAuthManager).
 		EXPECT().
 		ChangePassword(
-			gomock.Eq(userExpected),
-			gomock.Eq(oldPasswordExpected),
-			gomock.Eq(newPasswordExpected),
+			gomock.Eq(userOldPass),
+			gomock.Eq(oldPassword),
+			gomock.Eq(newPassword),
 		).
 		Return(
-			userExpected,
+			userNewPass,
 			nil,
 		)
 
 	handler.postAccountPassword(context)
 
-	respBody, respCode, err := ExtractResponse[api.DefaultResponse](t, w)
+	respBody, respCode, respParseErr := ExtractResponse[api.DefaultResponse](w)
 
-	require.Nilf(t, err, "Failed to parse JSON response")
+	require.Nilf(t, respParseErr, "Failed to parse JSON response")
 	require.Equalf(t, respCode, int(200), "Response returned unexpected status code")
-	require.Truef(t, MatchEntities(respBody, respBodyExpected), "Response returned unexpected body contents")
+	require.Truef(t, MatchEntities(respBodyExpected, respBody), "Response returned unexpected body contents")
+	// TODO: MatchEntities and gomock.Eq
 }
 
-func TestAuthHandlersPostAccountPasswordNok_old_pass(t *testing.T) {
+func TestAuthHandlersPostAccountPasswordNok_OldPass(t *testing.T) {
 	// data prep
 	gin.SetMode(gin.TestMode)
 	w := httptest.NewRecorder()
 
+	testPassword := "zaq1@WSX"
+
 	payload := api.PostAccountPasswordRequest{
-		OldPassword: "zaq1@WSX",
-		Password:    "zaq1@WSX",
+		OldPassword: testPassword,
+		Password:    testPassword,
 	}
 	payloadJson, _ := json.Marshal(payload)
 
@@ -182,6 +303,7 @@ func TestAuthHandlersPostAccountPasswordNok_old_pass(t *testing.T) {
 		SetMethod("POST").
 		SetHeader("Accept", "application/json").
 		SetHeader("Content-Type", "application/json").
+		SetDefaultToken().
 		SetBody(payloadJson).
 		Context
 
@@ -192,20 +314,25 @@ func TestAuthHandlersPostAccountPasswordNok_old_pass(t *testing.T) {
 
 	handler.postAccountPassword(context)
 
-	respBody, respCode, err := ExtractResponse[api.DefaultResponse](t, w)
+	respBody, respCode, respParseErr := ExtractResponse[api.DefaultResponse](w)
 
-	require.Nilf(t, err, "Failed to parse JSON response")
+	require.Nilf(t, respParseErr, "Failed to parse JSON response")
 	require.Equalf(t, respCode, int(400), "Response returned unexpected status code")
 	require.Truef(t, MatchEntities(respBody, respBodyExpected), "Response returned unexpected body contents")
+	// TODO: MatchEntities
 }
 
-// TODO
-func TestAuthHandlersPostAccountEmailConfirmation(t *testing.T) {
+func TestAuthHandlersPostAccountEmailConfirmationOk(t *testing.T) {
 	// data prep
 	gin.SetMode(gin.TestMode)
 	w := httptest.NewRecorder()
 
-	exampleToken := "ZWVnaDhhZWg4bGVpbDJhaXBlaW5nZWViNWFpU2hlaGUK"
+	tokenId := "0123456789"
+	tokenSecret := "ZWVnaDhhZWg4bGVpbDJhaXBlaW5nZWViNWFpU2hlaGUK"
+	exampleToken := tokenId + ":" + tokenSecret
+
+	testUser := GetDefaultUser()
+
 	payload := api.PostAccountEmailConfirmationRequest{
 		Token: exampleToken,
 	}
@@ -214,15 +341,12 @@ func TestAuthHandlersPostAccountEmailConfirmation(t *testing.T) {
 	context := NewTestContextBuilder(w).
 		SetDefaultUrl().
 		SetEndpoint("/auth/account/emailConfirmation").
-		SetDefaultUser(). // Authorization already performed by middleware
 		SetMethod("POST").
-		SetHeader("Authorization", "Bearer "+exampleToken).
 		SetHeader("Accept", "application/json").
 		SetHeader("Content-Type", "application/json").
 		SetBody(payloadJson).
 		Context
 
-	userExpected := GetDefaultUser()
 	respBodyExpected := api.DefaultResponse{Status: api.OK}
 
 	// test env prep
@@ -232,27 +356,41 @@ func TestAuthHandlersPostAccountEmailConfirmation(t *testing.T) {
 	handler.authManager.(*MockAuthManager).
 		EXPECT().
 		ConfirmEmail(
-			gomock.Eq(userExpected), //TODO Correct arguments and generate new mocks
-			gomock.Eq(exampleToken),
-		).Return(nil)
+			gomock.Eq(tokenId),
+			gomock.Eq(tokenSecret),
+		).Return(testUser)
 
 	handler.postAccountEmailConfirmation(context)
 
-	respBody, respCode, err := ExtractResponse[api.DefaultResponse](t, w)
+	respBody, respCode, respParseErr := ExtractResponse[api.DefaultResponse](w)
 
-	require.Nilf(t, err, "Failed to parse JSON response")
+	require.Nilf(t, respParseErr, "Failed to parse JSON response")
 	require.Equalf(t, respCode, int(200), "Response returned unexpected status code")
 	require.Truef(t, MatchEntities(respBody, respBodyExpected), "Response returned unexpected body contents")
+	// TODO: MatchEntities and gomock.Eq
 }
 
-func TestAuthHandlersPostSession(t *testing.T) {
+func TestAuthHandlersPostAccountEmailConfirmationNok_InvTok(t *testing.T) {
+	// TODO
+}
+
+func TestAuthHandlersPostAccountEmailConfirmationNok_ExpTok(t *testing.T) {
+	// TODO
+}
+
+func TestAuthHandlersPostSessionOk(t *testing.T) {
 	// data prep
 	gin.SetMode(gin.TestMode)
 	w := httptest.NewRecorder()
 
+	testPassword := "zaq1@WSX"
+	testUser := GetDefaultUser()
+	hash, _ := bcrypt.GenerateFromPassword([]byte(testPassword), 10)
+	testUser.PasswordHash = string(hash)
+
 	payload := api.PostAccountSessionRequest{
-		Email:    "test@example.com",
-		Password: "zaq1@WSX",
+		Email:    testUser.Email,
+		Password: testPassword,
 	}
 	payloadJson, _ := json.Marshal(payload)
 
@@ -276,21 +414,16 @@ func TestAuthHandlersPostSession(t *testing.T) {
 	handler.authManager.(*MockAuthManager).
 		EXPECT().
 		Login(
-			gomock.Eq("test@example.com"),
-			gomock.Eq("zaq1@WSX"),
+			gomock.Eq(testUser.Email),
+			gomock.Eq(testPassword),
 		).
 		Return(
-			&database.User{
-				PublicId:      "testUserId",
-				Email:         "test@example.com",
-				PasswordHash:  "hash of zaq1@WSX",
-				EmailVerified: true,
-			},
+			testUser,
 			&database.Token{
-				OwnerId:   0,
-				TokenId:   "testTokenId",
-				TokenHash: "ZWVnaDhhZWg4bGVpbDJhaXBlaW5nZWViNWFpU2hlaGUK",
-				// Expires: _, TODO - see how to mock this
+				OwnerId:      testUser.ID,
+				TokenId:      "testTokenId",
+				TokenHash:    "ZWVnaDhhZWg4bGVpbDJhaXBlaW5nZWViNWFpU2hlaGUK",
+				Expires:      time.Now().Add(time.Hour * 24),
 				TokenPurpose: database.TokenPurposeSession,
 				Used:         false,
 				Recalled:     false,
@@ -300,24 +433,44 @@ func TestAuthHandlersPostSession(t *testing.T) {
 
 	handler.postSession(context)
 
-	respBody, respCode, err := ExtractResponse[api.PostAccountSessionResponse](t, w)
+	respBody, respCode, respParseErr := ExtractResponse[api.PostAccountSessionResponse](w)
 
-	require.Nilf(t, err, "Failed to parse JSON response")
+	require.Nilf(t, respParseErr, "Failed to parse JSON response")
 	require.Equalf(t, respCode, int(201), "Response returned unexpected status code")
 	require.Truef(t, MatchEntities(respBody, respBodyExpected), "Response returned unexpected body contents")
 }
 
-func TestAuthHandlersDeleteSession(t *testing.T) {
+func TestAuthHandlersPostSessionNok_BadTok(t *testing.T) {
+	// TODO
+}
+
+func TestAuthHandlersDeleteSessionOk(t *testing.T) {
 	// data prep
 	gin.SetMode(gin.TestMode)
 	w := httptest.NewRecorder()
+
+	tokenId := "012345789"
+	tokenSecret := "ZWVnaDhhZWg4bGVpbDJhaXBlaW5nZWViNWFpU2hlaGUK"
+	testToken := tokenId + ":" + tokenSecret
+
+	testUser := GetDefaultUser()
+	tokenHash, _ := bcrypt.GenerateFromPassword([]byte(tokenSecret), 10)
+	testTokenStruct := &database.Token{
+		OwnerId:      testUser.ID,
+		TokenId:      tokenId,
+		TokenHash:    string(tokenHash),
+		Expires:      time.Now().Add(time.Hour * 24),
+		TokenPurpose: database.TokenPurposeSession,
+		Used:         true,
+		Recalled:     false,
+	}
 
 	context := NewTestContextBuilder(w).
 		SetDefaultUrl().
 		SetEndpoint("/auth/sessions").
 		SetDefaultUser().
 		SetMethod("DELETE").
-		SetHeader("Authorization", "Bearer ZWVnaDhhZWg4bGVpbDJhaXBlaW5nZWViNWFpU2hlaGUK").
+		SetToken(testToken).
 		SetHeader("Accept", "application/json").
 		Context
 
@@ -330,33 +483,24 @@ func TestAuthHandlersDeleteSession(t *testing.T) {
 	handler.authManager.(*MockAuthManager).
 		EXPECT().
 		Logout(
-			gomock.Eq("test@example.com"),
-			gomock.Eq("zaq1@WSX"),
+			gomock.Eq(tokenId),
+			gomock.Eq(tokenSecret),
 		).
 		Return(
-			&database.User{
-				PublicId:      "testUserId",
-				Email:         "test@example.com",
-				PasswordHash:  "hash of zaq1@WSX",
-				EmailVerified: true,
-			},
-			&database.Token{
-				OwnerId:   0,
-				TokenId:   "testTokenId",
-				TokenHash: "ZWVnaDhhZWg4bGVpbDJhaXBlaW5nZWViNWFpU2hlaGUK",
-				// Expires: _, TODO - see how F mocks this
-				TokenPurpose: database.TokenPurposeSession,
-				Used:         false,
-				Recalled:     false,
-			},
+			testUser,
+			testTokenStruct,
 			nil,
 		)
 
 	handler.postSession(context)
 
-	respBody, respCode, err := ExtractResponse[api.PostAccountSessionResponse](t, w)
+	respBody, respCode, respParseErr := ExtractResponse[api.PostAccountSessionResponse](w)
 
-	require.Nilf(t, err, "Failed to parse JSON response")
+	require.Nilf(t, respParseErr, "Failed to parse JSON response")
 	require.Equalf(t, respCode, int(200), "Response returned unexpected status code")
-	require.Truef(t, MatchEntities(respBody, respBodyExpected), "Response returned unexpected body contents")
+	require.Truef(t, MatchEntities(respBodyExpected, respBody), "Response returned unexpected body contents")
+}
+
+func TestAuthHandlersDeleteSessionNok_BadTok(t *testing.T) {
+	// TODO
 }
