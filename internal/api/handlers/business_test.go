@@ -19,21 +19,13 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func GetBusinessHandlers(ctrl *gomock.Controller) *BusinessHandlers {
-	commonMockUserAuthorizedAccessor := NewMockUserAuthorizedAccessor(ctrl)
-	commonMockBusinessAuthorizedAccessor := NewMockBusinessAuthorizedAccessor(ctrl)
-
+func getBusinessHandlers(ctrl *gomock.Controller) *BusinessHandlers {
 	return &BusinessHandlers{
-		businessManager:    NewMockBusinessManager(ctrl),
-		transactionManager: NewMockTransactionManager(ctrl),
-		itemDefinitionHandlers: ItemDefinitionHandlers{
-			itemDefinitionManager:      NewMockItemDefinitionManager(ctrl),
-			userAuthorizedAcessor:      commonMockUserAuthorizedAccessor,
-			businessAuthorizedAccessor: commonMockBusinessAuthorizedAccessor,
-			logger:                     log.Default(),
-		},
-		userAuthorizedAcessor:         commonMockUserAuthorizedAccessor,
-		businessAuthorizedAccessor:    commonMockBusinessAuthorizedAccessor,
+		businessManager:               NewMockBusinessManager(ctrl),
+		transactionManager:            NewMockTransactionManager(ctrl),
+		itemDefinitionManager:         NewMockItemDefinitionManager(ctrl),
+		userAuthorizedAcessor:         NewMockUserAuthorizedAccessor(ctrl),
+		businessAuthorizedAccessor:    NewMockBusinessAuthorizedAccessor(ctrl),
 		authorizedTransactionAccessor: NewMockAuthorizedTransactionAccessor(ctrl),
 		logger:                        log.Default(),
 	}
@@ -99,7 +91,7 @@ func TestBusinessHandlersPostAccountOk(t *testing.T) {
 
 	// test env prep
 	ctrl := gomock.NewController(t)
-	handler := GetBusinessHandlers(ctrl)
+	handler := getBusinessHandlers(ctrl)
 
 	handler.businessManager.(*MockBusinessManager).
 		EXPECT().
@@ -166,7 +158,7 @@ func TestBusinessHandlersPostAccountNok_ChkBiz_InvalidNip(t *testing.T) {
 
 	// test env prep
 	ctrl := gomock.NewController(t)
-	handler := GetBusinessHandlers(ctrl)
+	handler := getBusinessHandlers(ctrl)
 
 	handler.postAccount(context)
 
@@ -222,7 +214,7 @@ func TestBusinessHandlersPostAccountNok_ChkBiz_InvalidKrs(t *testing.T) {
 
 	// test env prep
 	ctrl := gomock.NewController(t)
-	handler := GetBusinessHandlers(ctrl)
+	handler := getBusinessHandlers(ctrl)
 
 	handler.postAccount(context)
 
@@ -278,7 +270,7 @@ func TestBusinessHandlersPostAccountNok_ChkBiz_InvalidRegon(t *testing.T) {
 
 	// test env prep
 	ctrl := gomock.NewController(t)
-	handler := GetBusinessHandlers(ctrl)
+	handler := getBusinessHandlers(ctrl)
 
 	handler.postAccount(context)
 
@@ -295,7 +287,7 @@ func TestBusinessHandlersPostAccountNok_UniqBiz(t *testing.T) {
 
 	// test env prep
 	ctrl := gomock.NewController(t)
-	handler := GetBusinessHandlers(ctrl)
+	handler := getBusinessHandlers(ctrl)
 
 	handler.businessManager.(*MockBusinessManager).
 		EXPECT().
@@ -385,7 +377,7 @@ func TestBusinessHandlersGetAccountInfoOk(t *testing.T) {
 
 	// test env prep
 	ctrl := gomock.NewController(t)
-	handler := GetBusinessHandlers(ctrl)
+	handler := getBusinessHandlers(ctrl)
 
 	handler.userAuthorizedAcessor.(*MockUserAuthorizedAccessor).
 		EXPECT().
@@ -413,7 +405,7 @@ func TestBusinessHandlersGetAccountInfoNok_NoBiz(t *testing.T) {
 
 	// test env prep
 	ctrl := gomock.NewController(t)
-	handler := GetBusinessHandlers(ctrl)
+	handler := getBusinessHandlers(ctrl)
 
 	handler.userAuthorizedAcessor.(*MockUserAuthorizedAccessor).
 		EXPECT().
@@ -474,7 +466,7 @@ func TestBusinessHandlersPatchAccountInfoOk(t *testing.T) {
 
 	// test env prep
 	ctrl := gomock.NewController(t)
-	handler := GetBusinessHandlers(ctrl)
+	handler := getBusinessHandlers(ctrl)
 
 	handler.userAuthorizedAcessor.(*MockUserAuthorizedAccessor).
 		EXPECT().
@@ -544,7 +536,7 @@ func TestBusinessHandlersPatchAccountInfoNok_InvBiz(t *testing.T) {
 
 	// test env prep
 	ctrl := gomock.NewController(t)
-	handler := GetBusinessHandlers(ctrl)
+	handler := getBusinessHandlers(ctrl)
 
 	handler.userAuthorizedAcessor.(*MockUserAuthorizedAccessor).
 		EXPECT().
@@ -609,7 +601,18 @@ func TestBusinessHandlersGetTransactionOk(t *testing.T) {
 
 	// test env prep
 	ctrl := gomock.NewController(t)
-	handler := GetBusinessHandlers(ctrl)
+	handler := getBusinessHandlers(ctrl)
+
+	handler.userAuthorizedAcessor.(*MockUserAuthorizedAccessor).
+		EXPECT().
+		Get(
+			gomock.Eq(testBusinessUser),
+			gomock.Eq(&database.Business{PublicId: testBusiness.PublicId}),
+		).
+		Return(
+			testBusiness,
+			nil,
+		)
 
 	// TODO Mock translation itemId to OwnedItem - accessor or manager?
 
@@ -690,7 +693,7 @@ func TestBusinessHandlersPostTransactionOk(t *testing.T) {
 
 	// test env prep
 	ctrl := gomock.NewController(t)
-	handler := GetBusinessHandlers(ctrl)
+	handler := getBusinessHandlers(ctrl)
 
 	handler.authorizedTransactionAccessor.(*MockAuthorizedTransactionAccessor).
 		EXPECT().
