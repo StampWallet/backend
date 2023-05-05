@@ -8,6 +8,7 @@ import (
 
 	api "github.com/StampWallet/backend/internal/api/models"
 	. "github.com/StampWallet/backend/internal/database"
+	"github.com/StampWallet/backend/internal/services"
 	. "github.com/StampWallet/backend/internal/services/mocks"
 	. "github.com/StampWallet/backend/internal/testutils"
 	"github.com/gin-gonic/gin"
@@ -80,7 +81,9 @@ func TestHandleNok_UnknownToken(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	w := httptest.NewRecorder()
 
-	testToken := "0123456789:ZWVnaDhhZWg4bGVpbDJhaXBlaW5nZWViNWFpU2hlaGUK"
+	testTokenSecret := "ZWVnaDhhZWg4bGVpbDJhaXBlaW5nZWViNWFpU2hlaGUK"
+	testTokenId := "0123456789"
+	testToken := testTokenId + ":" + testTokenSecret
 
 	context := NewTestContextBuilder(w).
 		SetDefaultUrl().
@@ -94,13 +97,27 @@ func TestHandleNok_UnknownToken(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	authMiddleware := getAuthMiddleware(ctrl)
 
+	authMiddleware.tokenService.(*MockTokenService).
+		EXPECT().
+		Check(
+			gomock.Eq(testTokenId),
+			gomock.Eq(testTokenSecret),
+		).
+		Return(
+			nil,
+			nil,
+			services.UnknownToken,
+		)
+
 	authMiddleware.Handle(context)
 
+	respBodyExpected := api.DefaultResponse{Status: api.FORBIDDEN}
 	respBody, respCode, respParseErr := ExtractResponse[api.DefaultResponse](w)
 
 	require.Nilf(t, respParseErr, "Failed to parse JSON response")
 	require.Equalf(t, respCode, int(401), "Response returned unexpected status code")
-	require.Equalf(t, respBody.Status, api.FORBIDDEN, "Status inside default response body does not match expected")
+	require.Truef(t, MatchEntities(respBodyExpected, respBody), "Status inside default response body does not match expected")
+	// TODO: MatchEntities
 
 	userPtr, userExists := context.Get("user")
 	require.Truef(t, userPtr == nil && userExists == false, "User field was overwritten despite no valid user existing")
