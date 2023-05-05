@@ -66,6 +66,17 @@ func (TimeGreaterThanNow) String() string {
 	return "TimeGreaterThanNow"
 }
 
+type TimeJustBeforeNow struct {
+}
+
+func (matcher TimeJustBeforeNow) Matches(x interface{}) bool {
+	return time.Now().After(x.(time.Time)) && time.Now().Add(-5*time.Minute).Before(x.(time.Time))
+}
+
+func (TimeJustBeforeNow) String() string {
+	return "TimeJustBeforeNow"
+}
+
 type Copyable interface {
 	uint64 | uint | string | bool | time.Time
 }
@@ -137,4 +148,8 @@ func ExtractResponse[T any](t *testing.T, w *httptest.ResponseRecorder) (*T, int
 	bodyPtr := new(T)
 	err := json.Unmarshal(bodyBytes, bodyPtr)
 	return bodyPtr, w.Code, err
+}
+
+func TimeJustAroundNow(x time.Time) bool {
+	return time.Now().After(x) && time.Now().Add(-5*time.Minute).Before(x)
 }

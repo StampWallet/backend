@@ -13,6 +13,10 @@ var NotFound = errors.New("Entity not found")
 var NoAccess = errors.New("No access to entity")
 var DatabaseError = errors.New("Database error")
 
+// rule of thumb with managers and accessors: if a manager method requires an object, this probably means, that the object has to retrived with an accessors. and the accessor will check the (simple, in case of this app) permissions
+// if a manager requires only object id, that means that the action can be done by anyone
+// handlers should not access the database directly. thats what managers and accessors are for
+
 func checkErr(tx GormDB) error {
 	err := tx.GetError()
 	if err == gorm.ErrRecordNotFound || tx.GetRowsAffected() != 1 {
