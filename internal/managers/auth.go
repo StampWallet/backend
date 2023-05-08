@@ -221,7 +221,10 @@ func (manager *AuthManagerImpl) ChangeEmail(user User, newEmail string) (*User, 
 		tx.Rollback()
 		return nil, err
 	}
-	tx.Commit()
+
+	if err := tx.Commit().GetError(); err != nil {
+		return nil, err
+	}
 
 	return &user, nil
 }

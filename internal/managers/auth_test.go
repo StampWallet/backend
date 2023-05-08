@@ -10,7 +10,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
-	gormlogger "gorm.io/gorm/logger"
 
 	. "github.com/StampWallet/backend/internal/database"
 	. "github.com/StampWallet/backend/internal/database/mocks"
@@ -19,12 +18,25 @@ import (
 	. "github.com/StampWallet/backend/internal/testutils"
 )
 
-func GetAuthManager(ctrl *gomock.Controller) (*AuthManagerImpl, error) {
-	//db, mock, err := sqlmock.New()
-	//if err != nil {
-	//    ctrl.T.Errorf("failed to init sqlmock %s", err)
-	//    return nil, nil, err
-	//}
+type userMatcher struct {
+	ID            *uint
+	Email         *string
+	PasswordHash  *string
+	FirstName     *string
+	LastName      *string
+	EmailVerified *bool
+}
+
+type tokenMatcher struct {
+	OwnerId      *uint
+	TokenId      *string
+	Expires      *time.Time
+	TokenPurpose *TokenPurposeEnum
+	Used         *bool
+	Recalled     *bool
+}
+
+func getAuthManager(ctrl *gomock.Controller) (*AuthManagerImpl, error) {
 	return &AuthManagerImpl{
 		&BaseServices{
 			Logger:   log.Default(),
@@ -35,208 +47,7 @@ func GetAuthManager(ctrl *gomock.Controller) (*AuthManagerImpl, error) {
 	}, nil
 }
 
-type UserMatcher struct {
-	ID            *uint
-	Email         *string
-	PasswordHash  *string
-	FirstName     *string
-	LastName      *string
-	EmailVerified *bool
-}
-
-type TokenMatcher struct {
-	OwnerId      *uint
-	TokenId      *string
-	Expires      *time.Time
-	TokenPurpose *TokenPurposeEnum
-	Used         *bool
-	Recalled     *bool
-}
-
-func TestAuthManagerCreate(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-	manager, _ := GetAuthManager(ctrl)
-
-	userMatcher := &StructMatcher{UserMatcher{
-		Email:         Ptr("test@example.com"),
-		FirstName:     Ptr("first"),
-		LastName:      Ptr("last"),
-		EmailVerified: Ptr(false),
-	}}
-
-	manager.baseServices.Database.(*MockGormDB).
-		EXPECT().
-		Begin().
-		Return(manager.baseServices.Database)
-
-	manager.baseServices.Database.(*MockGormDB).
-		EXPECT().
-		First(gomock.Any(), &StructMatcher{UserMatcher{
-			Email: Ptr("test@example.com"),
-		}}).
-		DoAndReturn(func(user *User, cond interface{}) GormDB {
-			manager.baseServices.Database.(*MockGormDB).
-				EXPECT().
-				GetError().
-				Return(gormlogger.ErrRecordNotFound)
-			return manager.baseServices.Database
-		})
-
-	manager.baseServices.Database.(*MockGormDB).
-		EXPECT().
-		Create(userMatcher).
-		DoAndReturn(func(user *User) GormDB {
-			manager.baseServices.Database.(*MockGormDB).
-				EXPECT().
-				GetError().
-				Return(nil)
-			return manager.baseServices.Database
-		})
-
-	manager.baseServices.Database.(*MockGormDB).
-		EXPECT().
-		Commit().
-		DoAndReturn(func() GormDB {
-			manager.baseServices.Database.(*MockGormDB).
-				EXPECT().
-				GetError().
-				Return(nil)
-			return manager.baseServices.Database
-		})
-
-	manager.tokenService.(*MockTokenService).
-		EXPECT().
-		Create(
-			userMatcher,
-			gomock.Eq(TokenPurposeEmail),
-			&TimeGreaterThanNow{time.Now().Add(24 * time.Hour)},
-		).
-		Return(&Token{
-			TokenPurpose: TokenPurposeEmail,
-			Used:         false,
-			Recalled:     false,
-		}, "emailSecret", nil)
-
-	manager.tokenService.(*MockTokenService).
-		EXPECT().
-		Create(
-			userMatcher,
-			gomock.Eq(TokenPurposeSession),
-			&TimeGreaterThanNow{time.Now().Add(time.Hour)},
-		).
-		Return(&Token{
-			TokenPurpose: TokenPurposeSession,
-			Used:         true,
-			Recalled:     false,
-		}, "sessionSecret", nil)
-
-	//TODO subject and body probably should be tested too
-	manager.emailService.(*MockEmailService).
-		EXPECT().
-		Send(
-			gomock.Eq("test@example.com"),
-			gomock.Any(),
-			gomock.Any())
-
-	user, token, secret, err := manager.Create(
-		UserDetails{
-			Email:     "test@example.com",
-			Password:  "zaq1@WSX",
-			FirstName: "first",
-			LastName:  "last",
-		},
-	)
-	if err != nil {
-		t.Errorf("Expected no errors but received: %s", err)
-	}
-
-	if user != nil {
-		assert.Equal(t, "test@example.com", user.Email, "User email is expected")
-		assert.Equal(t, "sessionSecret", secret, "Invalid session secret")
-		err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte("zaq1@WSX"))
-		if err != nil {
-			t.Errorf("CompareHashAndPassword retruned an error %s", err)
-		}
-	} else {
-		t.Errorf("User is nil")
-	}
-
-	if token != nil {
-		assert.Equal(t, TokenPurposeSession, token.TokenPurpose)
-		assert.Equal(t, user.ID, token.OwnerId)
-		assert.Equal(t, true, token.Used)
-		assert.Equal(t, false, token.Recalled)
-	} else {
-		t.Errorf("Token is nil")
-	}
-}
-
-func TestAuthManagerCreateWithInvalidEmail(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-	manager, _ := GetAuthManager(ctrl)
-
-	user, _, _, err := manager.Create(
-		UserDetails{
-			Email:    "test",
-			Password: "zaq1@WSX",
-		},
-	)
-
-	if err != InvalidEmail {
-		t.Errorf("Expected an InvalidEmail error %s", err)
-	}
-	if user != nil {
-		t.Errorf("User is not nil")
-	}
-}
-
-func TestAuthManagerCreateWithExistingEmail(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-	manager, _ := GetAuthManager(ctrl)
-
-	manager.baseServices.Database.(*MockGormDB).
-		EXPECT().
-		Begin().
-		Return(manager.baseServices.Database)
-
-	manager.baseServices.Database.(*MockGormDB).
-		EXPECT().
-		First(gomock.Any(), &StructMatcher{UserMatcher{
-			Email: Ptr("test@example.com"),
-		}}).
-		DoAndReturn(func(arg *User, conds interface{}) GormDB {
-			manager.baseServices.Database.(*MockGormDB).
-				EXPECT().
-				GetError().
-				Return(nil)
-			arg.ID = 1
-			arg.Email = "test@example.com"
-			return manager.baseServices.Database
-		})
-
-	manager.baseServices.Database.(*MockGormDB).
-		EXPECT().
-		Rollback()
-
-	user, _, _, err := manager.Create(
-		UserDetails{
-			Email:    "test@example.com",
-			Password: "zaq1@WSX",
-		},
-	)
-
-	if err != EmailExists {
-		t.Errorf("Expected an ExistingEmail error %s", err)
-	}
-	if user != nil {
-		t.Errorf("User is not nil")
-	}
-}
-
-func GetExampleUser() User {
+func getExampleUser() User {
 	hash, err := bcrypt.GenerateFromPassword([]byte("zaq1@WSX"), 10)
 	if err != nil {
 		panic(err)
@@ -261,10 +72,10 @@ func GetExampleUser() User {
 }
 
 func mockExampleUser(database *MockGormDB) User {
-	user := GetExampleUser()
+	user := getExampleUser()
 	database.
 		EXPECT().
-		First(gomock.Any(), &StructMatcher{UserMatcher{
+		First(gomock.Any(), &StructMatcher{userMatcher{
 			Email: Ptr("test@example.com"),
 		}}).
 		DoAndReturn(func(arg *User, conds ...interface{}) GormDB {
@@ -308,7 +119,7 @@ func mockExampleUserEmailVerificationToken(database *MockGormDB) Token {
 	token := createExampleToken("test_email", TokenPurposeEmail)
 	database.
 		EXPECT().
-		Find(gomock.Any(), &StructMatcher{TokenMatcher{
+		Find(gomock.Any(), &StructMatcher{tokenMatcher{
 			TokenId: Ptr("test_email"),
 		}}).
 		Do(func(arg *Token) GormDB {
@@ -340,7 +151,7 @@ func mockExampleUserLogin(tokenService *MockTokenService) Token {
 		Used:         true,
 		Recalled:     false,
 	}
-	user := GetExampleUser()
+	user := getExampleUser()
 	tokenService.
 		EXPECT().
 		Check("test_login", "test_hash").
@@ -348,15 +159,210 @@ func mockExampleUserLogin(tokenService *MockTokenService) Token {
 	return token
 }
 
+func mockBegin(db GormDB) {
+	db.(*MockGormDB).
+		EXPECT().
+		Begin().
+		Return(db)
+}
+
+func mockRollback(db GormDB) {
+	db.(*MockGormDB).
+		EXPECT().
+		Rollback().
+		Return(db)
+}
+
+func mockCommit(db GormDB) {
+	db.(*MockGormDB).
+		EXPECT().
+		Commit().
+		DoAndReturn(returnError0(db, nil))
+}
+
+//lol
+
+func returnError0(db GormDB, err error) func() GormDB {
+	return (func() GormDB {
+		db.(*MockGormDB).
+			EXPECT().
+			GetError().
+			Return(err)
+		return db
+	})
+}
+
+func returnError1(db GormDB, err error) func(arg any) GormDB {
+	return (func(arg any) GormDB {
+		db.(*MockGormDB).
+			EXPECT().
+			GetError().
+			Return(err)
+		return db
+	})
+}
+
+func returnError2(db GormDB, err error) func(arg any, arg2 any) GormDB {
+	return (func(arg any, arg2 any) GormDB {
+		db.(*MockGormDB).
+			EXPECT().
+			GetError().
+			Return(err)
+		return db
+	})
+}
+
+// Tests
+
+func TestAuthManagerCreate(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	manager, _ := getAuthManager(ctrl)
+	db := manager.baseServices.Database
+
+	mainUserMatcher := &StructMatcher{userMatcher{
+		Email:         Ptr("test@example.com"),
+		FirstName:     Ptr("first"),
+		LastName:      Ptr("last"),
+		EmailVerified: Ptr(false),
+	}}
+
+	mockBegin(db)
+
+	db.(*MockGormDB).
+		EXPECT().
+		First(gomock.Any(), &StructMatcher{userMatcher{
+			Email: Ptr("test@example.com"),
+		}}).
+		DoAndReturn(returnError2(db, gorm.ErrRecordNotFound))
+
+	db.(*MockGormDB).
+		EXPECT().
+		Create(mainUserMatcher).
+		DoAndReturn(returnError1(db, nil))
+
+	mockCommit(db)
+
+	manager.tokenService.(*MockTokenService).
+		EXPECT().
+		Create(
+			mainUserMatcher,
+			gomock.Eq(TokenPurposeEmail),
+			&TimeGreaterThanNow{time.Now().Add(24 * time.Hour)},
+		).
+		Return(&Token{
+			TokenPurpose: TokenPurposeEmail,
+			Used:         false,
+			Recalled:     false,
+		}, "emailSecret", nil)
+
+	manager.tokenService.(*MockTokenService).
+		EXPECT().
+		Create(
+			mainUserMatcher,
+			gomock.Eq(TokenPurposeSession),
+			&TimeGreaterThanNow{time.Now().Add(time.Hour)},
+		).
+		Return(&Token{
+			TokenPurpose: TokenPurposeSession,
+			Used:         true,
+			Recalled:     false,
+		}, "sessionSecret", nil)
+
+	//TODO subject and body probably should be tested too
+	manager.emailService.(*MockEmailService).
+		EXPECT().
+		Send(
+			gomock.Eq("test@example.com"),
+			gomock.Any(),
+			gomock.Any())
+
+	user, token, secret, err := manager.Create(
+		UserDetails{
+			Email:     "test@example.com",
+			Password:  "zaq1@WSX",
+			FirstName: "first",
+			LastName:  "last",
+		},
+	)
+
+	require.Nilf(t, err, "manager.Create should return a nil error")
+
+	require.NotNilf(t, user, "user returned by login should not be nil")
+	assert.Equal(t, "test@example.com", user.Email, "User email is expected")
+	assert.Equal(t, "sessionSecret", secret, "Invalid session secret")
+	bcryptErr := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte("zaq1@WSX"))
+	require.Nilf(t, bcryptErr, "bcrypt.CompareHashAndPassword should return a nil error")
+
+	require.NotNilf(t, token, "token returned by login should not be nil")
+	assert.Equal(t, TokenPurposeSession, token.TokenPurpose)
+	assert.Equal(t, user.ID, token.OwnerId)
+	assert.Equal(t, true, token.Used)
+	assert.Equal(t, false, token.Recalled)
+}
+
+func TestAuthManagerCreateWithInvalidEmail(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	manager, _ := getAuthManager(ctrl)
+
+	user, _, _, err := manager.Create(
+		UserDetails{
+			Email:    "test",
+			Password: "zaq1@WSX",
+		},
+	)
+
+	require.ErrorIsf(t, InvalidEmail, err, "manager.Create should return InvalidEmail error")
+	require.Nilf(t, user, "manager.Create should return nil user")
+}
+
+func TestAuthManagerCreateWithExistingEmail(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	manager, _ := getAuthManager(ctrl)
+	db := manager.baseServices.Database
+
+	mockBegin(db)
+
+	db.(*MockGormDB).
+		EXPECT().
+		First(gomock.Any(), &StructMatcher{userMatcher{
+			Email: Ptr("test@example.com"),
+		}}).
+		DoAndReturn(func(arg *User, conds interface{}) GormDB {
+			db.(*MockGormDB).
+				EXPECT().
+				GetError().
+				Return(nil)
+			arg.ID = 1
+			arg.Email = "test@example.com"
+			return db
+		})
+
+	mockRollback(db)
+
+	user, _, _, err := manager.Create(
+		UserDetails{
+			Email:    "test@example.com",
+			Password: "zaq1@WSX",
+		},
+	)
+
+	require.ErrorIsf(t, EmailExists, err, "manager.Create should return EmailExists error")
+	require.Nilf(t, user, "manager.Create should return nil user")
+}
+
 func TestAuthManagerLogin(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	manager, _ := GetAuthManager(ctrl)
+	manager, _ := getAuthManager(ctrl)
+	db := manager.baseServices.Database
 
-	mockUser := mockExampleUser(manager.baseServices.Database.(*MockGormDB))
+	mockUser := mockExampleUser(db.(*MockGormDB))
 	manager.tokenService.(*MockTokenService).
 		EXPECT().
-		Create(&StructMatcher{UserMatcher{
+		Create(&StructMatcher{userMatcher{
 			ID: &mockUser.ID,
 		}}, TokenPurposeSession, TimeGreaterThanNow{time.Now().Add(time.Hour)}).
 		DoAndReturn(func(user User, arg1 interface{}, arg2 interface{}) (*Token, string, error) {
@@ -364,24 +370,16 @@ func TestAuthManagerLogin(t *testing.T) {
 		})
 
 	user, token, sessionSecret, err := manager.Login("test@example.com", "zaq1@WSX")
-	if err != nil {
-		t.Errorf("Error is not nil %s", err)
+	require.Nilf(t, err, "manager.Login should return a nil error")
+	require.NotNilf(t, user, "manager.Login should not return a nil user")
+	require.NotNilf(t, token, "manager.Login should not return a nil token")
+	assert.Equal(t, "test@example.com", user.Email, "Invalid user email")
+	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte("zaq1@WSX")); err != nil {
+		t.Errorf("bcrypt did not return nil %s", err)
 	}
-	if user == nil {
-		t.Errorf("User is nil")
-	} else {
-		assert.Equal(t, "test@example.com", user.Email, "Invalid user email")
-		if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte("zaq1@WSX")); err != nil {
-			t.Errorf("bcrypt did not return nil %s", err)
-		}
-	}
-	if token == nil {
-		t.Errorf("User is nil")
-	} else {
-		assert.Equal(t, user.ID, token.OwnerId, "Invalid token owner id")
-		assert.Equal(t, TokenPurposeSession, token.TokenPurpose, "Invalid token purpose")
-		assert.Equal(t, "sessionSecret", sessionSecret, "Invalid session secret")
-	}
+	assert.Equal(t, user.ID, token.OwnerId, "Invalid token owner id")
+	assert.Equal(t, TokenPurposeSession, token.TokenPurpose, "Invalid token purpose")
+	assert.Equal(t, "sessionSecret", sessionSecret, "Invalid session secret")
 }
 
 func assertInvalidLogin(t *testing.T, user *User, token *Token, sessionSecret string, err error) {
@@ -402,8 +400,10 @@ func assertInvalidLogin(t *testing.T, user *User, token *Token, sessionSecret st
 func TestAuthManagerLoginInvalidPassword(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	manager, _ := GetAuthManager(ctrl)
-	mockExampleUser(manager.baseServices.Database.(*MockGormDB))
+	manager, _ := getAuthManager(ctrl)
+	db := manager.baseServices.Database
+
+	mockExampleUser(db.(*MockGormDB))
 
 	user, token, sessionSecret, err := manager.Login("test@example.com", "invalid_password")
 	assertInvalidLogin(t, user, token, sessionSecret, err)
@@ -412,19 +412,15 @@ func TestAuthManagerLoginInvalidPassword(t *testing.T) {
 func TestAuthManagerLoginInvalidEmail(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	manager, _ := GetAuthManager(ctrl)
-	manager.baseServices.Database.(*MockGormDB).
+	manager, _ := getAuthManager(ctrl)
+	db := manager.baseServices.Database
+
+	db.(*MockGormDB).
 		EXPECT().
-		First(gomock.Any(), &StructMatcher{UserMatcher{
+		First(gomock.Any(), &StructMatcher{userMatcher{
 			Email: Ptr("unknown@example.com"),
 		}}).
-		DoAndReturn(func(user *User, cond interface{}) GormDB {
-			manager.baseServices.Database.(*MockGormDB).
-				EXPECT().
-				GetError().
-				Return(gormlogger.ErrRecordNotFound)
-			return manager.baseServices.Database
-		})
+		DoAndReturn(returnError2(db, gorm.ErrRecordNotFound))
 
 	user, token, sessionSecret, err := manager.Login("unknown@example.com", "invalid_password")
 	assertInvalidLogin(t, user, token, sessionSecret, err)
@@ -433,50 +429,33 @@ func TestAuthManagerLoginInvalidEmail(t *testing.T) {
 func TestAuthManagerConfirmEmail(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	manager, _ := GetAuthManager(ctrl)
+	manager, _ := getAuthManager(ctrl)
+	db := manager.baseServices.Database
 
-	user := GetExampleUser()
+	user := getExampleUser()
 	token := createExampleToken("test_email", TokenPurposeEmail)
 
-	manager.baseServices.Database.(*MockGormDB).
-		EXPECT().
-		Begin().
-		Return(manager.baseServices.Database)
+	mockBegin(db)
 
 	manager.tokenService.(*MockTokenService).
 		EXPECT().
 		Check("test_email", "test_hash").
 		Return(&user, &token, nil)
 
-	manager.baseServices.Database.(*MockGormDB).
+	db.(*MockGormDB).
 		EXPECT().
-		Save(&StructMatcher{UserMatcher{
+		Save(&StructMatcher{userMatcher{
 			ID:            Ptr(user.ID),
 			EmailVerified: Ptr(true),
 		}}).
-		DoAndReturn(func(arg any) any {
-			manager.baseServices.Database.(*MockGormDB).
-				EXPECT().
-				GetError().
-				Return(nil)
-			return manager.baseServices.Database
-		})
+		DoAndReturn(returnError1(db, nil))
 
 	manager.tokenService.(*MockTokenService).
 		EXPECT().
-		Invalidate(&StructMatcher{TokenMatcher{TokenId: Ptr("test_email")}}).
+		Invalidate(&StructMatcher{tokenMatcher{TokenId: Ptr("test_email")}}).
 		Return(&user, &token, nil)
 
-	manager.baseServices.Database.(*MockGormDB).
-		EXPECT().
-		Commit().
-		DoAndReturn(func() any {
-			manager.baseServices.Database.(*MockGormDB).
-				EXPECT().
-				GetError().
-				Return(nil)
-			return manager.baseServices.Database
-		})
+	mockCommit(db)
 
 	changedUser, err := manager.ConfirmEmail("test_email", "test_hash")
 	require.Nilf(t, err, "confirmEmail returned not nil error")
@@ -487,21 +466,17 @@ func TestAuthManagerConfirmEmail(t *testing.T) {
 func TestAuthManagerConfirmEmailInvalidId(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	manager, _ := GetAuthManager(ctrl)
+	manager, _ := getAuthManager(ctrl)
+	db := manager.baseServices.Database
 
-	manager.baseServices.Database.(*MockGormDB).
-		EXPECT().
-		Begin().
-		Return(manager.baseServices.Database)
+	mockBegin(db)
 
 	manager.tokenService.(*MockTokenService).
 		EXPECT().
 		Check("invalid_id", "test_hash").
 		Return(nil, nil, InvalidToken)
 
-	manager.baseServices.Database.(*MockGormDB).
-		EXPECT().
-		Rollback()
+	mockRollback(db)
 
 	_, err := manager.ConfirmEmail("invalid_id", "test_hash")
 	require.ErrorIsf(t, InvalidToken, err, "ConfirmEmail should return UnknownToken")
@@ -510,21 +485,17 @@ func TestAuthManagerConfirmEmailInvalidId(t *testing.T) {
 func TestAuthManagerConfirmEmailInvalidHash(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	manager, _ := GetAuthManager(ctrl)
+	manager, _ := getAuthManager(ctrl)
+	db := manager.baseServices.Database
 
-	manager.baseServices.Database.(*MockGormDB).
-		EXPECT().
-		Begin().
-		Return(manager.baseServices.Database)
+	mockBegin(db)
 
 	manager.tokenService.(*MockTokenService).
 		EXPECT().
 		Check("test_email", "invalid_hash").
 		Return(nil, nil, UnknownToken)
 
-	manager.baseServices.Database.(*MockGormDB).
-		EXPECT().
-		Rollback()
+	mockRollback(db)
 
 	_, err := manager.ConfirmEmail("test_email", "invalid_hash")
 	if err != InvalidToken {
@@ -535,78 +506,65 @@ func TestAuthManagerConfirmEmailInvalidHash(t *testing.T) {
 func TestAuthManagerChangePassword(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	manager, _ := GetAuthManager(ctrl)
+	manager, _ := getAuthManager(ctrl)
+	db := manager.baseServices.Database
 
 	var hash string
-	user := GetExampleUser()
+	user := getExampleUser()
 
-	manager.baseServices.Database.(*MockGormDB).
+	db.(*MockGormDB).
 		EXPECT().
-		Save(&StructMatcher{UserMatcher{
+		Save(&StructMatcher{userMatcher{
 			ID: Ptr(user.ID),
 		}}).
 		DoAndReturn(func(value *User) GormDB {
 			hash = value.PasswordHash
-			manager.baseServices.Database.(*MockGormDB).
+			db.(*MockGormDB).
 				EXPECT().
 				GetError().
 				Return(nil)
-			return manager.baseServices.Database
+			return db
 		})
 
 	_, err := manager.ChangePassword(user, "zaq1@WSX", "nu9AhYoo")
-	if err != nil {
-		t.Errorf("ChangePassword did not return nil %s", err)
-	}
+	require.Nilf(t, err, "manager.ChangePassword should return a nil error")
 	bcryptErr := bcrypt.CompareHashAndPassword([]byte(hash), []byte("nu9AhYoo"))
-	if bcryptErr != nil {
-		t.Errorf("bcrypt did not return nil %s", bcryptErr)
-	}
+	require.Nilf(t, bcryptErr, "bcrypt.CompareHashAndPassword should return a nil error")
 }
 
 func TestAuthManagerChangePasswordInvalid(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	manager, _ := GetAuthManager(ctrl)
+	manager, _ := getAuthManager(ctrl)
 
-	user := GetExampleUser()
+	user := getExampleUser()
 
 	_, err := manager.ChangePassword(user, "test", "nu9AhYoo")
-	if err == nil {
-		t.Errorf("ChangePassword returned nil %s", err)
-	}
+	require.ErrorIsf(t, InvalidOldPassword, err, "manager.ChangePassword should return a nil error")
 }
 
 func TestAuthManagerChangeEmail(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	manager, _ := GetAuthManager(ctrl)
+	manager, _ := getAuthManager(ctrl)
+	db := manager.baseServices.Database
 
-	user := GetExampleUser()
+	user := getExampleUser()
 
-	manager.baseServices.Database.(*MockGormDB).
+	mockBegin(db)
+
+	db.(*MockGormDB).
 		EXPECT().
-		Begin().
-		Return(manager.baseServices.Database)
-
-	manager.baseServices.Database.(*MockGormDB).
-		EXPECT().
-		Save(&StructMatcher{UserMatcher{
+		Save(&StructMatcher{userMatcher{
 			ID:            Ptr(user.ID),
 			EmailVerified: Ptr(false),
 		}}).
-		DoAndReturn(func(value *User) GormDB {
-			manager.baseServices.Database.(*MockGormDB).
-				EXPECT().
-				GetError().
-				Return(nil)
-			return manager.baseServices.Database
-		})
+		DoAndReturn(returnError1(db, nil))
 
 	manager.tokenService.(*MockTokenService).
 		EXPECT().
 		Create(
-			&StructMatcher{UserMatcher{
+			&StructMatcher{userMatcher{
 				Email:         Ptr("test2@example.com"),
 				EmailVerified: Ptr(false),
 			}},
@@ -626,30 +584,21 @@ func TestAuthManagerChangeEmail(t *testing.T) {
 			gomock.Any(),
 			gomock.Any())
 
-	manager.baseServices.Database.(*MockGormDB).
-		EXPECT().
-		Commit()
+	mockCommit(db)
 
 	changedUser, err := manager.ChangeEmail(user, "test2@example.com")
 
-	if err != nil {
-		t.Errorf("ChangeEmail returned an error %s", err)
-	}
-	if changedUser != nil {
-		if changedUser.EmailVerified {
-			t.Errorf("changedUser still has verified email")
-		}
-	} else {
-		t.Errorf("changedUser is nil")
-	}
+	require.Nilf(t, err, "ChangeEmail should return a nil error")
+	require.NotNilf(t, changedUser, "ChangeEmail should not return a nil user")
+	require.Falsef(t, changedUser.EmailVerified, "ChangeEmail should return a user with EmailVerified set to false")
 }
 
 func TestAuthManagerChangeEmailInvalid(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	manager, _ := GetAuthManager(ctrl)
+	manager, _ := getAuthManager(ctrl)
 
-	user := GetExampleUser()
+	user := getExampleUser()
 
 	changedUser, err := manager.ChangeEmail(user, "asd")
 
