@@ -16,8 +16,18 @@ import (
 	//. "github.com/StampWallet/backend/internal/services/mocks"
 )
 
-func GetDefaultUser() *User {
-	return &User{
+func Save[T any](db GormDB, item *T) {
+	if db == nil {
+		return
+	}
+	tx := db.Create(item)
+	if err := tx.GetError(); err != nil {
+		panic(fmt.Errorf("failed to create item of type %T: %w", *new(T), err))
+	}
+}
+
+func GetTestUser(db GormDB) *User {
+	user := User{
 		PublicId:      shortuuid.New(),
 		FirstName:     shortuuid.New(),
 		LastName:      shortuuid.New(),
@@ -25,15 +35,12 @@ func GetDefaultUser() *User {
 		PasswordHash:  shortuuid.New(),
 		EmailVerified: true,
 	}
+	Save(db, &user)
+	return &user
 }
 
-func GetTestUser(db GormDB) *User {
-	userPtr := GetDefaultUser()
-	tx := db.Create(userPtr)
-	if err := tx.GetError(); err != nil {
-		panic(fmt.Errorf("failed to create Item %w", err))
-	}
-	return userPtr
+func GetDefaultUser() *User {
+	return GetTestUser(nil)
 }
 
 func GetTestBusiness(db GormDB, user *User) *Business {
@@ -44,18 +51,20 @@ func GetTestBusiness(db GormDB, user *User) *Business {
 		Description:    "Description",
 		Address:        "test address",
 		GPSCoordinates: FromCoords(27.5916, 086.5640),
-		NIP:            strconv.Itoa(rand.Intn(math.MaxInt)),
+		NIP:            strconv.Itoa(rand.Intn(math.MaxInt)), // TODO: this needs to generate valid codes for tests
 		KRS:            strconv.Itoa(rand.Intn(math.MaxInt)),
 		REGON:          strconv.Itoa(rand.Intn(math.MaxInt)),
 		OwnerName:      "test owner",
 		BannerImageId:  GetTestFileMetadata(db, user).PublicId,
 		IconImageId:    GetTestFileMetadata(db, user).PublicId,
 	}
-	tx := db.Create(&business)
-	if err := tx.GetError(); err != nil {
-		panic(fmt.Errorf("failed to create Business %w", err))
-	}
+	user.Business = &business
+	Save(db, &business)
 	return &business
+}
+
+func GetDefaultBusiness(user *User) *Business {
+	return GetTestBusiness(nil, user)
 }
 
 func GetTestFileMetadata(db GormDB, user *User) *FileMetadata {
@@ -66,10 +75,7 @@ func GetTestFileMetadata(db GormDB, user *User) *FileMetadata {
 		PublicId: shortuuid.New(),
 		OwnerId:  user.ID,
 	}
-	tx := db.Create(&file)
-	if err := tx.GetError(); err != nil {
-		panic(fmt.Errorf("failed to create Business %w", err))
-	}
+	Save(db, &file)
 	return &file
 }
 
@@ -86,10 +92,7 @@ func GetTestItemDefinition(db GormDB, business *Business, metadata FileMetadata)
 		MaxAmount:   10,
 		Available:   true,
 	}
-	tx := db.Create(&definition)
-	if err := tx.GetError(); err != nil {
-		panic(fmt.Errorf("failed to create ItemDefinition %w", err))
-	}
+	Save(db, &definition)
 	return &definition
 }
 
@@ -100,34 +103,24 @@ func GetTestVirtualCard(db GormDB, user *User, business *Business) *VirtualCard 
 		BusinessId: business.ID,
 		Points:     40,
 	}
-	tx := db.Create(&virtualCard)
-	if err := tx.GetError(); err != nil {
-		panic(fmt.Errorf("failed to create VirtualCard %w", err))
-	}
+	Save(db, &virtualCard)
 	return &virtualCard
 }
 
-func GetDefaultOwnedItem(itemDefinition *ItemDefinition, card *VirtualCard) *OwnedItem {
-	return &OwnedItem{
+func GetTestOwnedItem(db GormDB, itemDefinition *ItemDefinition, card *VirtualCard) *OwnedItem {
+	ownedItem := OwnedItem{
 		PublicId:      shortuuid.New(),
 		DefinitionId:  itemDefinition.ID,
 		VirtualCardId: card.ID,
 		Used:          sql.NullTime{Valid: false},
 		Status:        OwnedItemStatusOwned,
 	}
+	Save(db, &ownedItem)
+	return &ownedItem
 }
 
-func Save(db GormDB, item any) {
-	tx := db.Create(item)
-	if err := tx.GetError(); err != nil {
-		panic(fmt.Errorf("failed to create OwnedItem %w", err))
-	}
-}
-
-func GetTestOwnedItem(db GormDB, itemDefinition *ItemDefinition, card *VirtualCard) *OwnedItem {
-	ownedItem := GetDefaultOwnedItem(itemDefinition, card)
-	Save(db, ownedItem)
-	return ownedItem
+func GetDefaultOwnedItem(itemDefinition *ItemDefinition, card *VirtualCard) *OwnedItem {
+	return GetTestOwnedItem(nil, itemDefinition, card)
 }
 
 func GetTestLocalCard(db GormDB, user *User) *LocalCard {
@@ -138,10 +131,7 @@ func GetTestLocalCard(db GormDB, user *User) *LocalCard {
 		Code:     strconv.Itoa(rand.Intn(math.MaxInt)),
 		Name:     "test card",
 	}
-	tx := db.Create(&localCard)
-	if err := tx.GetError(); err != nil {
-		panic(fmt.Errorf("failed to create LocalCard %w", err))
-	}
+	Save(db, &localCard)
 	return &localCard
 }
 
@@ -153,10 +143,7 @@ func GetTestTransaction(db GormDB, virtualCard *VirtualCard, items []OwnedItem) 
 		State:         TransactionStateStarted,
 		AddedPoints:   0,
 	}
-	tx := db.Create(&transaction)
-	if err := tx.GetError(); err != nil {
-		panic(fmt.Errorf("failed to create Transaction %w", err))
-	}
+	Save(db, &transaction)
 	var details []TransactionDetail
 	for _, item := range items {
 		transactionDetail := TransactionDetail{
@@ -164,17 +151,14 @@ func GetTestTransaction(db GormDB, virtualCard *VirtualCard, items []OwnedItem) 
 			ItemId:        item.ID,
 			Action:        NoActionType,
 		}
-		tx := db.Create(&transactionDetail)
 		details = append(details, transactionDetail)
-		if err := tx.GetError(); err != nil {
-			panic(fmt.Errorf("failed to create TransactionDetail %w", err))
-		}
+		Save(db, &transactionDetail)
 	}
 	return &transaction, details
 }
 
-func GetDefaultItem(business *Business) ItemDefinition {
-	return ItemDefinition{
+func GetDefaultItem(business *Business) *ItemDefinition {
+	itemDefinition := &ItemDefinition{
 		PublicId:    shortuuid.New(),
 		BusinessId:  business.ID,
 		Name:        "test item definition name",
@@ -186,11 +170,6 @@ func GetDefaultItem(business *Business) ItemDefinition {
 		MaxAmount:   10,
 		Available:   true,
 	}
-}
-
-func SaveItem(db GormDB, definition *ItemDefinition) {
-	tx := db.Create(&definition)
-	if err := tx.GetError(); err != nil {
-		panic(fmt.Errorf("failed to create ItemDefinition %w", err))
-	}
+	business.ItemDefinitions = append(business.ItemDefinitions, *itemDefinition)
+	return itemDefinition
 }

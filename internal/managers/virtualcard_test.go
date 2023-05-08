@@ -176,9 +176,9 @@ func TestVirtualCardManagerBuyItem(t *testing.T) {
 	s := setupVirtualCardManagerTest(t)
 	virtualCard := GetTestVirtualCard(s.db, s.user, s.business)
 	itemDefinition := GetDefaultItem(s.business)
-	SaveItem(s.db, &itemDefinition)
+	Save(s.db, itemDefinition)
 
-	ownedItem, err := s.manager.BuyItem(virtualCard, &itemDefinition)
+	ownedItem, err := s.manager.BuyItem(virtualCard, itemDefinition)
 	require.Nilf(t, err, "VirtualCardManager.BuyItem should return a nil error")
 	require.NotNilf(t, ownedItem, "VirtualCardManager.BuyItem should not return a nil ownedItem")
 	if virtualCard == nil {
@@ -200,13 +200,13 @@ func TestVirtualCardManagerBuyItemAboveMaxAmount(t *testing.T) {
 	virtualCard := GetTestVirtualCard(s.db, s.user, s.business)
 	itemDefinition := GetDefaultItem(s.business)
 	itemDefinition.MaxAmount = 1
-	SaveItem(s.db, &itemDefinition)
+	Save(s.db, itemDefinition)
 
-	ownedItem, err := s.manager.BuyItem(virtualCard, &itemDefinition)
+	ownedItem, err := s.manager.BuyItem(virtualCard, itemDefinition)
 	require.NotNilf(t, ownedItem, "VirtualCardManager.BuyItem should not return a nil item")
 	require.Nilf(t, err, "VirtualCardManager.BuyItem should return a nil error")
 
-	ownedItemAboveMaxAmount, err := s.manager.BuyItem(virtualCard, &itemDefinition)
+	ownedItemAboveMaxAmount, err := s.manager.BuyItem(virtualCard, itemDefinition)
 	require.Nilf(t, ownedItemAboveMaxAmount, "VirtualCardManager.BuyItem should return a nil item")
 	require.Equalf(t, err, AboveMaxAmount, "VirtualCardManager.BuyItem should return a AboveMaxAmount error")
 }
@@ -216,9 +216,9 @@ func TestVirtualCardManagerBuyItemWithNotEnoughPoints(t *testing.T) {
 	virtualCard := GetTestVirtualCard(s.db, s.user, s.business)
 	itemDefinition := GetDefaultItem(s.business)
 	itemDefinition.Price = virtualCard.Points + 1
-	SaveItem(s.db, &itemDefinition)
+	Save(s.db, itemDefinition)
 
-	ownedItem, err := s.manager.BuyItem(virtualCard, &itemDefinition)
+	ownedItem, err := s.manager.BuyItem(virtualCard, itemDefinition)
 	require.Nilf(t, ownedItem, "VirtualCardManager.BuyItem should return a nil item")
 	require.Equalf(t, NotEnoughPoints, err, "VirtualCardManager.BuyItem should a NotEnoughPoints error")
 }
@@ -229,9 +229,9 @@ func TestVirtualCardManagerBuyItemBeforeStartDate(t *testing.T) {
 	itemDefinition := GetDefaultItem(s.business)
 	itemDefinition.StartDate = sql.NullTime{Time: time.Now().Add(time.Hour * 24 * 24), Valid: true}
 	itemDefinition.EndDate = sql.NullTime{Time: time.Now().Add(time.Hour * 24 * 25), Valid: true}
-	SaveItem(s.db, &itemDefinition)
+	Save(s.db, itemDefinition)
 
-	ownedItem, err := s.manager.BuyItem(virtualCard, &itemDefinition)
+	ownedItem, err := s.manager.BuyItem(virtualCard, itemDefinition)
 	require.Nilf(t, ownedItem, "VirtualCardManager.BuyItem should return a nil item")
 	require.Equalf(t, BeforeStartDate, err, "VirtualCardManager.BuyItem should return a BeforeStartDate error")
 }
@@ -242,9 +242,9 @@ func TestVirtualCardManagerBuyItemAfterEndDate(t *testing.T) {
 	itemDefinition := GetDefaultItem(s.business)
 	itemDefinition.StartDate = sql.NullTime{Time: time.Now().Add(-time.Hour * 24 * 24), Valid: true}
 	itemDefinition.EndDate = sql.NullTime{Time: time.Now().Add(-time.Hour), Valid: true}
-	SaveItem(s.db, &itemDefinition)
+	Save(s.db, itemDefinition)
 
-	ownedItem, err := s.manager.BuyItem(virtualCard, &itemDefinition)
+	ownedItem, err := s.manager.BuyItem(virtualCard, itemDefinition)
 	require.Nilf(t, ownedItem, "VirtualCardManager.BuyItem should return a nil item")
 	require.Equalf(t, AfterEndDate, err, "VirtualCardManager.BuyItem should return an AfterEndDate error")
 }
@@ -254,9 +254,9 @@ func TestVirtualCardManagerBuyItemUnavailable(t *testing.T) {
 	virtualCard := GetTestVirtualCard(s.db, s.user, s.business)
 	itemDefinition := GetDefaultItem(s.business)
 	itemDefinition.Available = false
-	SaveItem(s.db, &itemDefinition)
+	Save(s.db, itemDefinition)
 
-	ownedItem, err := s.manager.BuyItem(virtualCard, &itemDefinition)
+	ownedItem, err := s.manager.BuyItem(virtualCard, itemDefinition)
 	require.Nilf(t, ownedItem, "VirtualCardManager.BuyItem should return a nil item")
 	require.Equalf(t, UnavailableItem, err, "VirtualCardManager.BuyItem should return an UnavailableItem error")
 }
@@ -266,9 +266,9 @@ func TestVirtualCardManagerBuyItemWithdrawn(t *testing.T) {
 	virtualCard := GetTestVirtualCard(s.db, s.user, s.business)
 	itemDefinition := GetDefaultItem(s.business)
 	itemDefinition.Withdrawn = false
-	SaveItem(s.db, &itemDefinition)
+	Save(s.db, itemDefinition)
 
-	ownedItem, err := s.manager.BuyItem(virtualCard, &itemDefinition)
+	ownedItem, err := s.manager.BuyItem(virtualCard, itemDefinition)
 	require.Nilf(t, ownedItem, "VirtualCardManager.BuyItem should return a nil item")
 	require.Equalf(t, WithdrawnItem, err, "VirtualCardManager.BuyItem should return a WithdrawnItem error")
 }

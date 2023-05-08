@@ -15,7 +15,7 @@ import (
 var InvalidEmail = errors.New("Invalid email")
 var InvalidLogin = errors.New("Invalid login")
 var EmailExists = errors.New("Email exists")
-var UnknownError = errors.New("Email exists")
+var UnknownError = errors.New("Unknown error")
 var InvalidToken = errors.New("Invalid token")
 
 type AuthManager interface {

@@ -3,20 +3,20 @@ package api
 import (
 	"log"
 
+	. "github.com/StampWallet/backend/internal/database/accessors"
 	. "github.com/StampWallet/backend/internal/managers"
 	"github.com/gin-gonic/gin"
 )
 
 type UserHandlers struct {
-	virtualCardManager  *VirtualCardManager
-	localCardManager    *LocalCardManager
-	businessManager     *BusinessManager
-	transactionManager  *TransactionManager
-	virtualCardHandlers *UserVirtualCardHandlers
-	localCardHandlers   *UserLocalCardHandlers
-	//this won't work at least not without reflection
-	//userAuthorizedAcessor UserAuthorizedAccessor
-	// authorizedTransactionAccessor *AuthorizedTransactionAccessor
+	virtualCardManager            VirtualCardManager
+	localCardManager              LocalCardManager
+	businessManager               BusinessManager
+	transactionManager            TransactionManager
+	virtualCardHandlers           *UserVirtualCardHandlers
+	localCardHandlers             *UserLocalCardHandlers
+	userAuthorizedAcessor         UserAuthorizedAccessor
+	authorizedTransactionAccessor AuthorizedTransactionAccessor
 
 	logger *log.Logger
 }
@@ -34,12 +34,12 @@ func (handler *UserHandlers) Connect(rg *gin.RouterGroup) {
 }
 
 type UserVirtualCardHandlers struct {
-	virtualCardManager    *VirtualCardManager
-	transactionManager    *TransactionManager
-	itemDefinitionManager *ItemDefinitionManager
-	//userAuthorizedAcessor UserAuthorizedAccessor
-	// authorizedTransactionAccessor *AuthorizedTransactionAccessor
-	logger *log.Logger
+	virtualCardManager            VirtualCardManager
+	transactionManager            TransactionManager
+	itemDefinitionManager         ItemDefinitionManager
+	userAuthorizedAcessor         UserAuthorizedAccessor
+	authorizedTransactionAccessor AuthorizedTransactionAccessor
+	logger                        *log.Logger
 }
 
 func (handler *UserVirtualCardHandlers) postCard(c *gin.Context) {
@@ -71,16 +71,16 @@ func (handler *UserVirtualCardHandlers) Connect(rg *gin.RouterGroup) {
 }
 
 type UserLocalCardHandlers struct {
-	localCardManager *LocalCardManager
-	//userAuthorizedAcessor UserAuthorizedAccessor
-	logger *log.Logger
+	localCardManager      LocalCardManager
+	userAuthorizedAcessor UserAuthorizedAccessor
+	logger                *log.Logger
 }
 
 func (handler *UserLocalCardHandlers) postCard(c *gin.Context) {
 
 }
 
-func (handler *UserLocalCardHandlers) getCard(c *gin.Context) {
+func (handler *UserLocalCardHandlers) getCardTypes(c *gin.Context) {
 
 }
 
