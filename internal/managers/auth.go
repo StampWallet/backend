@@ -15,7 +15,7 @@ import (
 var InvalidEmail = errors.New("Invalid email")
 var InvalidLogin = errors.New("Invalid login")
 var InvalidOldPassword = errors.New("Invalid old password")
-var InvalidTokenPurpose = errors.New("Invalid login")
+var InvalidTokenPurpose = errors.New("Invalid token purpose")
 var EmailExists = errors.New("Email exists")
 var UnknownError = errors.New("Unknown error")
 var InvalidToken = errors.New("Invalid token")
@@ -23,6 +23,7 @@ var InvalidToken = errors.New("Invalid token")
 type AuthManager interface {
 	Create(userDetails UserDetails) (*User, *Token, error)
 	Login(email string, password string) (*User, *Token, error)
+	Logout(tokenId string, tokenSecret string) (*User, *Token, error)
 	ConfirmEmail(tokenId string, tokenSecret string) (*User, error)
 	ChangePassword(user User, oldPassword string, newPassword string) (*User, error)
 	ChangeEmail(user User, newEmail string) (*User, error)
@@ -125,6 +126,23 @@ func (manager *AuthManagerImpl) Login(email string, password string) (*User, *To
 	}
 
 	return &user, sessionToken, sessionSecret, nil
+}
+
+func (manager *AuthManagerImpl) Logout(tokenId string, tokenSecret string) (*User, *Token, error) {
+	_, token, err := manager.tokenService.Check(tokenId, tokenSecret)
+	if err != nil {
+		manager.baseServices.Logger.Printf("tokenService.Check returned an error: %s", err)
+		return nil, nil, InvalidToken
+	}
+	if token.TokenPurpose != TokenPurposeSession {
+		return nil, nil, InvalidTokenPurpose
+	}
+	user, invalidatedToken, err := manager.tokenService.Invalidate(*token)
+	if err != nil {
+		manager.baseServices.Logger.Printf("tokenService.Invalidate returned an error: %s", err)
+		return nil, nil, InvalidToken
+	}
+	return user, invalidatedToken, nil
 }
 
 func (manager *AuthManagerImpl) ConfirmEmail(tokenId string, tokenSecret string) (*User, error) {

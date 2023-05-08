@@ -129,7 +129,7 @@ func mockExampleUserEmailVerificationToken(database *MockGormDB) Token {
 	return token
 }
 
-func mockExampleUserLogin(tokenService *MockTokenService) Token {
+func getExampleUserLogin() Token {
 	hash, err := bcrypt.GenerateFromPassword([]byte("test_hash"), 10)
 	if err != nil {
 		panic(err)
@@ -151,7 +151,12 @@ func mockExampleUserLogin(tokenService *MockTokenService) Token {
 		Used:         true,
 		Recalled:     false,
 	}
+	return token
+}
+
+func mockExampleUserLogin(tokenService *MockTokenService) Token {
 	user := getExampleUser()
+	token := getExampleUserLogin()
 	tokenService.
 		EXPECT().
 		Check("test_login", "test_hash").
@@ -424,6 +429,53 @@ func TestAuthManagerLoginInvalidEmail(t *testing.T) {
 
 	user, token, sessionSecret, err := manager.Login("unknown@example.com", "invalid_password")
 	assertInvalidLogin(t, user, token, sessionSecret, err)
+}
+
+func TestAuthManagerLogout(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	manager, _ := getAuthManager(ctrl)
+
+	user := getExampleUser()
+	token := getExampleUserLogin()
+	manager.tokenService.(*MockTokenService).
+		EXPECT().
+		Check(token.TokenId, "test_hash").
+		Return(&user, &token, nil)
+
+	manager.tokenService.(*MockTokenService).
+		EXPECT().
+		Invalidate(&StructMatcher{tokenMatcher{
+			TokenId: Ptr(token.TokenId),
+		}}).
+		DoAndReturn(func(token Token) (*User, *Token, error) {
+			token.Recalled = true
+			return &user, &token, nil
+		})
+
+	logoutUser, logoutToken, err := manager.Logout(token.TokenId, "test_hash")
+	require.Nil(t, err)
+	require.NotNil(t, logoutUser)
+	require.NotNil(t, logoutToken)
+	require.True(t, logoutToken.Recalled)
+	require.Equal(t, token.TokenId, logoutToken.TokenId)
+}
+
+func TestAuthManagerLogoutInvalidPurpose(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	manager, _ := getAuthManager(ctrl)
+
+	user := getExampleUser()
+	token := getExampleUserLogin()
+	token.TokenPurpose = TokenPurposeEmail
+	manager.tokenService.(*MockTokenService).
+		EXPECT().
+		Check(token.TokenId, "test_hash").
+		Return(&user, &token, nil)
+
+	logoutUser, logoutToken, err := manager.Logout(token.TokenId, "test_hash")
+	require.ErrorIs(t, err, InvalidTokenPurpose)
+	require.Nil(t, logoutUser)
+	require.Nil(t, logoutToken)
 }
 
 func TestAuthManagerConfirmEmail(t *testing.T) {
