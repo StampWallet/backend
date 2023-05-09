@@ -1,14 +1,13 @@
 package middleware
 
 import (
-	"github.com/StampWallet/backend/internal/services"
-	"github.com/gin-gonic/gin"
 	"log"
+
+	"github.com/gin-gonic/gin"
 )
 
 type RequireValidEmailMiddleware struct {
-	logger       *log.Logger
-	tokenService *services.TokenService
+	logger *log.Logger
 }
 
 func (middleware *RequireValidEmailMiddleware) Handle(c *gin.Context) {
