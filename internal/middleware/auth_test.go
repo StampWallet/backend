@@ -3,6 +3,7 @@ package middleware
 import (
 	"log"
 	"net/http/httptest"
+	"reflect"
 	"testing"
 	"time"
 
@@ -72,7 +73,7 @@ func TestHandleOk(t *testing.T) {
 	if ok == false {
 		t.Errorf("Context holds no user")
 	}
-	require.Truef(t, MatchEntities(testUser, user), "User entity provided by authenticator failed validation")
+	require.Truef(t, reflect.DeepEqual(testUser, user), "User entity provided by authenticator failed validation")
 	// TODO: test MatchEntities usage
 }
 
@@ -111,12 +112,12 @@ func TestHandleNok_UnknownToken(t *testing.T) {
 
 	authMiddleware.Handle(context)
 
-	respBodyExpected := api.DefaultResponse{Status: api.FORBIDDEN}
+	respBodyExpected := api.DefaultResponse{Status: api.UNAUTHORIZED}
 	respBody, respCode, respParseErr := ExtractResponse[api.DefaultResponse](w)
 
 	require.Nilf(t, respParseErr, "Failed to parse JSON response")
 	require.Equalf(t, respCode, int(401), "Response returned unexpected status code")
-	require.Truef(t, MatchEntities(respBodyExpected, respBody), "Status inside default response body does not match expected")
+	require.Truef(t, reflect.DeepEqual(respBodyExpected, *respBody), "Status inside default response body does not match expected")
 	// TODO: MatchEntities
 
 	userPtr, userExists := context.Get("user")
