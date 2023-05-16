@@ -64,7 +64,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DefaultResponse'
+                $ref: '#/components/schemas/PostAccountResponse'
               example:
                 status: OK
         '400':
@@ -1075,6 +1075,8 @@ components:
         - ALREADY_EXISTS
         - UNAUTHORIZED
         - INVALID_REQUEST
+        - UNKNOWN_ERROR
+        - CONFLICT
 
     PostAccountRequest:
       type: object
@@ -1087,6 +1089,12 @@ components:
           type: string
           format: password
           example: zaq1@WSX
+    PostAccountResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          example: ZWVnaDhhZWg4bGVpbDJhaXBlaW5nZWViNWFpU2hlaGUK
     PostAccountEmailConfirmationRequest:
       type: object
       properties:

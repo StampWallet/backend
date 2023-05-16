@@ -28,9 +28,9 @@ func Save[T any](db GormDB, item *T) {
 
 func GetTestUser(db GormDB) *User {
 	user := User{
-		PublicId:      shortuuid.New(),
-		FirstName:     shortuuid.New(),
-		LastName:      shortuuid.New(),
+		PublicId: shortuuid.New(),
+		//FirstName:     shortuuid.New(),
+		//LastName:      shortuuid.New(),
 		Email:         shortuuid.New() + "@example.com",
 		PasswordHash:  shortuuid.New(),
 		EmailVerified: true,

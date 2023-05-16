@@ -107,9 +107,9 @@ func (entity *FileMetadata) GetUserId(_ GormDB) (uint, error) {
 
 type User struct {
 	gorm.Model
-	PublicId      string `gorm:"uniqueIndex;not null"`
-	FirstName     string `gorm:"not null"`
-	LastName      string `gorm:"not null"`
+	PublicId string `gorm:"uniqueIndex;not null"`
+	//FirstName     string `gorm:"not null"`
+	//LastName      string `gorm:"not null"`
 	Email         string `gorm:"uniqueIndex;not null"`
 	PasswordHash  string `gorm:"not null"`
 	EmailVerified bool   `gorm:"default:false;not null"`

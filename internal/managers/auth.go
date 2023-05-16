@@ -21,19 +21,19 @@ var UnknownError = errors.New("Unknown error")
 var InvalidToken = errors.New("Invalid token")
 
 type AuthManager interface {
-	Create(userDetails UserDetails) (*User, *Token, error)
-	Login(email string, password string) (*User, *Token, error)
+	Create(userDetails UserDetails) (*User, *Token, string, error)
+	Login(email string, password string) (*User, *Token, string, error)
 	Logout(tokenId string, tokenSecret string) (*User, *Token, error)
 	ConfirmEmail(tokenId string, tokenSecret string) (*User, error)
-	ChangePassword(user User, oldPassword string, newPassword string) (*User, error)
-	ChangeEmail(user User, newEmail string) (*User, error)
+	ChangePassword(user *User, oldPassword string, newPassword string) (*User, error)
+	ChangeEmail(user *User, newEmail string) (*User, error)
 }
 
 type UserDetails struct {
-	FirstName string
-	LastName  string
-	Email     string
-	Password  string
+	//FirstName string
+	//LastName  string
+	Email    string
+	Password string
 }
 
 type AuthManagerImpl struct {
@@ -68,11 +68,11 @@ func (manager *AuthManagerImpl) Create(userDetails UserDetails) (*User, *Token, 
 		return nil, nil, "", bcryptErr
 	}
 	user := User{
-		PublicId:      shortuuid.New(),
-		Email:         userDetails.Email,
-		PasswordHash:  string(hash),
-		FirstName:     userDetails.FirstName,
-		LastName:      userDetails.LastName,
+		PublicId:     shortuuid.New(),
+		Email:        userDetails.Email,
+		PasswordHash: string(hash),
+		//FirstName:     userDetails.FirstName,
+		//LastName:      userDetails.LastName,
 		EmailVerified: false,
 	}
 	tx = tx.Create(&user)
@@ -185,7 +185,7 @@ func (manager *AuthManagerImpl) ConfirmEmail(tokenId string, tokenSecret string)
 	return user, nil
 }
 
-func (manager *AuthManagerImpl) ChangePassword(user User, oldPassword string, newPassword string) (*User, error) {
+func (manager *AuthManagerImpl) ChangePassword(user *User, oldPassword string, newPassword string) (*User, error) {
 	err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(oldPassword))
 	if err == bcrypt.ErrMismatchedHashAndPassword {
 		return nil, InvalidOldPassword
@@ -204,10 +204,10 @@ func (manager *AuthManagerImpl) ChangePassword(user User, oldPassword string, ne
 		return nil, err
 	}
 
-	return &user, nil
+	return user, nil
 }
 
-func (manager *AuthManagerImpl) ChangeEmail(user User, newEmail string) (*User, error) {
+func (manager *AuthManagerImpl) ChangeEmail(user *User, newEmail string) (*User, error) {
 	_, err := mail.ParseAddress(newEmail)
 	if err != nil {
 		return nil, InvalidEmail
@@ -227,7 +227,7 @@ func (manager *AuthManagerImpl) ChangeEmail(user User, newEmail string) (*User, 
 		return nil, dbErr
 	}
 
-	emailToken, emailSecret, err := manager.tokenService.Create(user,
+	emailToken, emailSecret, err := manager.tokenService.Create(*user,
 		TokenPurposeEmail, time.Now().Add(24*time.Hour))
 	if err != nil {
 		tx.Rollback()
@@ -244,5 +244,5 @@ func (manager *AuthManagerImpl) ChangeEmail(user User, newEmail string) (*User, 
 		return nil, err
 	}
 
-	return &user, nil
+	return user, nil
 }
