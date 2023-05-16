@@ -2,16 +2,43 @@ package testutils
 
 import (
 	"fmt"
+	"log"
 	"os"
+	"time"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 
 	. "github.com/StampWallet/backend/internal/database"
 )
 
 func RecreateDatabase(db GormDB, databaseName string) error {
-	tx := db.Raw("DROP DATABASE ?; CREATE DATABASE ?; create extension if not exists postgis;", databaseName, databaseName)
+	newLogger := logger.New(
+		log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer
+		logger.Config{
+			SlowThreshold: 100 * time.Second,
+		},
+	)
+
+	//https://dba.stackexchange.com/a/154075
+	tx := db.Session(&gorm.Session{Logger: newLogger}).Exec(`
+do
+$$
+declare
+  l_stmt text;
+begin
+  select 'truncate ' || string_agg(format('%I.%I', schemaname, tablename), ',')
+    into l_stmt
+  from pg_tables
+  where schemaname in ('public') and tablename != 'spatial_ref_sys';
+
+  if l_stmt is not null then 
+	execute l_stmt;
+  end if;
+end;
+$$
+	`)
 	if err := tx.GetError(); err != nil {
 		return err
 	}
