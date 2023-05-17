@@ -199,6 +199,8 @@ font-style: italic;
   <div class="method-summary"></div>
   <h4><a href="#Account">Account</a></h4>
   <ul>
+  <li><a href="#changeEmail"><code><span class="http-method">post</span> /auth/account/email</code></a></li>
+  <li><a href="#changePassword"><code><span class="http-method">post</span> /auth/account/password</code></a></li>
   <li><a href="#confirmEmail"><code><span class="http-method">post</span> /auth/account/emailConfirmation</code></a></li>
   <li><a href="#createAccount"><code><span class="http-method">post</span> /auth/account</code></a></li>
   </ul>
@@ -266,12 +268,12 @@ font-style: italic;
   </ul>
 
   <h1><a name="Account">Account</a></h1>
-  <div class="method"><a name="confirmEmail"/>
+  <div class="method"><a name="changeEmail"/>
     <div class="method-path">
     <a class="up" href="#__Methods">Up</a>
-    <pre class="post"><code class="huge"><span class="http-method">post</span> /auth/account/emailConfirmation</code></pre></div>
-    <div class="method-summary">Confirm email (<span class="nickname">confirmEmail</span>)</div>
-    <div class="method-notes">When an account is created, user receives an email with a link to a static website. That website simply posts it's parameters (unique to each email) to this endpoint. The parameters will be unique and hard to guess, allowing to verify that user has really received the email.</div>
+    <pre class="post"><code class="huge"><span class="http-method">post</span> /auth/account/email</code></pre></div>
+    <div class="method-summary">Change email (<span class="nickname">changeEmail</span>)</div>
+    <div class="method-notes">This endpoint can be used to change email address of currently logged in user. Changing email address requires email confirmation</div>
 
 
     <h3 class="field-label">Consumes</h3>
@@ -282,65 +284,7 @@ font-style: italic;
 
     <h3 class="field-label">Request body</h3>
     <div class="field-items">
-      <div class="param">PostAccountEmailConfirmationRequest <a href="#PostAccountEmailConfirmationRequest">PostAccountEmailConfirmationRequest</a> (required)</div>
-
-      <div class="param-desc"><span class="param-type">Body Parameter</span> &mdash;  </div>
-
-    </div>  <!-- field-items -->
-
-
-
-
-    <h3 class="field-label">Return type</h3>
-    <div class="return-type">
-      <a href="#PostAccountResponse">PostAccountResponse</a>
-      
-    </div>
-
-    <!--Todo: process Response Object and its headers, schema, examples -->
-
-    <h3 class="field-label">Example data</h3>
-    <div class="example-data-content-type">Content-Type: application/json</div>
-    <pre class="example"><code>{
-  "token" : "ZWVnaDhhZWg4bGVpbDJhaXBlaW5nZWViNWFpU2hlaGUK"
-}</code></pre>
-
-    <h3 class="field-label">Produces</h3>
-    This API call produces the following media types according to the <span class="header">Accept</span> request header;
-    the media type will be conveyed by the <span class="header">Content-Type</span> response header.
-    <ul>
-      <li><code>application/json</code></li>
-    </ul>
-
-    <h3 class="field-label">Responses</h3>
-    <h4 class="field-label">200</h4>
-    Successful operation
-        <a href="#PostAccountResponse">PostAccountResponse</a>
-    <h4 class="field-label">400</h4>
-    Invalid request format
-        <a href="#DefaultResponse">DefaultResponse</a>
-    <h4 class="field-label">404</h4>
-    Token not found
-        <a href="#DefaultResponse">DefaultResponse</a>
-  </div> <!-- method -->
-  <hr/>
-  <div class="method"><a name="createAccount"/>
-    <div class="method-path">
-    <a class="up" href="#__Methods">Up</a>
-    <pre class="post"><code class="huge"><span class="http-method">post</span> /auth/account</code></pre></div>
-    <div class="method-summary">Create a new account (<span class="nickname">createAccount</span>)</div>
-    <div class="method-notes">Create a new account with specified password and email, send a confirmation email</div>
-
-
-    <h3 class="field-label">Consumes</h3>
-    This API call consumes the following media types via the <span class="header">Content-Type</span> request header:
-    <ul>
-      <li><code>application/json</code></li>
-    </ul>
-
-    <h3 class="field-label">Request body</h3>
-    <div class="field-items">
-      <div class="param">PostAccountRequest <a href="#PostAccountRequest">PostAccountRequest</a> (required)</div>
+      <div class="param">PostAccountEmailRequest <a href="#PostAccountEmailRequest">PostAccountEmailRequest</a> (required)</div>
 
       <div class="param-desc"><span class="param-type">Body Parameter</span> &mdash;  </div>
 
@@ -371,9 +315,180 @@ font-style: italic;
     </ul>
 
     <h3 class="field-label">Responses</h3>
-    <h4 class="field-label">201</h4>
+    <h4 class="field-label">200</h4>
     Successful operation
         <a href="#DefaultResponse">DefaultResponse</a>
+    <h4 class="field-label">400</h4>
+    Invalid request format
+        <a href="#DefaultResponse">DefaultResponse</a>
+    <h4 class="field-label">409</h4>
+    Email already exists
+        <a href="#DefaultResponse">DefaultResponse</a>
+  </div> <!-- method -->
+  <hr/>
+  <div class="method"><a name="changePassword"/>
+    <div class="method-path">
+    <a class="up" href="#__Methods">Up</a>
+    <pre class="post"><code class="huge"><span class="http-method">post</span> /auth/account/password</code></pre></div>
+    <div class="method-summary">Change password (<span class="nickname">changePassword</span>)</div>
+    <div class="method-notes">This endpoint can be used to change password of currently logged in user. Requires the user to provide their old password</div>
+
+
+    <h3 class="field-label">Consumes</h3>
+    This API call consumes the following media types via the <span class="header">Content-Type</span> request header:
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Request body</h3>
+    <div class="field-items">
+      <div class="param">DefaultResponse <a href="#DefaultResponse">DefaultResponse</a> (required)</div>
+
+      <div class="param-desc"><span class="param-type">Body Parameter</span> &mdash;  </div>
+
+    </div>  <!-- field-items -->
+
+
+
+
+    <h3 class="field-label">Return type</h3>
+    <div class="return-type">
+      <a href="#DefaultResponse">DefaultResponse</a>
+      
+    </div>
+
+    <!--Todo: process Response Object and its headers, schema, examples -->
+
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>{
+  "message" : "message"
+}</code></pre>
+
+    <h3 class="field-label">Produces</h3>
+    This API call produces the following media types according to the <span class="header">Accept</span> request header;
+    the media type will be conveyed by the <span class="header">Content-Type</span> response header.
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Responses</h3>
+    <h4 class="field-label">200</h4>
+    Successful operation
+        <a href="#DefaultResponse">DefaultResponse</a>
+    <h4 class="field-label">400</h4>
+    Invalid request format or invalid old password
+        <a href="#DefaultResponse">DefaultResponse</a>
+  </div> <!-- method -->
+  <hr/>
+  <div class="method"><a name="confirmEmail"/>
+    <div class="method-path">
+    <a class="up" href="#__Methods">Up</a>
+    <pre class="post"><code class="huge"><span class="http-method">post</span> /auth/account/emailConfirmation</code></pre></div>
+    <div class="method-summary">Confirm email (<span class="nickname">confirmEmail</span>)</div>
+    <div class="method-notes">When an account is created, user receives an email with a link to a static website. That website simply posts it's parameters (unique to each email) to this endpoint. The parameters will be unique and hard to guess, allowing to verify that user really has access to the email address.</div>
+
+
+    <h3 class="field-label">Consumes</h3>
+    This API call consumes the following media types via the <span class="header">Content-Type</span> request header:
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Request body</h3>
+    <div class="field-items">
+      <div class="param">PostAccountEmailConfirmationRequest <a href="#PostAccountEmailConfirmationRequest">PostAccountEmailConfirmationRequest</a> (required)</div>
+
+      <div class="param-desc"><span class="param-type">Body Parameter</span> &mdash;  </div>
+
+    </div>  <!-- field-items -->
+
+
+
+
+    <h3 class="field-label">Return type</h3>
+    <div class="return-type">
+      <a href="#PostAccountResponse">PostAccountResponse</a>
+      
+    </div>
+
+    <!--Todo: process Response Object and its headers, schema, examples -->
+
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>{
+  "token" : "ZWVnaDhhZWg4bGVpbDJhaQo=:XBlaW5nZWViNWFpU2hlaGUKa"
+}</code></pre>
+
+    <h3 class="field-label">Produces</h3>
+    This API call produces the following media types according to the <span class="header">Accept</span> request header;
+    the media type will be conveyed by the <span class="header">Content-Type</span> response header.
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Responses</h3>
+    <h4 class="field-label">200</h4>
+    Successful operation
+        <a href="#PostAccountResponse">PostAccountResponse</a>
+    <h4 class="field-label">400</h4>
+    Invalid request format
+        <a href="#DefaultResponse">DefaultResponse</a>
+    <h4 class="field-label">401</h4>
+    Unauthorized - invalid token
+        <a href="#DefaultResponse">DefaultResponse</a>
+  </div> <!-- method -->
+  <hr/>
+  <div class="method"><a name="createAccount"/>
+    <div class="method-path">
+    <a class="up" href="#__Methods">Up</a>
+    <pre class="post"><code class="huge"><span class="http-method">post</span> /auth/account</code></pre></div>
+    <div class="method-summary">Create a new account (<span class="nickname">createAccount</span>)</div>
+    <div class="method-notes">Create a new account with specified password and email, send a confirmation email</div>
+
+
+    <h3 class="field-label">Consumes</h3>
+    This API call consumes the following media types via the <span class="header">Content-Type</span> request header:
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Request body</h3>
+    <div class="field-items">
+      <div class="param">PostAccountRequest <a href="#PostAccountRequest">PostAccountRequest</a> (required)</div>
+
+      <div class="param-desc"><span class="param-type">Body Parameter</span> &mdash;  </div>
+
+    </div>  <!-- field-items -->
+
+
+
+
+    <h3 class="field-label">Return type</h3>
+    <div class="return-type">
+      <a href="#PostAccountResponse">PostAccountResponse</a>
+      
+    </div>
+
+    <!--Todo: process Response Object and its headers, schema, examples -->
+
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>{
+  "token" : "ZWVnaDhhZWg4bGVpbDJhaQo=:XBlaW5nZWViNWFpU2hlaGUKa"
+}</code></pre>
+
+    <h3 class="field-label">Produces</h3>
+    This API call produces the following media types according to the <span class="header">Accept</span> request header;
+    the media type will be conveyed by the <span class="header">Content-Type</span> response header.
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Responses</h3>
+    <h4 class="field-label">201</h4>
+    Successful operation
+        <a href="#PostAccountResponse">PostAccountResponse</a>
     <h4 class="field-label">400</h4>
     Invalid request format, email or password
         <a href="#DefaultResponse">DefaultResponse</a>
@@ -1345,7 +1460,7 @@ font-style: italic;
     <h3 class="field-label">Example data</h3>
     <div class="example-data-content-type">Content-Type: application/json</div>
     <pre class="example"><code>{
-  "token" : "ZWVnaDhhZWg4bGVpbDJhaXBlaW5nZWViNWFpU2hlaGUK"
+  "token" : "ZWVnaDhhZWg4bGVpbDJhaQo=:XBlaW5nZWViNWFpU2hlaGUKa"
 }</code></pre>
 
     <h3 class="field-label">Produces</h3>
