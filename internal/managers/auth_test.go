@@ -38,7 +38,7 @@ type tokenMatcher struct {
 
 func getAuthManager(ctrl *gomock.Controller) (*AuthManagerImpl, error) {
 	return &AuthManagerImpl{
-		&BaseServices{
+		BaseServices{
 			Logger:   log.Default(),
 			Database: NewMockGormDB(ctrl),
 		},
@@ -62,9 +62,9 @@ func getExampleUser() User {
 				Valid: false,
 			},
 		},
-		PublicId:      "Es3Aepo7",
-		FirstName:     "test_first_name",
-		LastName:      "test_last_name",
+		PublicId: "Es3Aepo7",
+		//FirstName:     "test_first_name",
+		//LastName:      "test_last_name",
 		Email:         "test@example.com",
 		PasswordHash:  string(hash),
 		EmailVerified: false,
@@ -226,9 +226,9 @@ func TestAuthManagerCreate(t *testing.T) {
 	db := manager.baseServices.Database
 
 	mainUserMatcher := &StructMatcher{userMatcher{
-		Email:         Ptr("test@example.com"),
-		FirstName:     Ptr("first"),
-		LastName:      Ptr("last"),
+		Email: Ptr("test@example.com"),
+		//FirstName:     Ptr("first"),
+		//LastName:      Ptr("last"),
 		EmailVerified: Ptr(false),
 	}}
 
@@ -284,10 +284,10 @@ func TestAuthManagerCreate(t *testing.T) {
 
 	user, token, secret, err := manager.Create(
 		UserDetails{
-			Email:     "test@example.com",
-			Password:  "zaq1@WSX",
-			FirstName: "first",
-			LastName:  "last",
+			Email:    "test@example.com",
+			Password: "zaq1@WSX",
+			//FirstName: "first",
+			//LastName:  "last",
 		},
 	)
 

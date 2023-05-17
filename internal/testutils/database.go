@@ -48,7 +48,7 @@ $$
 	return nil
 }
 
-func GetDatabase() *GormDBImpl {
+func GetTestDatabase() *GormDBImpl {
 	url := os.Getenv("TEST_DATABASE_URL")
 	dbname := os.Getenv("TEST_DATABASE_NAME")
 	if url == "" {

@@ -12,6 +12,13 @@ type AuthMiddleware struct {
 	tokenService services.TokenService
 }
 
+func CreateAuthMiddleware(logger *log.Logger, tokenService services.TokenService) *AuthMiddleware {
+	return &AuthMiddleware{
+		logger:       logger,
+		tokenService: tokenService,
+	}
+}
+
 func (middleware *AuthMiddleware) Handle(c *gin.Context) {
 
 }
