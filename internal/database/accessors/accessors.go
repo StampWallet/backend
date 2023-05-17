@@ -9,20 +9,20 @@ import (
 	"gorm.io/gorm"
 )
 
-var NotFound = errors.New("Entity not found")
-var NoAccess = errors.New("No access to entity")
-var DatabaseError = errors.New("Database error")
+var ErrNotFound = errors.New("Entity not found")
+var ErrNoAccess = errors.New("No access to entity")
+var ErrDatabaseError = errors.New("Database error")
 
-// rule of thumb with managers and accessors: if a manager method requires an object, this probably means, that the object has to retrived with an accessors. and the accessor will check the (simple, in case of this app) permissions
+// rule of thumb with managers and accessors: if a manager method requires an object, this probably means, that the object has to be retrived with an accessor. and the accessor will check the (simple, in case of this app) permissions
 // if a manager requires only object id, that means that the action can be done by anyone
 // handlers should not access the database directly. thats what managers and accessors are for
 
 func checkErr(tx GormDB) error {
 	err := tx.GetError()
 	if err == gorm.ErrRecordNotFound || tx.GetRowsAffected() != 1 {
-		return NotFound
+		return ErrNotFound
 	} else if err != nil {
-		return fmt.Errorf("%w: %w", DatabaseError, err)
+		return fmt.Errorf("%w: %w", ErrDatabaseError, err)
 	}
 	return nil
 }
@@ -36,9 +36,9 @@ func checkEq[T authModel](el T, expectedId uint, id uint, err error) (T, error) 
 	if expectedId == id {
 		return el, nil
 	} else if expectedId != id {
-		return empty, NoAccess
+		return empty, ErrNoAccess
 	} else {
-		return empty, fmt.Errorf("%w: %w", DatabaseError, err)
+		return empty, fmt.Errorf("%w: %w", ErrDatabaseError, err)
 	}
 }
 
