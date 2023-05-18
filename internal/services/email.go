@@ -26,8 +26,10 @@ func CreateEmailServiceImpl(smtpConfig SMTPConfig, logger *log.Logger) (*EmailSe
 		//mail.WithLogger(*logger),
 		mail.WithPassword(smtpConfig.Password),
 		mail.WithUsername(smtpConfig.Username),
+		mail.WithSMTPAuth(mail.SMTPAuthLogin),
 		mail.WithPort(int(smtpConfig.ServerPort)),
-		mail.WithSSL())
+		mail.WithSSL(),
+		mail.WithoutNoop())
 	if err != nil {
 		return nil, err
 	}
@@ -44,6 +46,7 @@ func (service *EmailServiceImpl) Send(email string, subject string, body string)
 		mail.WithCharset(mail.CharsetUTF8),
 	)
 	msg.Subject(subject)
+	msg.From(service.smtpConfig.SenderEmail)
 	err := msg.AddTo(email)
 	if err != nil {
 		return fmt.Errorf("%s failed to add recipient: %+v", CallerFilename(), err)

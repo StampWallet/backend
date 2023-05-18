@@ -109,6 +109,23 @@ func main() {
 					return config.SaveConfig(config.GetDefaultConfig(), ctx.String("config"))
 				},
 			},
+			{
+				Name: "send-email",
+				Flags: []cli.Flag{
+					&cli.StringFlag{Name: "to"},
+					&cli.StringFlag{Name: "subject"},
+					&cli.StringFlag{Name: "body"},
+				},
+				Usage: "sends an email",
+				Action: func(ctx *cli.Context) error {
+					config, err := config.LoadConfig(ctx.String("config"))
+					emailService, err := services.CreateEmailServiceImpl(config.SmtpConfig, log.Default())
+					if err != nil {
+						return fmt.Errorf("failed to create email service %+v", err)
+					}
+					return emailService.Send(ctx.String("to"), ctx.String("subject"), ctx.String("body"))
+				},
+			},
 		},
 	}
 	if err := app.Run(os.Args); err != nil {
