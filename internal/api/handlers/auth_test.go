@@ -322,23 +322,29 @@ func TestAuthHandlersPostAccountPasswordNok_OldPass(t *testing.T) {
 	// TODO: MatchEntities
 }
 
-func TestAuthHandlersPostAccountEmailConfirmationOk(t *testing.T) {
+func SetupAuthHandlersPostAccountEmailConfirmation() (
+	w *httptest.ResponseRecorder,
+	context *gin.Context,
+	testUser *database.User,
+	tokenId string,
+	tokenSecret string,
+) {
 	// data prep
 	gin.SetMode(gin.TestMode)
-	w := httptest.NewRecorder()
+	w = httptest.NewRecorder()
 
-	tokenId := "0123456789"
-	tokenSecret := "ZWVnaDhhZWg4bGVpbDJhaXBlaW5nZWViNWFpU2hlaGUK"
+	tokenId = "0123456789"
+	tokenSecret = "ZWVnaDhhZWg4bGVpbDJhaXBlaW5nZWViNWFpU2hlaGUK"
 	exampleToken := tokenId + ":" + tokenSecret
 
-	testUser := GetDefaultUser()
+	testUser = GetDefaultUser()
 
 	payload := api.PostAccountEmailConfirmationRequest{
 		Token: exampleToken,
 	}
 	payloadJson, _ := json.Marshal(payload)
 
-	context := NewTestContextBuilder(w).
+	context = NewTestContextBuilder(w).
 		SetDefaultUrl().
 		SetEndpoint("/auth/account/emailConfirmation").
 		SetMethod("POST").
@@ -346,6 +352,12 @@ func TestAuthHandlersPostAccountEmailConfirmationOk(t *testing.T) {
 		SetHeader("Content-Type", "application/json").
 		SetBody(payloadJson).
 		Context
+
+	return w, context, testUser, tokenId, tokenSecret
+}
+
+func TestAuthHandlersPostAccountEmailConfirmationOk(t *testing.T) {
+	w, context, testUser, tokenId, tokenSecret := SetupAuthHandlersPostAccountEmailConfirmation()
 
 	respBodyExpected := api.DefaultResponse{Status: api.OK}
 
@@ -358,7 +370,11 @@ func TestAuthHandlersPostAccountEmailConfirmationOk(t *testing.T) {
 		ConfirmEmail(
 			gomock.Eq(tokenId),
 			gomock.Eq(tokenSecret),
-		).Return(testUser)
+		).
+		Return(
+			testUser,
+			nil,
+		)
 
 	handler.postAccountEmailConfirmation(context)
 
@@ -371,20 +387,49 @@ func TestAuthHandlersPostAccountEmailConfirmationOk(t *testing.T) {
 }
 
 func TestAuthHandlersPostAccountEmailConfirmationNok_InvTok(t *testing.T) {
-	// TODO
+	w, context, _, tokenId, tokenSecret := SetupAuthHandlersPostAccountEmailConfirmation()
+
+	respBodyExpected := api.DefaultResponse{Status: api.NOT_FOUND}
+
+	// test env prep
+	ctrl := gomock.NewController(t)
+	handler := GetAuthHandlers(ctrl)
+
+	handler.authManager.(*MockAuthManager).
+		EXPECT().
+		ConfirmEmail(
+			gomock.Eq(tokenId),
+			gomock.Eq(tokenSecret),
+		).
+		Return(
+			nil,
+			managers.InvalidToken,
+		)
+
+	handler.postAccountEmailConfirmation(context)
+
+	respBody, respCode, respParseErr := ExtractResponse[api.DefaultResponse](w)
+
+	require.Nilf(t, respParseErr, "Failed to parse JSON response")
+	require.Equalf(t, respCode, int(404), "Response returned unexpected status code")
+	require.Truef(t, MatchEntities(respBody, respBodyExpected), "Response returned unexpected body contents")
+	// TODO: MatchEntities and gomock.Eq
 }
 
-func TestAuthHandlersPostAccountEmailConfirmationNok_ExpTok(t *testing.T) {
-	// TODO
-}
-
-func TestAuthHandlersPostSessionOk(t *testing.T) {
+func SetupAuthHandlersPostSession() (
+	w *httptest.ResponseRecorder,
+	context *gin.Context,
+	testUser *database.User,
+	testPassword string,
+	testToken *database.Token,
+	testTokenSecret string,
+) {
 	// data prep
 	gin.SetMode(gin.TestMode)
-	w := httptest.NewRecorder()
+	w = httptest.NewRecorder()
 
-	testPassword := "zaq1@WSX"
-	testUser := GetDefaultUser()
+	testPassword = "zaq1@WSX"
+	testUser = GetDefaultUser()
 	hash, _ := bcrypt.GenerateFromPassword([]byte(testPassword), 10)
 	testUser.PasswordHash = string(hash)
 
@@ -394,7 +439,7 @@ func TestAuthHandlersPostSessionOk(t *testing.T) {
 	}
 	payloadJson, _ := json.Marshal(payload)
 
-	context := NewTestContextBuilder(w).
+	context = NewTestContextBuilder(w).
 		SetDefaultUrl().
 		SetEndpoint("/auth/account/sessions").
 		SetMethod("POST").
@@ -403,9 +448,24 @@ func TestAuthHandlersPostSessionOk(t *testing.T) {
 		SetBody(payloadJson).
 		Context
 
-	respBodyExpected := api.PostAccountSessionResponse{
-		Token: "ZWVnaDhhZWg4bGVpbDJhaXBlaW5nZWViNWFpU2hlaGUK",
+	testTokenSecret = "ZWVnaDhhZWg4bGVpbDJhaXBlaW5nZWViNWFpU2hlaGUK"
+	hash, _ = bcrypt.GenerateFromPassword([]byte(testTokenSecret), 10)
+	testToken = &database.Token{
+		OwnerId:      testUser.ID,
+		TokenId:      "testTokenId",
+		TokenHash:    string(hash),
+		Expires:      time.Now().Add(time.Hour * 24),
+		TokenPurpose: database.TokenPurposeSession,
+		Used:         false,
+		Recalled:     false,
 	}
+	testUser.Tokens = append(testUser.Tokens, *testToken)
+
+	return w, context, testUser, testPassword, testToken, testTokenSecret
+}
+
+func TestAuthHandlersPostSessionOk(t *testing.T) {
+	w, context, testUser, testPassword, testToken, testTokenSecret := SetupAuthHandlersPostSession()
 
 	// test env prep
 	ctrl := gomock.NewController(t)
@@ -419,43 +479,105 @@ func TestAuthHandlersPostSessionOk(t *testing.T) {
 		).
 		Return(
 			testUser,
-			&database.Token{
-				OwnerId:      testUser.ID,
-				TokenId:      "testTokenId",
-				TokenHash:    "ZWVnaDhhZWg4bGVpbDJhaXBlaW5nZWViNWFpU2hlaGUK",
-				Expires:      time.Now().Add(time.Hour * 24),
-				TokenPurpose: database.TokenPurposeSession,
-				Used:         false,
-				Recalled:     false,
-			},
+			testToken,
 			nil,
 		)
 
 	handler.postSession(context)
+
+	respBodyExpected := api.PostAccountSessionResponse{
+		Token: testTokenSecret,
+	}
 
 	respBody, respCode, respParseErr := ExtractResponse[api.PostAccountSessionResponse](w)
 
 	require.Nilf(t, respParseErr, "Failed to parse JSON response")
 	require.Equalf(t, respCode, int(201), "Response returned unexpected status code")
 	require.Truef(t, MatchEntities(respBody, respBodyExpected), "Response returned unexpected body contents")
+	// TODO: MatchEntities and gomock.Eq
 }
 
-func TestAuthHandlersPostSessionNok_BadTok(t *testing.T) {
-	// TODO
+func TestAuthHandlersPostSessionNok_InvEmail(t *testing.T) {
+	w, context, testUser, testPassword, _, _ := SetupAuthHandlersPostSession()
+
+	// test env prep
+	ctrl := gomock.NewController(t)
+	handler := GetAuthHandlers(ctrl)
+
+	handler.authManager.(*MockAuthManager).
+		EXPECT().
+		Login(
+			gomock.Eq(testUser.Email),
+			gomock.Eq(testPassword),
+		).
+		Return(
+			nil,
+			nil,
+			managers.InvalidEmail,
+		)
+
+	handler.postSession(context)
+
+	respBodyExpected := api.DefaultResponse{Status: api.UNAUTHORIZED}
+
+	respBody, respCode, respParseErr := ExtractResponse[api.DefaultResponse](w)
+
+	require.Nilf(t, respParseErr, "Failed to parse JSON response")
+	require.Equalf(t, respCode, int(401), "Response returned unexpected status code")
+	require.Truef(t, MatchEntities(respBody, respBodyExpected), "Response returned unexpected body contents")
+	// TODO: MatchEntities and gomock.Eq
 }
 
-func TestAuthHandlersDeleteSessionOk(t *testing.T) {
+func TestAuthHandlersPostSessionNok_InvLogin(t *testing.T) {
+	w, context, testUser, testPassword, _, _ := SetupAuthHandlersPostSession()
+
+	// test env prep
+	ctrl := gomock.NewController(t)
+	handler := GetAuthHandlers(ctrl)
+
+	handler.authManager.(*MockAuthManager).
+		EXPECT().
+		Login(
+			gomock.Eq(testUser.Email),
+			gomock.Eq(testPassword),
+		).
+		Return(
+			nil,
+			nil,
+			managers.InvalidLogin,
+		)
+
+	handler.postSession(context)
+
+	respBodyExpected := api.DefaultResponse{Status: api.UNAUTHORIZED}
+
+	respBody, respCode, respParseErr := ExtractResponse[api.DefaultResponse](w)
+
+	require.Nilf(t, respParseErr, "Failed to parse JSON response")
+	require.Equalf(t, respCode, int(401), "Response returned unexpected status code")
+	require.Truef(t, MatchEntities(respBody, respBodyExpected), "Response returned unexpected body contents")
+	// TODO: MatchEntities and gomock.Eq
+}
+
+func SetupAuthHandlersDeleteSession() (
+	w *httptest.ResponseRecorder,
+	context *gin.Context,
+	testUser *database.User,
+	tokenId string,
+	tokenSecret string,
+	testTokenStruct *database.Token,
+) {
 	// data prep
 	gin.SetMode(gin.TestMode)
-	w := httptest.NewRecorder()
+	w = httptest.NewRecorder()
 
-	tokenId := "012345789"
-	tokenSecret := "ZWVnaDhhZWg4bGVpbDJhaXBlaW5nZWViNWFpU2hlaGUK"
+	tokenId = "012345789"
+	tokenSecret = "ZWVnaDhhZWg4bGVpbDJhaXBlaW5nZWViNWFpU2hlaGUK"
 	testToken := tokenId + ":" + tokenSecret
 
-	testUser := GetDefaultUser()
+	testUser = GetDefaultUser()
 	tokenHash, _ := bcrypt.GenerateFromPassword([]byte(tokenSecret), 10)
-	testTokenStruct := &database.Token{
+	testTokenStruct = &database.Token{
 		OwnerId:      testUser.ID,
 		TokenId:      tokenId,
 		TokenHash:    string(tokenHash),
@@ -465,14 +587,20 @@ func TestAuthHandlersDeleteSessionOk(t *testing.T) {
 		Recalled:     false,
 	}
 
-	context := NewTestContextBuilder(w).
+	context = NewTestContextBuilder(w).
 		SetDefaultUrl().
 		SetEndpoint("/auth/sessions").
-		SetDefaultUser().
+		SetUser(testUser).
 		SetMethod("DELETE").
 		SetToken(testToken).
 		SetHeader("Accept", "application/json").
 		Context
+
+	return w, context, testUser, tokenId, tokenSecret, testTokenStruct
+}
+
+func TestAuthHandlersDeleteSessionOk(t *testing.T) {
+	w, context, testUser, tokenId, tokenSecret, testTokenStruct := SetupAuthHandlersDeleteSession()
 
 	respBodyExpected := api.DefaultResponse{Status: api.OK}
 
@@ -499,8 +627,36 @@ func TestAuthHandlersDeleteSessionOk(t *testing.T) {
 	require.Nilf(t, respParseErr, "Failed to parse JSON response")
 	require.Equalf(t, respCode, int(200), "Response returned unexpected status code")
 	require.Truef(t, MatchEntities(respBodyExpected, respBody), "Response returned unexpected body contents")
+	// TODO: MatchEntities and gomock.Eq
 }
 
-func TestAuthHandlersDeleteSessionNok_BadTok(t *testing.T) {
-	// TODO
+func TestAuthHandlersDeleteSessionNok_InvTok(t *testing.T) {
+	w, context, _, tokenId, tokenSecret, _ := SetupAuthHandlersDeleteSession()
+
+	respBodyExpected := api.DefaultResponse{Status: api.UNAUTHORIZED}
+
+	// test env prep
+	ctrl := gomock.NewController(t)
+	handler := GetAuthHandlers(ctrl)
+
+	handler.authManager.(*MockAuthManager).
+		EXPECT().
+		Logout(
+			gomock.Eq(tokenId),
+			gomock.Eq(tokenSecret),
+		).
+		Return(
+			nil,
+			nil,
+			managers.InvalidToken,
+		)
+
+	handler.postSession(context)
+
+	respBody, respCode, respParseErr := ExtractResponse[api.PostAccountSessionResponse](w)
+
+	require.Nilf(t, respParseErr, "Failed to parse JSON response")
+	require.Equalf(t, respCode, int(401), "Response returned unexpected status code")
+	require.Truef(t, MatchEntities(respBodyExpected, respBody), "Response returned unexpected body contents")
+	// TODO: MatchEntities and gomock.Eq
 }

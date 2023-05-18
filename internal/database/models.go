@@ -1,14 +1,17 @@
 package database
 
 import (
+	"context"
 	"database/sql"
-	"database/sql/driver"
+	//"database/sql/driver"
+	"fmt"
 	"time"
 
 	"github.com/twpayne/go-geom"
-	"github.com/twpayne/go-geom/encoding/ewkb"
+	//"github.com/twpayne/go-geom/encoding/ewkb"
 	"github.com/twpayne/go-geom/encoding/ewkbhex"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type ActionTypeEnum string
@@ -127,14 +130,38 @@ func (g *GPSCoordinates) Scan(input interface{}) error {
 	if err != nil {
 		return err
 	}
-	gt = gt.(*GPSCoordinates)
+	gp := gt.(*geom.Point)
+	gc := GPSCoordinates(*gp)
+	g = &gc
 	return nil
 }
 
-// TODO probably does not work
-func (g GPSCoordinates) Value() (driver.Value, error) {
+//// TODO probably does not work
+//func (g GPSCoordinates) Value() (driver.Value, error) {
+//	b := geom.Point(g)
+//	//return ewkbhex.Encode(&b, ewkb.NDR)
+//	//fmt.Printf("%f %f\n", b.X(), b.Y())
+//	if b.Empty() {
+//		return "SRID=3857;POINT(0 0)", nil
+//	} else {
+//		return fmt.Sprintf("SRID=3857;POINT(%f %f)", b.X(), b.Y()), nil
+//	}
+//}
+
+func (g GPSCoordinates) GormDataType() string {
+	return "geometry"
+}
+
+func (g GPSCoordinates) GormValue(ctx context.Context, db *gorm.DB) clause.Expr {
 	b := geom.Point(g)
-	return ewkbhex.Encode(&b, ewkb.NDR)
+	var vars []interface{} = []interface{}{"SRID=4326;POINT(0 0)"}
+	if !b.Empty() {
+		vars = []interface{}{fmt.Sprintf("SRID=4326;POINT(%f %f)", b.X(), b.Y())}
+	}
+	return clause.Expr{
+		SQL:  "ST_PointFromText(?)",
+		Vars: vars,
+	}
 }
 
 func FromCoords(longitude float64, latitude float64) GPSCoordinates {

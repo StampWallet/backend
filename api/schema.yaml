@@ -44,7 +44,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/DefaultResponse'
               example:
-                status: CONFLICT
+                status: ALREADY_EXISTS
   /auth/account/emailConfirmation:
     post:
       tags:
@@ -164,7 +164,7 @@ paths:
               $ref: '#/components/schemas/PostBusinessAccountRequest'
         required: true
       responses:
-        '200':
+        '201':
           description: Successful operation
           content:
             application/json:
@@ -202,6 +202,22 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GetBusinessAccountResponse'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+              example:
+                status: UNAUTHORIZED
+        '404':
+          description: Does not exist or forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+              example:
+                status: NOT_FOUND
       security: 
         - sessionToken: []
     patch:
@@ -297,12 +313,6 @@ paths:
       summary: Get list of item definitions
       description: This endpoint is used to retrieve data about existing item definitions (benefits).
       operationId: getItemDefinitions
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/GetBusinessItemDefinitionsResponse'
-        required: true
       responses:
         '200':
           description: Successful operation
@@ -643,7 +653,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/DefaultResponse'
               example:
-                status: CONFLICT
+                status: ALREADY_EXISTS
       security: 
         - sessionToken: []
     delete:
@@ -1065,7 +1075,6 @@ components:
         - ALREADY_EXISTS
         - UNAUTHORIZED
         - INVALID_REQUEST
-        - CONFLICT
 
     PostAccountRequest:
       type: object
