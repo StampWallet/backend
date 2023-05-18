@@ -1,5 +1,8 @@
 name: Go package
 on: [push]
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -21,9 +24,31 @@ jobs:
         continue-on-error: true
         run: go vet ./...
       - name: Test
+        continue-on-error: true
         run: go test -v ./...
         env: 
           TEST_DATABASE_URL: "postgres://postgres@localhost/stampwallet"
           TEST_DATABASE_NAME: "stampwallet"
       - name: Build
         run: go build -v ./...
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Build and push
+        uses: docker/build-push-action@v4
+        with:
+          context: "{{defaultContext}}:."
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
