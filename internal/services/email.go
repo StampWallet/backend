@@ -17,7 +17,27 @@ type EmailService interface {
 type EmailServiceImpl struct {
 	mailClient mail.Client
 	smtpConfig SMTPConfig
-	logger     log.Logger
+	logger     *log.Logger
+}
+
+func CreateEmailServiceImpl(smtpConfig SMTPConfig, logger *log.Logger) (*EmailServiceImpl, error) {
+	client, err := mail.NewClient(
+		smtpConfig.ServerHostname,
+		//mail.WithLogger(*logger),
+		mail.WithPassword(smtpConfig.Password),
+		mail.WithUsername(smtpConfig.Username),
+		mail.WithSMTPAuth(mail.SMTPAuthLogin),
+		mail.WithPort(int(smtpConfig.ServerPort)),
+		mail.WithSSL(),
+		mail.WithoutNoop())
+	if err != nil {
+		return nil, err
+	}
+	return &EmailServiceImpl{
+		mailClient: *client,
+		smtpConfig: smtpConfig,
+		logger:     logger,
+	}, nil
 }
 
 func (service *EmailServiceImpl) Send(email string, subject string, body string) error {
@@ -26,6 +46,7 @@ func (service *EmailServiceImpl) Send(email string, subject string, body string)
 		mail.WithCharset(mail.CharsetUTF8),
 	)
 	msg.Subject(subject)
+	msg.From(service.smtpConfig.SenderEmail)
 	err := msg.AddTo(email)
 	if err != nil {
 		return fmt.Errorf("%s failed to add recipient: %+v", CallerFilename(), err)
