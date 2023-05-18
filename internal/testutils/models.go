@@ -193,3 +193,22 @@ func GetTestToken(db GormDB, user *User) (*Token, string) {
 	Save(db, &token)
 	return &token, secret
 }
+
+func GetTestSessionToken(db GormDB, user *User, expires time.Time) (*Token, string) {
+	secret := shortuuid.New()
+	hash, err := bcrypt.GenerateFromPassword([]byte(secret), 10)
+	if err != nil {
+		panic(fmt.Sprintf("failed to create token hash %s", err))
+	}
+	token := Token{
+		TokenId:      shortuuid.New(),
+		TokenHash:    string(hash),
+		Expires:      expires,
+		TokenPurpose: TokenPurposeSession,
+		Used:         false,
+		Recalled:     false,
+		User:         user,
+	}
+	Save(db, &token)
+	return &token, secret
+}

@@ -65,8 +65,29 @@ func TestTokenServiceCheckValid(t *testing.T) {
 	require.NotNilf(t, nToken, "Token should not be nil")
 	require.Equalf(t, token.TokenId, nToken.TokenId, "TokenService.Check should return the expected token")
 	require.Equalf(t, true, nToken.Used, "Token should be marked as used")
-
 	require.Equalf(t, nToken.User.PublicId, user.PublicId, "TokenService.Check should return the expected user")
+
+	_, err = service.Check(token.TokenId, secret)
+	require.Equalf(t, err, ErrTokenUsed, "TokenService.Check should return ErrTokenUsed on used email token")
+}
+
+func TestTokenServiceCheckValidSessionToken(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	service := GetTokenService(ctrl)
+	user := GetTestUser(service.baseServices.Database)
+	token, secret := GetTestSessionToken(service.baseServices.Database, user, time.Now().Add(time.Hour))
+
+	nToken, err := service.Check(token.TokenId, secret)
+	require.Nilf(t, err, "TokenService.Check should not return an error")
+	require.NotNilf(t, nToken.User, "User should not be nil")
+	require.NotNilf(t, nToken, "Token should not be nil")
+	require.Equalf(t, token.TokenId, nToken.TokenId, "TokenService.Check should return the expected token")
+	require.Equalf(t, true, nToken.Used, "Token should be marked as used")
+	require.Equalf(t, nToken.User.PublicId, user.PublicId, "TokenService.Check should return the expected user")
+	require.Truef(t, time.Now().Add((7*24*time.Hour)-time.Hour).Before(nToken.Expires), "session token expiration date should be updated")
+
+	_, err = service.Check(token.TokenId, secret)
+	require.Nilf(t, err, "TokenService.Check should not return ErrTokenUsed on used session token")
 }
 
 func TestTokenServiceCheckInvalidId(t *testing.T) {
@@ -76,8 +97,7 @@ func TestTokenServiceCheckInvalidId(t *testing.T) {
 	_, secret := GetTestToken(service.baseServices.Database, user)
 
 	nToken, err := service.Check("invalid id", secret)
-	require.ErrorAsf(t, err, ErrUnknownToken, "TokenService.Check should return a UnknownToken error")
-	require.Nilf(t, nToken.User, "TokenService.Check should return a nil user")
+	require.Equalf(t, ErrUnknownToken, err, "TokenService.Check should return a UnknownToken error")
 	require.Nilf(t, nToken, "TokenService.Check should return a nil token")
 }
 
@@ -88,8 +108,7 @@ func TestTokenServiceCheckInvalidSecret(t *testing.T) {
 	token, secret := GetTestToken(service.baseServices.Database, user)
 
 	nToken, err := service.Check(token.TokenId, secret+"invalid")
-	require.ErrorAsf(t, err, ErrUnknownToken, "TokenService.Check should return a UnknownToken error")
-	require.Nilf(t, nToken.User, "TokenService.Check should return a nil user")
+	require.Equalf(t, ErrUnknownToken, err, "TokenService.Check should return a UnknownToken error")
 	require.Nilf(t, nToken, "TokenService.Check should return a nil token")
 }
 
@@ -108,8 +127,7 @@ func TestTokenServiceInvalidate(t *testing.T) {
 	require.Equalf(t, user.PublicId, nToken.User.PublicId, "TokenService.Invalidate should return the expected user")
 
 	testToken, err := service.Check(token.TokenId, secret)
-	require.ErrorAsf(t, err, ErrUnknownToken, "TokenService.Check should return an error")
-	require.Nilf(t, testToken.User, "TokenService.Check should return a nil user")
+	require.Equalf(t, ErrUnknownToken, err, "TokenService.Check should return an error")
 	require.Nilf(t, testToken, "TokenService.Check should return a nil token")
 
 	var dbToken Token

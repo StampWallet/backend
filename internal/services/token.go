@@ -14,6 +14,8 @@ import (
 )
 
 var ErrUnknownToken = errors.New("Invalid token")
+var ErrTokenExpired = errors.New("Token expired")
+var ErrTokenUsed = errors.New("Token used")
 
 type TokenService interface {
 	Create(user *User, purpose TokenPurposeEnum, expiration time.Time) (*Token, string, error)
@@ -52,10 +54,10 @@ func (service *TokenServiceImpl) Create(user *User, purpose TokenPurposeEnum, ex
 }
 
 func (service *TokenServiceImpl) Check(tokenId string, tokenSecret string) (*Token, error) {
-	var token *Token
+	var token Token
 	tx := service.baseServices.Database.
 		Preload("User").
-		Find(token, Token{TokenId: tokenId, Recalled: false})
+		First(&token, Token{TokenId: tokenId, Recalled: false})
 	err := tx.GetError()
 	if err == gorm.ErrRecordNotFound {
 		return nil, ErrUnknownToken
@@ -64,22 +66,31 @@ func (service *TokenServiceImpl) Check(tokenId string, tokenSecret string) (*Tok
 	}
 
 	if time.Now().After(token.Expires) {
+		return nil, ErrTokenExpired
+	}
+
+	if token.Recalled {
 		return nil, ErrUnknownToken
 	}
 
-	token.Used = true
-	if token.TokenPurpose == TokenPurposeEmail && token.Used {
+	err = bcrypt.CompareHashAndPassword([]byte(token.TokenHash), []byte(tokenSecret))
+	if err != nil {
 		return nil, ErrUnknownToken
+	}
+
+	if token.TokenPurpose == TokenPurposeEmail && token.Used {
+		return nil, ErrTokenUsed
 	} else if token.TokenPurpose == TokenPurposeSession {
 		token.Expires = time.Now().Add(7 * 24 * time.Hour)
 	}
 
-	tx = service.baseServices.Database.Save(token)
+	token.Used = true
+	tx = service.baseServices.Database.Save(&token)
 	if err := tx.GetError(); err != nil {
 		return nil, fmt.Errorf("%s database failed to update token: %+v", CallerFilename(), err)
 	}
 
-	return token, nil
+	return &token, nil
 }
 
 func (service *TokenServiceImpl) Invalidate(token *Token) (*Token, error) {
