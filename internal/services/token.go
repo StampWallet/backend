@@ -20,7 +20,7 @@ var ErrTokenUsed = errors.New("Token used")
 type TokenService interface {
 	Create(user *User, purpose TokenPurposeEnum, expiration time.Time) (*Token, string, error)
 	Check(tokenId string, tokenSecret string) (*Token, error)
-	Invalidate(token *Token) (*User, *Token, error)
+	Invalidate(token *Token) (*Token, error)
 }
 
 type TokenServiceImpl struct {
