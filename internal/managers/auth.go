@@ -2,14 +2,17 @@ package managers
 
 import (
 	"errors"
+	"fmt"
 	"net/mail"
 	"time"
 
-	. "github.com/StampWallet/backend/internal/database"
-	. "github.com/StampWallet/backend/internal/services"
 	"github.com/lithammer/shortuuid/v4"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
+
+	. "github.com/StampWallet/backend/internal/database"
+	. "github.com/StampWallet/backend/internal/services"
+	. "github.com/StampWallet/backend/internal/utils"
 )
 
 var InvalidEmail = errors.New("Invalid email")
@@ -50,16 +53,16 @@ func (manager *AuthManagerImpl) Create(userDetails UserDetails) (*User, *Token, 
 
 	var existingUser User
 	tx := manager.baseServices.Database.Begin()
-	tx = tx.First(&existingUser, &User{
+	txFirst := tx.First(&existingUser, &User{
 		Email: userDetails.Email,
 	})
-	err = tx.GetError()
+	err = txFirst.GetError()
 	if err == nil {
 		tx.Rollback()
 		return nil, nil, "", EmailExists
 	} else if err != nil && err != gorm.ErrRecordNotFound {
 		tx.Rollback()
-		return nil, nil, "", err
+		return nil, nil, "", fmt.Errorf("failed to to find user, database error: %+v", err)
 	}
 
 	hash, bcryptErr := bcrypt.GenerateFromPassword([]byte(userDetails.Password), 10)
@@ -75,30 +78,30 @@ func (manager *AuthManagerImpl) Create(userDetails UserDetails) (*User, *Token, 
 		LastName:      userDetails.LastName,
 		EmailVerified: false,
 	}
-	tx = tx.Create(&user)
-	if err := tx.GetError(); err != nil {
+	txCreate := tx.Create(&user)
+	if err := txCreate.GetError(); err != nil {
 		tx.Rollback()
-		return nil, nil, "", err
+		return nil, nil, "", fmt.Errorf("%s failed to to create user, database error: %+v", CallerFilename(), err)
 	}
 
 	emailToken, emailSecret, err := manager.tokenService.Create(user, TokenPurposeEmail, time.Now().Add(24*time.Hour))
 	if err != nil {
 		tx.Rollback()
-		return nil, nil, "", err
+		return nil, nil, "", fmt.Errorf("%s failed to to create email token, tokenservice error: %+v", CallerFilename(), err)
 	}
 	sessionToken, sessionSecret, err := manager.tokenService.Create(user, TokenPurposeSession, time.Now().Add(time.Hour))
 	if err != nil {
 		tx.Rollback()
-		return nil, nil, "", err
+		return nil, nil, "", fmt.Errorf("%s failed to to create session token, tokenservice error: %+v", CallerFilename(), err)
 	}
 	mailErr := manager.emailService.Send(userDetails.Email, "test", "test "+emailToken.TokenId+":"+emailSecret)
 	if mailErr != nil {
 		tx.Rollback()
-		return nil, nil, "", err
+		return nil, nil, "", fmt.Errorf("%s failed to to create session token, tokenservice error: %+v", CallerFilename(), err)
 	}
 
 	if err := tx.Commit().GetError(); err != nil {
-		return nil, nil, "", err
+		return nil, nil, "", fmt.Errorf("%s failed to commit, database error: %+v", CallerFilename(), err)
 	}
 	return &user, sessionToken, sessionSecret, nil
 }
@@ -167,8 +170,8 @@ func (manager *AuthManagerImpl) ConfirmEmail(tokenId string, tokenSecret string)
 	}
 
 	user.EmailVerified = true
-	tx = tx.Save(user)
-	if err = tx.GetError(); err != nil {
+	txSave := tx.Save(user)
+	if err = txSave.GetError(); err != nil {
 		tx.Rollback()
 		return nil, err
 	}
@@ -217,8 +220,8 @@ func (manager *AuthManagerImpl) ChangeEmail(user User, newEmail string) (*User, 
 	user.EmailVerified = false
 
 	tx := manager.baseServices.Database.Begin()
-	tx = tx.Save(&user)
-	dbErr := tx.GetError()
+	txSave := tx.Save(&user)
+	dbErr := txSave.GetError()
 	if dbErr == gorm.ErrDuplicatedKey {
 		tx.Rollback()
 		manager.baseServices.Logger.Printf("gorm error when changing email %s\n", dbErr)
