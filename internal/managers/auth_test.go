@@ -416,7 +416,7 @@ func TestAuthManagerInvalidLogoutHash(t *testing.T) {
 	manager.tokenService.(*MockTokenService).
 		EXPECT().
 		Check("test", "test_hah").
-		Return(nil, nil, InvalidToken)
+		Return(nil, ErrUnknownToken)
 
 	logoutUser, logoutToken, err := manager.Logout("test", "test_hah")
 	if err != InvalidToken {
@@ -439,7 +439,7 @@ func TestAuthManagerInvalidLogoutValue(t *testing.T) {
 	manager.tokenService.(*MockTokenService).
 		EXPECT().
 		Check("test_invalid", "test_hash").
-		Return(nil, nil, InvalidToken)
+		Return(nil, ErrUnknownToken)
 
 	logoutUser, logoutToken, err := manager.Logout("test_invalid", "test_hash")
 	if err != InvalidToken {
@@ -464,12 +464,12 @@ func TestAuthManagerConfirmEmail(t *testing.T) {
 	manager.tokenService.(*MockTokenService).
 		EXPECT().
 		Check("test_email", "test_hash").
-		Return(&user, &token, nil)
+		Return(&token, nil)
 
 	manager.tokenService.(*MockTokenService).
 		EXPECT().
 		Invalidate(StructMatcher{&TokenMatcher{TokenId: Ptr("test_email")}}).
-		Return(&user, &token, nil)
+		Return(&token, nil)
 
 	manager.baseServices.Database.(*MockGormDB).
 		EXPECT().
@@ -500,11 +500,11 @@ func TestAuthManagerConfirmEmailInvalidId(t *testing.T) {
 	manager.tokenService.(*MockTokenService).
 		EXPECT().
 		Check("invalid_id", "test_hash").
-		Return(nil, nil, UnknownToken)
+		Return(nil, ErrUnknownToken)
 
 	_, err := manager.ConfirmEmail("invalid_id", "test_hash")
-	if err != UnknownToken {
-		t.Errorf("ConfirmEmail did not return UnknownToken %s", err)
+	if err != InvalidToken {
+		t.Errorf("ConfirmEmail did not return InvalidToken %s", err)
 	}
 }
 
@@ -519,7 +519,7 @@ func TestAuthManagerConfirmEmailInvalidHash(t *testing.T) {
 	manager.tokenService.(*MockTokenService).
 		EXPECT().
 		Check("test_email", "invalid_hash").
-		Return(nil, nil, UnknownToken)
+		Return(nil, ErrUnknownToken)
 
 	_, err := manager.ConfirmEmail("test_email", "invalid_hash")
 	if err != InvalidToken {
