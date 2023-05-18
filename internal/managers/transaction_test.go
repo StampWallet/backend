@@ -17,7 +17,7 @@ func GetTransactionManager(ctrl *gomock.Controller) *TransactionManagerImpl {
 	return &TransactionManagerImpl{
 		&BaseServices{
 			Logger:   log.Default(),
-			Database: GetDatabase(),
+			Database: GetTestDatabase(),
 		},
 	}
 }
