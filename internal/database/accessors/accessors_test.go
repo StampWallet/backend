@@ -15,19 +15,19 @@ import (
 
 func GetBusinessAuthorizedAccessor(ctrl *gomock.Controller) *BusinessAuthorizedAccessorImpl {
 	return &BusinessAuthorizedAccessorImpl{
-		database: GetDatabase(),
+		database: GetTestDatabase(),
 	}
 }
 
 func GetUserAuthorizedAccessor(ctrl *gomock.Controller) *UserAuthorizedAccessorImpl {
 	return &UserAuthorizedAccessorImpl{
-		database: GetDatabase(),
+		database: GetTestDatabase(),
 	}
 }
 
 func GetTransactionAuthorizedAccessor(ctrl *gomock.Controller) *AuthorizedTransactionAccessorImpl {
 	return &AuthorizedTransactionAccessorImpl{
-		database: GetDatabase(),
+		database: GetTestDatabase(),
 	}
 }
 

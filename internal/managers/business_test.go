@@ -20,7 +20,7 @@ func GetBusinessManager(ctrl *gomock.Controller) *BusinessManagerImpl {
 	return &BusinessManagerImpl{
 		&BaseServices{
 			Logger:   log.Default(),
-			Database: GetDatabase(),
+			Database: GetTestDatabase(),
 		},
 		NewMockFileStorageService(ctrl),
 	}

@@ -19,11 +19,11 @@ import (
 )
 
 type userMatcher struct {
-	ID            *uint
-	Email         *string
-	PasswordHash  *string
-	FirstName     *string
-	LastName      *string
+	ID           *uint
+	Email        *string
+	PasswordHash *string
+	//FirstName     *string
+	//LastName      *string
 	EmailVerified *bool
 }
 
@@ -578,7 +578,7 @@ func TestAuthManagerChangePassword(t *testing.T) {
 			return db
 		})
 
-	_, err := manager.ChangePassword(user, "zaq1@WSX", "nu9AhYoo")
+	_, err := manager.ChangePassword(&user, "zaq1@WSX", "nu9AhYoo")
 	require.Nilf(t, err, "manager.ChangePassword should return a nil error")
 	bcryptErr := bcrypt.CompareHashAndPassword([]byte(hash), []byte("nu9AhYoo"))
 	require.Nilf(t, bcryptErr, "bcrypt.CompareHashAndPassword should return a nil error")
@@ -591,7 +591,7 @@ func TestAuthManagerChangePasswordInvalid(t *testing.T) {
 
 	user := getExampleUser()
 
-	_, err := manager.ChangePassword(user, "test", "nu9AhYoo")
+	_, err := manager.ChangePassword(&user, "test", "nu9AhYoo")
 	require.ErrorIsf(t, InvalidOldPassword, err, "manager.ChangePassword should return a nil error")
 }
 
@@ -638,7 +638,7 @@ func TestAuthManagerChangeEmail(t *testing.T) {
 
 	mockCommit(db)
 
-	changedUser, err := manager.ChangeEmail(user, "test2@example.com")
+	changedUser, err := manager.ChangeEmail(&user, "test2@example.com")
 
 	require.Nilf(t, err, "ChangeEmail should return a nil error")
 	require.NotNilf(t, changedUser, "ChangeEmail should not return a nil user")
@@ -652,7 +652,7 @@ func TestAuthManagerChangeEmailInvalid(t *testing.T) {
 
 	user := getExampleUser()
 
-	changedUser, err := manager.ChangeEmail(user, "asd")
+	changedUser, err := manager.ChangeEmail(&user, "asd")
 
 	require.ErrorIsf(t, InvalidEmail, err, "error should be InvalidEmail")
 	require.Nilf(t, changedUser, "changedUser should be nil")
