@@ -199,7 +199,7 @@ func (manager *AuthManagerImpl) ChangePassword(user *User, oldPassword string, n
 	}
 
 	user.PasswordHash = string(newHash)
-	tx := manager.baseServices.Database.Save(&user)
+	tx := manager.baseServices.Database.Save(user)
 	if err := tx.GetError(); err != nil {
 		return nil, err
 	}

@@ -19,11 +19,11 @@ import (
 )
 
 type userMatcher struct {
-	ID            *uint
-	Email         *string
-	PasswordHash  *string
-	FirstName     *string
-	LastName      *string
+	ID           *uint
+	Email        *string
+	PasswordHash *string
+	//FirstName     *string
+	//LastName      *string
 	EmailVerified *bool
 }
 
@@ -62,9 +62,9 @@ func getExampleUser() User {
 				Valid: false,
 			},
 		},
-		PublicId:      "Es3Aepo7",
-		FirstName:     "test_first_name",
-		LastName:      "test_last_name",
+		PublicId: "Es3Aepo7",
+		//FirstName:     "test_first_name",
+		//LastName:      "test_last_name",
 		Email:         "test@example.com",
 		PasswordHash:  string(hash),
 		EmailVerified: false,
@@ -226,9 +226,9 @@ func TestAuthManagerCreate(t *testing.T) {
 	db := manager.baseServices.Database
 
 	mainUserMatcher := &StructMatcher{userMatcher{
-		Email:         Ptr("test@example.com"),
-		FirstName:     Ptr("first"),
-		LastName:      Ptr("last"),
+		Email: Ptr("test@example.com"),
+		//FirstName:     Ptr("first"),
+		//LastName:      Ptr("last"),
 		EmailVerified: Ptr(false),
 	}}
 
@@ -284,10 +284,10 @@ func TestAuthManagerCreate(t *testing.T) {
 
 	user, token, secret, err := manager.Create(
 		UserDetails{
-			Email:     "test@example.com",
-			Password:  "zaq1@WSX",
-			FirstName: "first",
-			LastName:  "last",
+			Email:    "test@example.com",
+			Password: "zaq1@WSX",
+			//FirstName: "first",
+			//LastName:  "last",
 		},
 	)
 
@@ -578,7 +578,7 @@ func TestAuthManagerChangePassword(t *testing.T) {
 			return db
 		})
 
-	_, err := manager.ChangePassword(user, "zaq1@WSX", "nu9AhYoo")
+	_, err := manager.ChangePassword(&user, "zaq1@WSX", "nu9AhYoo")
 	require.Nilf(t, err, "manager.ChangePassword should return a nil error")
 	bcryptErr := bcrypt.CompareHashAndPassword([]byte(hash), []byte("nu9AhYoo"))
 	require.Nilf(t, bcryptErr, "bcrypt.CompareHashAndPassword should return a nil error")
@@ -591,7 +591,7 @@ func TestAuthManagerChangePasswordInvalid(t *testing.T) {
 
 	user := getExampleUser()
 
-	_, err := manager.ChangePassword(user, "test", "nu9AhYoo")
+	_, err := manager.ChangePassword(&user, "test", "nu9AhYoo")
 	require.ErrorIsf(t, InvalidOldPassword, err, "manager.ChangePassword should return a nil error")
 }
 
@@ -638,7 +638,7 @@ func TestAuthManagerChangeEmail(t *testing.T) {
 
 	mockCommit(db)
 
-	changedUser, err := manager.ChangeEmail(user, "test2@example.com")
+	changedUser, err := manager.ChangeEmail(&user, "test2@example.com")
 
 	require.Nilf(t, err, "ChangeEmail should return a nil error")
 	require.NotNilf(t, changedUser, "ChangeEmail should not return a nil user")
@@ -652,7 +652,7 @@ func TestAuthManagerChangeEmailInvalid(t *testing.T) {
 
 	user := getExampleUser()
 
-	changedUser, err := manager.ChangeEmail(user, "asd")
+	changedUser, err := manager.ChangeEmail(&user, "asd")
 
 	require.ErrorIsf(t, InvalidEmail, err, "error should be InvalidEmail")
 	require.Nilf(t, changedUser, "changedUser should be nil")
