@@ -40,6 +40,7 @@ func TestHandleOk(t *testing.T) {
 		TokenPurpose: TokenPurposeSession,
 		Used:         false,
 		Recalled:     false,
+		User:         testUser,
 	}
 
 	context := NewTestContextBuilder(w).
@@ -61,7 +62,6 @@ func TestHandleOk(t *testing.T) {
 			gomock.Eq(testTokenSecret),
 		).
 		Return(
-			testUser,
 			testTokenStruct,
 			nil,
 		)
@@ -76,7 +76,64 @@ func TestHandleOk(t *testing.T) {
 	// TODO: test MatchEntities usage
 }
 
-func TestHandleNok_UnknownToken(t *testing.T) {
+func TestHandleNok_EmailToken(t *testing.T) {
+	// data prep
+	gin.SetMode(gin.TestMode)
+	w := httptest.NewRecorder()
+
+	testTokenSecret := "ZWVnaDhhZWg4bGVpbDJhaXBlaW5nZWViNWFpU2hlaGUK"
+	testTokenId := "0123456789"
+	testToken := testTokenId + ":" + testTokenSecret
+	testUser := GetDefaultUser()
+	testTokenStruct := &Token{
+		OwnerId:      testUser.ID,
+		TokenId:      testTokenId,
+		TokenHash:    testToken,
+		Expires:      time.Now().Add(time.Hour * 24),
+		TokenPurpose: TokenPurposeEmail,
+		Used:         false,
+		Recalled:     false,
+		User:         testUser,
+	}
+
+	context := NewTestContextBuilder(w).
+		SetDefaultUrl().
+		SetEndpoint("/user/cards").
+		SetMethod("GET").
+		SetHeader("Authorization", "Bearer "+testToken).
+		SetHeader("Accept", "application/json").
+		Context
+
+	// test env prep
+	ctrl := gomock.NewController(t)
+	authMiddleware := getAuthMiddleware(ctrl)
+
+	authMiddleware.tokenService.(*MockTokenService).
+		EXPECT().
+		Check(
+			gomock.Eq(testTokenId),
+			gomock.Eq(testTokenSecret),
+		).
+		Return(
+			testTokenStruct,
+			nil,
+		)
+
+	authMiddleware.Handle(context)
+
+	respBodyExpected := api.DefaultResponse{Status: api.UNAUTHORIZED}
+	respBody, respCode, respParseErr := ExtractResponse[api.DefaultResponse](w)
+
+	require.Nilf(t, respParseErr, "Failed to parse JSON response")
+	require.Equalf(t, respCode, int(401), "Response returned unexpected status code")
+	require.Truef(t, MatchEntities(respBodyExpected, respBody), "Status inside default response body does not match expected")
+	// TODO: MatchEntities
+
+	userPtr, userExists := context.Get("user")
+	require.Truef(t, userPtr == nil && userExists == false, "User field was overwritten despite no valid user existing")
+}
+
+func testHandleTokenError(t *testing.T, err error) {
 	// data prep
 	gin.SetMode(gin.TestMode)
 	w := httptest.NewRecorder()
@@ -105,13 +162,12 @@ func TestHandleNok_UnknownToken(t *testing.T) {
 		).
 		Return(
 			nil,
-			nil,
-			services.UnknownToken,
+			err,
 		)
 
 	authMiddleware.Handle(context)
 
-	respBodyExpected := api.DefaultResponse{Status: api.FORBIDDEN}
+	respBodyExpected := api.DefaultResponse{Status: api.UNAUTHORIZED}
 	respBody, respCode, respParseErr := ExtractResponse[api.DefaultResponse](w)
 
 	require.Nilf(t, respParseErr, "Failed to parse JSON response")
@@ -121,4 +177,10 @@ func TestHandleNok_UnknownToken(t *testing.T) {
 
 	userPtr, userExists := context.Get("user")
 	require.Truef(t, userPtr == nil && userExists == false, "User field was overwritten despite no valid user existing")
+}
+
+func TestHandleNok_TokenErrors(t *testing.T) {
+	for _, err := range []error{services.ErrUnknownToken, services.ErrTokenExpired, services.ErrTokenUsed} {
+		testHandleTokenError(t, err)
+	}
 }
