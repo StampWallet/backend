@@ -81,7 +81,7 @@ func TestVirtualCardManagerCreate(t *testing.T) {
 	require.Equalf(t, uint(0), virtualCard.Points, "VirtualCardManager.Create should returned a card with 0 points")
 
 	newVirtualCard, newErr := s.manager.Create(*s.user, *s.business)
-	require.Equalf(t, VirtualCardAlreadyExists, newErr, "VirtualCardManager.Create should returned VirtualCardAlreadyExists if the user attempts to create the same card twice")
+	require.Equalf(t, ErrVirtualCardAlreadyExists, newErr, "VirtualCardManager.Create should returned VirtualCardAlreadyExists if the user attempts to create the same card twice")
 	require.Nilf(t, newVirtualCard, "VirtualCardManager.Create should return a nil pointer if the user attempts to create the same card twice")
 }
 
@@ -114,7 +114,7 @@ func TestVirtualCardManagerRemoveNotExisting(t *testing.T) {
 	s := setupVirtualCardManagerTest(t)
 
 	err := s.manager.Remove(&VirtualCard{Model: gorm.Model{ID: 123123}})
-	require.Equalf(t, NoSuchVirtualCard, err, "VirtualCardManager.Remove should retrun NoSuchVirtualCard error")
+	require.Equalf(t, ErrNoSuchVirtualCard, err, "VirtualCardManager.Remove should retrun NoSuchVirtualCard error")
 }
 
 func TestVirtualCardManagerGetOwnedItems(t *testing.T) {
@@ -189,7 +189,7 @@ func TestVirtualCardManagerBuyItemAboveMaxAmount(t *testing.T) {
 
 	ownedItemAboveMaxAmount, err := s.manager.BuyItem(virtualCard, itemDefinition)
 	require.Nilf(t, ownedItemAboveMaxAmount, "VirtualCardManager.BuyItem should return a nil item")
-	require.Equalf(t, err, AboveMaxAmount, "VirtualCardManager.BuyItem should return a AboveMaxAmount error")
+	require.Equalf(t, err, ErrAboveMaxAmount, "VirtualCardManager.BuyItem should return a AboveMaxAmount error")
 }
 
 func TestVirtualCardManagerBuyItemWithNotEnoughPoints(t *testing.T) {
@@ -201,7 +201,7 @@ func TestVirtualCardManagerBuyItemWithNotEnoughPoints(t *testing.T) {
 
 	ownedItem, err := s.manager.BuyItem(virtualCard, itemDefinition)
 	require.Nilf(t, ownedItem, "VirtualCardManager.BuyItem should return a nil item")
-	require.Equalf(t, NotEnoughPoints, err, "VirtualCardManager.BuyItem should a NotEnoughPoints error")
+	require.Equalf(t, ErrNotEnoughPoints, err, "VirtualCardManager.BuyItem should a NotEnoughPoints error")
 }
 
 func TestVirtualCardManagerBuyItemBeforeStartDate(t *testing.T) {
@@ -214,7 +214,7 @@ func TestVirtualCardManagerBuyItemBeforeStartDate(t *testing.T) {
 
 	ownedItem, err := s.manager.BuyItem(virtualCard, itemDefinition)
 	require.Nilf(t, ownedItem, "VirtualCardManager.BuyItem should return a nil item")
-	require.Equalf(t, BeforeStartDate, err, "VirtualCardManager.BuyItem should return a BeforeStartDate error")
+	require.Equalf(t, ErrBeforeStartDate, err, "VirtualCardManager.BuyItem should return a BeforeStartDate error")
 }
 
 func TestVirtualCardManagerBuyItemAfterEndDate(t *testing.T) {
@@ -227,7 +227,7 @@ func TestVirtualCardManagerBuyItemAfterEndDate(t *testing.T) {
 
 	ownedItem, err := s.manager.BuyItem(virtualCard, itemDefinition)
 	require.Nilf(t, ownedItem, "VirtualCardManager.BuyItem should return a nil item")
-	require.Equalf(t, AfterEndDate, err, "VirtualCardManager.BuyItem should return an AfterEndDate error")
+	require.Equalf(t, ErrAfterEndDate, err, "VirtualCardManager.BuyItem should return an AfterEndDate error")
 }
 
 func TestVirtualCardManagerBuyItemUnavailable(t *testing.T) {
@@ -239,7 +239,7 @@ func TestVirtualCardManagerBuyItemUnavailable(t *testing.T) {
 
 	ownedItem, err := s.manager.BuyItem(virtualCard, itemDefinition)
 	require.Nilf(t, ownedItem, "VirtualCardManager.BuyItem should return a nil item")
-	require.Equalf(t, UnavailableItem, err, "VirtualCardManager.BuyItem should return an UnavailableItem error")
+	require.Equalf(t, ErrUnavailableItem, err, "VirtualCardManager.BuyItem should return an UnavailableItem error")
 }
 
 func TestVirtualCardManagerBuyItemWithdrawn(t *testing.T) {
@@ -251,7 +251,7 @@ func TestVirtualCardManagerBuyItemWithdrawn(t *testing.T) {
 
 	ownedItem, err := s.manager.BuyItem(virtualCard, itemDefinition)
 	require.Nilf(t, ownedItem, "VirtualCardManager.BuyItem should return a nil item")
-	require.Equalf(t, WithdrawnItem, err, "VirtualCardManager.BuyItem should return a WithdrawnItem error")
+	require.Equalf(t, ErrWithdrawnItem, err, "VirtualCardManager.BuyItem should return a WithdrawnItem error")
 }
 
 func TestVirtualCardManagerReturnItem(t *testing.T) {
@@ -273,7 +273,7 @@ func TestVirtualCardManagerReturnItem(t *testing.T) {
 	require.Equalf(t, OwnedItemStatusEnum(OwnedItemStatusReturned), dbOwnedItem.Status, "Owned item in the database should have returned status")
 
 	err = s.manager.ReturnItem(ownedItem)
-	require.Equalf(t, ItemCantBeReturned, err, "VirtualCardManager.Return should return an ItemCantBeReturned error on second return try")
+	require.Equalf(t, ErrItemCantBeReturned, err, "VirtualCardManager.Return should return an ItemCantBeReturned error on second return try")
 
 	tx = s.db.First(&dbVirtualCard, VirtualCard{Model: gorm.Model{ID: virtualCard.ID}})
 	require.Nilf(t, tx.GetError(), "Datbase find for OwnedItem should not return an error")
