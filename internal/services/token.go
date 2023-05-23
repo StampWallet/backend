@@ -19,6 +19,12 @@ type TokenServiceImpl struct {
 	baseServices BaseServices
 }
 
+func CreateTokenServiceImpl(baseServices BaseServices) *TokenServiceImpl {
+	return &TokenServiceImpl{
+		baseServices: baseServices,
+	}
+}
+
 func (service *TokenServiceImpl) Create(user *User, purpose TokenPurposeEnum, expiration time.Time) (*Token, string, error) {
 	return nil, "", nil
 }

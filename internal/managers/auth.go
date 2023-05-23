@@ -57,9 +57,18 @@ type UserDetails struct {
 }
 
 type AuthManagerImpl struct {
-	baseServices *BaseServices
+	baseServices BaseServices
 	emailService EmailService
 	tokenService TokenService
+}
+
+func CreateAuthManagerImpl(baseServices BaseServices,
+	emailService EmailService, tokenService TokenService) *AuthManagerImpl {
+	return &AuthManagerImpl{
+		baseServices: baseServices,
+		emailService: emailService,
+		tokenService: tokenService,
+	}
 }
 
 func (manager *AuthManagerImpl) Create(userDetails UserDetails) (*User, *Token, string, error) {

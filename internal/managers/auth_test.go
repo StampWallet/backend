@@ -42,7 +42,7 @@ type tokenMatcher struct {
 
 func getAuthManager(ctrl *gomock.Controller) (*AuthManagerImpl, error) {
 	return &AuthManagerImpl{
-		&BaseServices{
+		BaseServices{
 			Logger:   log.Default(),
 			Database: NewMockGormDB(ctrl),
 		},

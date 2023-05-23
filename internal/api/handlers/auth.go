@@ -18,6 +18,13 @@ type AuthHandlers struct {
 	logger      *log.Logger
 }
 
+func CreateAuthHandlers(authManager managers.AuthManager, logger *log.Logger) *AuthHandlers {
+	return &AuthHandlers{
+		authManager: authManager,
+		logger:      logger,
+	}
+}
+
 // TODO share this with middleware
 // Splits the token by :, expects exactly one :
 func splitToken(token string) (string, string, error) {
@@ -116,7 +123,6 @@ func (handler *AuthHandlers) deleteSession(c *gin.Context) {
 	}
 
 	c.JSON(200, api.DefaultResponse{Status: api.OK})
-
 }
 
 // Handles email confirmation request
@@ -222,6 +228,14 @@ func (handler *AuthHandlers) postAccountEmail(c *gin.Context) {
 	c.JSON(200, api.DefaultResponse{Status: api.OK})
 }
 
-func (handler *AuthHandlers) Connect(rg *gin.RouterGroup, authMiddleware middleware.AuthMiddleware) {
-
+func (handler *AuthHandlers) Connect(rg *gin.RouterGroup, authMiddleware *middleware.AuthMiddleware) {
+	account := rg.Group("/account")
+	{
+		account.POST("", handler.postAccount)
+		account.POST("/emailConfirmation", handler.postAccountEmailConfirmation)
+		account.POST("/email", authMiddleware.Handle, handler.postAccountEmail)
+		account.POST("/password", authMiddleware.Handle, handler.postAccountPassword)
+	}
+	rg.POST("/sessions", handler.postSession)
+	rg.DELETE("/sessions", authMiddleware.Handle, handler.deleteSession)
 }

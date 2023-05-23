@@ -321,7 +321,7 @@ paths:
                 status: INVALID_REQUEST
       security: 
         - sessionToken: []
-  /business/menuImage/:
+  /business/menuImages/:
     post:
       tags:
         - business
@@ -345,7 +345,7 @@ paths:
                 status: INVALID_REQUEST
       security: 
         - sessionToken: []
-  /business/menuImage/{menuImageId}:
+  /business/menuImages/{menuImageId}:
     delete:
       tags:
         - business
@@ -510,7 +510,7 @@ paths:
                 status: NOT_FOUND
       security: 
         - sessionToken: []
-  /business/transaction/{transactionCode}:
+  /business/transactions/{transactionCode}:
     get:
       tags:
         - transactions
@@ -869,7 +869,7 @@ paths:
         - sessionToken: []
 
   # NOTE: only one transaction per user+business should be available at the same time
-  /user/cards/virtual/{businessId}/transaction:
+  /user/cards/virtual/{businessId}/transactions:
     post:
       tags:
         - transaction
@@ -914,7 +914,7 @@ paths:
                 status: NOT_FOUND
       security: 
         - sessionToken: []
-  /user/cards/virtual/{businessId}/transaction/{transactionCode}:
+  /user/cards/virtual/{businessId}/transactions/{transactionCode}:
     get:
       tags:
         - transaction
@@ -956,7 +956,6 @@ paths:
     get:
       tags:
         - user
-        - search
       summary: Search businesses
       description: This endpoint is used to search businesses that match the provided text query or are close to a specified point.
       operationId: SearchBusinesses

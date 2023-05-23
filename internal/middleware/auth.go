@@ -21,6 +21,13 @@ type AuthMiddleware struct {
 	tokenService services.TokenService
 }
 
+func CreateAuthMiddleware(logger *log.Logger, tokenService services.TokenService) *AuthMiddleware {
+	return &AuthMiddleware{
+		logger:       logger,
+		tokenService: tokenService,
+	}
+}
+
 // Gin handler function for the middleware
 func (middleware *AuthMiddleware) Handle(c *gin.Context) {
 	// Parse Authorization header value - divide on spaces

@@ -20,7 +20,7 @@ func GetTestVirtualCardManager(ctrl *gomock.Controller) *VirtualCardManagerImpl 
 	return &VirtualCardManagerImpl{
 		&BaseServices{
 			Logger:   log.Default(),
-			Database: GetDatabase(),
+			Database: GetTestDatabase(),
 		},
 	}
 }

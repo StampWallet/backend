@@ -206,9 +206,9 @@ font-style: italic;
   </ul>
   <h4><a href="#Business">Business</a></h4>
   <ul>
-  <li><a href="#addMenuImage"><code><span class="http-method">post</span> /business/menuImage/</code></a></li>
+  <li><a href="#addMenuImage"><code><span class="http-method">post</span> /business/menuImages/</code></a></li>
   <li><a href="#createBusinessAccount"><code><span class="http-method">post</span> /business/account</code></a></li>
-  <li><a href="#deleteMenuImage"><code><span class="http-method">delete</span> /business/menuImage/{menuImageId}</code></a></li>
+  <li><a href="#deleteMenuImage"><code><span class="http-method">delete</span> /business/menuImages/{menuImageId}</code></a></li>
   <li><a href="#getBusinessAccountInfo"><code><span class="http-method">get</span> /business/info</code></a></li>
   <li><a href="#updateBusinessAccount"><code><span class="http-method">patch</span> /business/info</code></a></li>
   </ul>
@@ -235,10 +235,6 @@ font-style: italic;
   <li><a href="#deleteLocalCard"><code><span class="http-method">delete</span> /user/cards/local/{cardId}</code></a></li>
   <li><a href="#getLocalCardTypes"><code><span class="http-method">get</span> /user/cards/local/types</code></a></li>
   </ul>
-  <h4><a href="#Search">Search</a></h4>
-  <ul>
-  <li><a href="#searchBusinesses"><code><span class="http-method">get</span> /user/businesses</code></a></li>
-  </ul>
   <h4><a href="#Sessions">Sessions</a></h4>
   <ul>
   <li><a href="#login"><code><span class="http-method">post</span> /auth/sessions</code></a></li>
@@ -246,13 +242,13 @@ font-style: italic;
   </ul>
   <h4><a href="#Transaction">Transaction</a></h4>
   <ul>
-  <li><a href="#getTransactionStatus"><code><span class="http-method">get</span> /user/cards/virtual/{businessId}/transaction/{transactionCode}</code></a></li>
-  <li><a href="#startTransaction"><code><span class="http-method">post</span> /user/cards/virtual/{businessId}/transaction</code></a></li>
+  <li><a href="#getTransactionStatus"><code><span class="http-method">get</span> /user/cards/virtual/{businessId}/transactions/{transactionCode}</code></a></li>
+  <li><a href="#startTransaction"><code><span class="http-method">post</span> /user/cards/virtual/{businessId}/transactions</code></a></li>
   </ul>
   <h4><a href="#Transactions">Transactions</a></h4>
   <ul>
-  <li><a href="#finishTransaction"><code><span class="http-method">post</span> /business/transaction/{transactionCode}</code></a></li>
-  <li><a href="#getTransactionDetails"><code><span class="http-method">get</span> /business/transaction/{transactionCode}</code></a></li>
+  <li><a href="#finishTransaction"><code><span class="http-method">post</span> /business/transactions/{transactionCode}</code></a></li>
+  <li><a href="#getTransactionDetails"><code><span class="http-method">get</span> /business/transactions/{transactionCode}</code></a></li>
   </ul>
   <h4><a href="#User">User</a></h4>
   <ul>
@@ -502,7 +498,7 @@ font-style: italic;
   <div class="method"><a name="addMenuImage"/>
     <div class="method-path">
     <a class="up" href="#__Methods">Up</a>
-    <pre class="post"><code class="huge"><span class="http-method">post</span> /business/menuImage/</code></pre></div>
+    <pre class="post"><code class="huge"><span class="http-method">post</span> /business/menuImages/</code></pre></div>
     <div class="method-summary">Add menu image to business (<span class="nickname">addMenuImage</span>)</div>
     <div class="method-notes">This endpoint is used to add a new menu image to business details. Returns a new fileId to be used with '/file/' endpoints.</div>
 
@@ -605,7 +601,7 @@ font-style: italic;
   <div class="method"><a name="deleteMenuImage"/>
     <div class="method-path">
     <a class="up" href="#__Methods">Up</a>
-    <pre class="delete"><code class="huge"><span class="http-method">delete</span> /business/menuImage/{menuImageId}</code></pre></div>
+    <pre class="delete"><code class="huge"><span class="http-method">delete</span> /business/menuImages/{menuImageId}</code></pre></div>
     <div class="method-summary">Delete menu image from business (<span class="nickname">deleteMenuImage</span>)</div>
     <div class="method-notes">This endpoint is used to delete a menu image from business details.</div>
 
@@ -1363,67 +1359,6 @@ font-style: italic;
         <a href="#GetUserLocalCardTypesResponse">GetUserLocalCardTypesResponse</a>
   </div> <!-- method -->
   <hr/>
-  <h1><a name="Search">Search</a></h1>
-  <div class="method"><a name="searchBusinesses"/>
-    <div class="method-path">
-    <a class="up" href="#__Methods">Up</a>
-    <pre class="get"><code class="huge"><span class="http-method">get</span> /user/businesses</code></pre></div>
-    <div class="method-summary">Search businesses (<span class="nickname">searchBusinesses</span>)</div>
-    <div class="method-notes">This endpoint is used to search businesses that match the provided text query or are close to a specified point.</div>
-
-
-
-
-
-    <h3 class="field-label">Query parameters</h3>
-    <div class="field-items">
-      <div class="param">text (optional)</div>
-
-      <div class="param-desc"><span class="param-type">Query Parameter</span> &mdash; Filter by business name default: null </div><div class="param">location (optional)</div>
-
-      <div class="param-desc"><span class="param-type">Query Parameter</span> &mdash; Filter by business location default: null format: ISO 6709</div><div class="param">proximity (optional)</div>
-
-      <div class="param-desc"><span class="param-type">Query Parameter</span> &mdash; Filter by distance from location in meters default: null </div>
-    </div>  <!-- field-items -->
-
-
-    <h3 class="field-label">Return type</h3>
-    <div class="return-type">
-      <a href="#GetUserBusinessesSearchResponse">GetUserBusinessesSearchResponse</a>
-      
-    </div>
-
-    <!--Todo: process Response Object and its headers, schema, examples -->
-
-    <h3 class="field-label">Example data</h3>
-    <div class="example-data-content-type">Content-Type: application/json</div>
-    <pre class="example"><code>{
-  "businesses" : [ {
-    "publicId" : "cG9leWlWb283c2h1Cg",
-    "name" : "Business",
-    "description" : "Coffee shop or whatever",
-    "gpsCoordinates" : "+48.8577+002.295/",
-    "bannerImageId" : "b29naG9oVGhhaG42Cg",
-    "iconImageId" : "b29naG9oVGhhaG42Cg"
-  } ]
-}</code></pre>
-
-    <h3 class="field-label">Produces</h3>
-    This API call produces the following media types according to the <span class="header">Accept</span> request header;
-    the media type will be conveyed by the <span class="header">Content-Type</span> response header.
-    <ul>
-      <li><code>application/json</code></li>
-    </ul>
-
-    <h3 class="field-label">Responses</h3>
-    <h4 class="field-label">200</h4>
-    Successful operation
-        <a href="#GetUserBusinessesSearchResponse">GetUserBusinessesSearchResponse</a>
-    <h4 class="field-label">400</h4>
-    Invalid request
-        <a href="#DefaultResponse">DefaultResponse</a>
-  </div> <!-- method -->
-  <hr/>
   <h1><a name="Sessions">Sessions</a></h1>
   <div class="method"><a name="login"/>
     <div class="method-path">
@@ -1530,7 +1465,7 @@ font-style: italic;
   <div class="method"><a name="getTransactionStatus"/>
     <div class="method-path">
     <a class="up" href="#__Methods">Up</a>
-    <pre class="get"><code class="huge"><span class="http-method">get</span> /user/cards/virtual/{businessId}/transaction/{transactionCode}</code></pre></div>
+    <pre class="get"><code class="huge"><span class="http-method">get</span> /user/cards/virtual/{businessId}/transactions/{transactionCode}</code></pre></div>
     <div class="method-summary">Get info about a transaction (<span class="nickname">getTransactionStatus</span>)</div>
     <div class="method-notes">This endpoint is used in the last step of transaction processing, it's used to check the status of the transaction.</div>
 
@@ -1587,7 +1522,7 @@ font-style: italic;
   <div class="method"><a name="startTransaction"/>
     <div class="method-path">
     <a class="up" href="#__Methods">Up</a>
-    <pre class="post"><code class="huge"><span class="http-method">post</span> /user/cards/virtual/{businessId}/transaction</code></pre></div>
+    <pre class="post"><code class="huge"><span class="http-method">post</span> /user/cards/virtual/{businessId}/transactions</code></pre></div>
     <div class="method-summary">Start a transaction (<span class="nickname">startTransaction</span>)</div>
     <div class="method-notes">This endpoint is used in the first step of transaction processing, the app should use it to start a transaction optionally providing items to be exchanged.</div>
 
@@ -1653,7 +1588,7 @@ font-style: italic;
   <div class="method"><a name="finishTransaction"/>
     <div class="method-path">
     <a class="up" href="#__Methods">Up</a>
-    <pre class="post"><code class="huge"><span class="http-method">post</span> /business/transaction/{transactionCode}</code></pre></div>
+    <pre class="post"><code class="huge"><span class="http-method">post</span> /business/transactions/{transactionCode}</code></pre></div>
     <div class="method-summary">Finish a transaction (<span class="nickname">finishTransaction</span>)</div>
     <div class="method-notes">This endpoint is used in the third step of transaction processing, the app should use it to update transaction details with data about points added to user's account and actions that were taken on items included in the transaction.</div>
 
@@ -1717,7 +1652,7 @@ font-style: italic;
   <div class="method"><a name="getTransactionDetails"/>
     <div class="method-path">
     <a class="up" href="#__Methods">Up</a>
-    <pre class="get"><code class="huge"><span class="http-method">get</span> /business/transaction/{transactionCode}</code></pre></div>
+    <pre class="get"><code class="huge"><span class="http-method">get</span> /business/transactions/{transactionCode}</code></pre></div>
     <div class="method-summary">Get info about a started transaction (<span class="nickname">getTransactionDetails</span>)</div>
     <div class="method-notes">This endpoint is used in the second step of transaction processing, the app should use it to retrieve details about a transaction started by a user, after scanning user's transaction code.</div>
 
