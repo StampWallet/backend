@@ -181,7 +181,7 @@ func verifyMaxAmount(db GormDB, virtualCard *VirtualCard, itemDefinition *ItemDe
 	return nil
 }
 
-// Verifies if virtualCard has enough point to buy item of type itemDefinition
+// Verifies if virtualCard has enough points to buy item of type itemDefinition
 func verifyPrice(db GormDB, virtualCard *VirtualCard, itemDefinition *ItemDefinition) error {
 	var points uint
 	result := db.Model(&VirtualCard{}).
