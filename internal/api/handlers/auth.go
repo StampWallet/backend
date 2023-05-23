@@ -49,9 +49,9 @@ func (handler *AuthHandlers) postAccount(c *gin.Context) {
 	})
 	if err != nil {
 		handler.logger.Printf("failed to authManager.Create in postAccount %+v", err)
-		if err == managers.EmailExists {
+		if err == managers.ErrEmailExists {
 			c.JSON(409, api.DefaultResponse{Status: api.CONFLICT})
-		} else if err != managers.UnknownError {
+		} else if err != managers.ErrUnknownError {
 			c.JSON(400, api.DefaultResponse{Status: api.INVALID_REQUEST})
 		} else {
 			c.JSON(500, api.DefaultResponse{Status: api.UNKNOWN_ERROR})
@@ -81,9 +81,9 @@ func (handler *AuthHandlers) postAccountEmail(c *gin.Context) {
 	_, err := handler.authManager.ChangeEmail(user, req.Email)
 	if err != nil {
 		handler.logger.Printf("failed to authManager.ChangeEmail in postAccountEmail %+v", err)
-		if err == managers.EmailExists {
+		if err == managers.ErrEmailExists {
 			c.JSON(409, api.DefaultResponse{Status: api.CONFLICT})
-		} else if err != managers.UnknownError {
+		} else if err != managers.ErrUnknownError {
 			c.JSON(400, api.DefaultResponse{Status: api.INVALID_REQUEST})
 		} else {
 			c.JSON(500, api.DefaultResponse{Status: api.UNKNOWN_ERROR})
@@ -113,7 +113,7 @@ func (handler *AuthHandlers) postAccountPassword(c *gin.Context) {
 	_, err := handler.authManager.ChangePassword(user, req.OldPassword, req.Password)
 	if err != nil {
 		handler.logger.Printf("failed to authManager.ChangePassword in postAccountPassword %+v", err)
-		if err != managers.UnknownError {
+		if err != managers.ErrUnknownError {
 			c.JSON(400, api.DefaultResponse{Status: api.INVALID_REQUEST})
 		} else {
 			c.JSON(500, api.DefaultResponse{Status: api.UNKNOWN_ERROR})
@@ -142,9 +142,9 @@ func (handler *AuthHandlers) postAccountEmailConfirmation(c *gin.Context) {
 	_, err = handler.authManager.ConfirmEmail(tokenId, tokenSecret)
 	if err != nil {
 		handler.logger.Printf("failed to authManager.ChangePassword in postAccountEmailConfirmation %+v", err)
-		if err == managers.InvalidToken || err == managers.InvalidTokenPurpose {
+		if err == managers.ErrInvalidToken || err == managers.ErrInvalidTokenPurpose {
 			c.JSON(401, api.DefaultResponse{Status: api.UNAUTHORIZED})
-		} else if err != managers.UnknownError {
+		} else if err != managers.ErrUnknownError {
 			c.JSON(400, api.DefaultResponse{Status: api.INVALID_REQUEST})
 		} else {
 			c.JSON(500, api.DefaultResponse{Status: api.UNKNOWN_ERROR})
@@ -166,9 +166,9 @@ func (handler *AuthHandlers) postSession(c *gin.Context) {
 	_, token, tokenSecret, err := handler.authManager.Login(req.Email, req.Password)
 	if err != nil {
 		handler.logger.Printf("failed to authManager.Login in postSession %+v", err)
-		if err == managers.InvalidEmail || err == managers.InvalidLogin {
+		if err == managers.ErrInvalidEmail || err == managers.ErrInvalidLogin {
 			c.JSON(401, api.DefaultResponse{Status: api.UNAUTHORIZED})
-		} else if err != managers.UnknownError {
+		} else if err != managers.ErrUnknownError {
 			c.JSON(400, api.DefaultResponse{Status: api.INVALID_REQUEST})
 		} else {
 			c.JSON(500, api.DefaultResponse{Status: api.UNKNOWN_ERROR})
@@ -190,9 +190,9 @@ func (handler *AuthHandlers) deleteSession(c *gin.Context) {
 	_, _, err = handler.authManager.Logout(id, secret)
 	if err != nil {
 		handler.logger.Printf("failed to authManager.Logout in deleteSession %+v", err)
-		if err == managers.InvalidToken || err == managers.InvalidTokenPurpose {
+		if err == managers.ErrInvalidToken || err == managers.ErrInvalidTokenPurpose {
 			c.JSON(401, api.DefaultResponse{Status: api.UNAUTHORIZED})
-		} else if err != managers.UnknownError {
+		} else if err != managers.ErrUnknownError {
 			c.JSON(400, api.DefaultResponse{Status: api.INVALID_REQUEST})
 		} else {
 			c.JSON(500, api.DefaultResponse{Status: api.UNKNOWN_ERROR})
