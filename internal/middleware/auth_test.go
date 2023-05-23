@@ -17,6 +17,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// Create AuthMiddleware
 func getAuthMiddleware(ctrl *gomock.Controller) *AuthMiddleware {
 	return &AuthMiddleware{
 		logger:       log.Default(),
@@ -24,6 +25,7 @@ func getAuthMiddleware(ctrl *gomock.Controller) *AuthMiddleware {
 	}
 }
 
+// Test AuthMiddleware on the happy path
 func TestHandleOk(t *testing.T) {
 	// data prep
 	gin.SetMode(gin.TestMode)
@@ -77,6 +79,7 @@ func TestHandleOk(t *testing.T) {
 	// TODO: test MatchEntities usage
 }
 
+// Test AuthMiddleware when the token is invalid
 func TestHandleNok_UnknownToken(t *testing.T) {
 	// data prep
 	gin.SetMode(gin.TestMode)
