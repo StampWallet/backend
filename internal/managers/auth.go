@@ -113,14 +113,14 @@ func (manager *AuthManagerImpl) Create(userDetails UserDetails) (*User, *Token, 
 	}
 
 	// Create token for email verification
-	emailToken, emailSecret, err := manager.tokenService.Create(user, TokenPurposeEmail, time.Now().Add(24*time.Hour))
+	emailToken, emailSecret, err := manager.tokenService.Create(&user, TokenPurposeEmail, time.Now().Add(24*time.Hour))
 	if err != nil {
 		tx.Rollback()
 		return nil, nil, "", fmt.Errorf("%s failed to to create email token, tokenservice error: %+v", CallerFilename(), err)
 	}
 
 	// Create token for session
-	sessionToken, sessionSecret, err := manager.tokenService.Create(user, TokenPurposeSession, time.Now().Add(time.Hour))
+	sessionToken, sessionSecret, err := manager.tokenService.Create(&user, TokenPurposeSession, time.Now().Add(time.Hour))
 	if err != nil {
 		tx.Rollback()
 		return nil, nil, "", fmt.Errorf("%s failed to to create session token, tokenservice error: %+v", CallerFilename(), err)
@@ -161,7 +161,7 @@ func (manager *AuthManagerImpl) Login(email string, password string) (*User, *To
 	}
 
 	// Create session token
-	sessionToken, sessionSecret, err := manager.tokenService.Create(user, TokenPurposeSession, time.Now().Add(time.Hour))
+	sessionToken, sessionSecret, err := manager.tokenService.Create(&user, TokenPurposeSession, time.Now().Add(time.Hour))
 	if err != nil {
 		return nil, nil, "", err
 	}
@@ -181,7 +181,7 @@ func (manager *AuthManagerImpl) Logout(tokenId string, tokenSecret string) (*Use
 	}
 
 	// Invalidate token
-	user, invalidatedToken, err := manager.tokenService.Invalidate(*token)
+	user, invalidatedToken, err := manager.tokenService.Invalidate(token)
 	if err != nil {
 		manager.baseServices.Logger.Printf("tokenService.Invalidate returned an error: %s", err)
 		return nil, nil, ErrInvalidToken
@@ -221,7 +221,7 @@ func (manager *AuthManagerImpl) ConfirmEmail(tokenId string, tokenSecret string)
 	}
 
 	// Invalidate token
-	user, token, err = manager.tokenService.Invalidate(*token)
+	user, token, err = manager.tokenService.Invalidate(token)
 	if err != nil {
 		tx.Rollback()
 		return nil, err
@@ -284,7 +284,7 @@ func (manager *AuthManagerImpl) ChangeEmail(user User, newEmail string) (*User, 
 	}
 
 	// Create email verification token
-	emailToken, emailSecret, err := manager.tokenService.Create(user,
+	emailToken, emailSecret, err := manager.tokenService.Create(&user,
 		TokenPurposeEmail, time.Now().Add(24*time.Hour))
 	if err != nil {
 		tx.Rollback()

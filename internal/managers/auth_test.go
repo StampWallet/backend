@@ -386,7 +386,7 @@ func TestAuthManagerLogin(t *testing.T) {
 		Create(&StructMatcher{userMatcher{
 			ID: &mockUser.ID,
 		}}, TokenPurposeSession, TimeGreaterThanNow{time.Now().Add(time.Hour)}).
-		DoAndReturn(func(user User, arg1 interface{}, arg2 interface{}) (*Token, string, error) {
+		DoAndReturn(func(user *User, arg1 interface{}, arg2 interface{}) (*Token, string, error) {
 			return &Token{OwnerId: user.ID, TokenId: "test", TokenHash: "test", TokenPurpose: TokenPurposeSession}, "sessionSecret", nil
 		})
 
@@ -467,9 +467,9 @@ func TestAuthManagerLogout(t *testing.T) {
 		Invalidate(&StructMatcher{tokenMatcher{
 			TokenId: Ptr(token.TokenId),
 		}}).
-		DoAndReturn(func(token Token) (*User, *Token, error) {
+		DoAndReturn(func(token *Token) (*User, *Token, error) {
 			token.Recalled = true
-			return &user, &token, nil
+			return &user, token, nil
 		})
 
 	logoutUser, logoutToken, err := manager.Logout(token.TokenId, "test_hash")
