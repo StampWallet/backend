@@ -22,4 +22,5 @@ const (
 	UNAUTHORIZED    DefaultResponseStatusEnum = "UNAUTHORIZED"
 	INVALID_REQUEST DefaultResponseStatusEnum = "INVALID_REQUEST"
 	UNKNOWN_ERROR   DefaultResponseStatusEnum = "UNKNOWN_ERROR"
+	CONFLICT        DefaultResponseStatusEnum = "CONFLICT"
 )

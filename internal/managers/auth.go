@@ -26,13 +26,13 @@ var (
 )
 
 type AuthManager interface {
-	// Creates a new user account from UserDetails struct. Returns a database object and a session token
-	// for the user. Sends a verification email.
-	Create(userDetails UserDetails) (*User, *Token, error)
+	// Creates a new user account from UserDetails struct. Returns a database object and, session token and
+	// matching token secret for the user. Sends a verification email.
+	Create(userDetails UserDetails) (*User, *Token, string, error)
 
 	// Checks if email and password match any user. If yes, returns the database object and serssion token
 	// for that user.
-	Login(email string, password string) (*User, *Token, error)
+	Login(email string, password string) (*User, *Token, string, error)
 
 	// Checks if token id and secret match any session token. If yes, invalidates the token.
 	Logout(tokenId string, tokenSecret string) (*User, *Token, error)
@@ -42,18 +42,18 @@ type AuthManager interface {
 	ConfirmEmail(tokenId string, tokenSecret string) (*User, error)
 
 	// Changes password of user, if oldPassword matches user.PasswordHash.
-	ChangePassword(user User, oldPassword string, newPassword string) (*User, error)
+	ChangePassword(user *User, oldPassword string, newPassword string) (*User, error)
 
 	// Changes email of user, if no other user has the same email. Changes user.EmailVerified to false,
 	// sends a new verification email.
-	ChangeEmail(user User, newEmail string) (*User, error)
+	ChangeEmail(user *User, newEmail string) (*User, error)
 }
 
 type UserDetails struct {
-	FirstName string
-	LastName  string
-	Email     string
-	Password  string
+	//FirstName string
+	//LastName  string
+	Email    string
+	Password string
 }
 
 type AuthManagerImpl struct {
@@ -99,11 +99,11 @@ func (manager *AuthManagerImpl) Create(userDetails UserDetails) (*User, *Token, 
 
 	// Create the user in the database
 	user := User{
-		PublicId:      shortuuid.New(),
-		Email:         userDetails.Email,
-		PasswordHash:  string(hash),
-		FirstName:     userDetails.FirstName,
-		LastName:      userDetails.LastName,
+		PublicId:     shortuuid.New(),
+		Email:        userDetails.Email,
+		PasswordHash: string(hash),
+		//FirstName:     userDetails.FirstName,
+		//LastName:      userDetails.LastName,
 		EmailVerified: false,
 	}
 	txCreate := tx.Create(&user)
@@ -235,7 +235,7 @@ func (manager *AuthManagerImpl) ConfirmEmail(tokenId string, tokenSecret string)
 	return user, nil
 }
 
-func (manager *AuthManagerImpl) ChangePassword(user User, oldPassword string, newPassword string) (*User, error) {
+func (manager *AuthManagerImpl) ChangePassword(user *User, oldPassword string, newPassword string) (*User, error) {
 	// Check if old password matches
 	err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(oldPassword))
 	if err == bcrypt.ErrMismatchedHashAndPassword {
@@ -252,15 +252,15 @@ func (manager *AuthManagerImpl) ChangePassword(user User, oldPassword string, ne
 
 	// Update password in the database
 	user.PasswordHash = string(newHash)
-	tx := manager.baseServices.Database.Save(&user)
+	tx := manager.baseServices.Database.Save(user)
 	if err := tx.GetError(); err != nil {
 		return nil, err
 	}
 
-	return &user, nil
+	return user, nil
 }
 
-func (manager *AuthManagerImpl) ChangeEmail(user User, newEmail string) (*User, error) {
+func (manager *AuthManagerImpl) ChangeEmail(user *User, newEmail string) (*User, error) {
 	// Check if email is valid
 	_, err := mail.ParseAddress(newEmail)
 	if err != nil {
@@ -284,7 +284,7 @@ func (manager *AuthManagerImpl) ChangeEmail(user User, newEmail string) (*User, 
 	}
 
 	// Create email verification token
-	emailToken, emailSecret, err := manager.tokenService.Create(&user,
+	emailToken, emailSecret, err := manager.tokenService.Create(user,
 		TokenPurposeEmail, time.Now().Add(24*time.Hour))
 	if err != nil {
 		tx.Rollback()
@@ -303,5 +303,5 @@ func (manager *AuthManagerImpl) ChangeEmail(user User, newEmail string) (*User, 
 		return nil, err
 	}
 
-	return &user, nil
+	return user, nil
 }

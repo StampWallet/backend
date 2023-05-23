@@ -26,7 +26,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DefaultResponse'
+                $ref: '#/components/schemas/PostAccountResponse'
               example:
                 status: CREATED
         '400':
@@ -50,13 +50,51 @@ paths:
       tags:
         - account
       summary: Confirm email
-      description: When an account is created, user receives an email with a link to a static website. That website simply posts it's parameters (unique to each email) to this endpoint. The parameters will be unique and hard to guess, allowing to verify that user has really received the email.
+      description: When an account is created, user receives an email with a link to a static website. That website simply posts it's parameters (unique to each email) to this endpoint. The parameters will be unique and hard to guess, allowing to verify that user really has access to the email address.
       operationId: confirmEmail
       requestBody:
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/PostAccountEmailConfirmationRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostAccountResponse'
+              example:
+                token: ZWVnaDhhZWg4bGVpbDJhaQo=:XBlaW5nZWViNWFpU2hlaGUKa
+        '400':
+          description: Invalid request format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+              example:
+                status: INVALID_REQUEST
+        '401':
+          description: Unauthorized - invalid token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+              example:
+                status: UNAUTHORIZED
+  /auth/account/email:
+    post:
+      tags:
+        - account
+      summary: Change email
+      description: This endpoint can be used to change email address of currently logged in user. Changing email address requires email confirmation
+      operationId: changeEmail
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostAccountEmailRequest'
         required: true
       responses:
         '200':
@@ -75,14 +113,46 @@ paths:
                 $ref: '#/components/schemas/DefaultResponse'
               example:
                 status: INVALID_REQUEST
-        '404':
-          description: Token not found
+        '409':
+          description: Email already exists
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/DefaultResponse'
               example:
-                status: NOT_FOUND
+                status: CONFLICT
+      security: 
+        - sessionToken: []
+  /auth/account/password:
+    post:
+      tags:
+        - account
+      summary: Change password
+      description: This endpoint can be used to change password of currently logged in user. Requires the user to provide their old password
+      operationId: changePassword
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DefaultResponse'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+              example:
+                status: OK
+        '400':
+          description: Invalid request format or invalid old password
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+              example:
+                status: INVALID_REQUEST
       security: 
         - sessionToken: []
   /auth/sessions:
@@ -1076,6 +1146,7 @@ components:
         - UNAUTHORIZED
         - INVALID_REQUEST
         - UNKNOWN_ERROR
+        - CONFLICT
 
     PostAccountRequest:
       type: object
@@ -1088,12 +1159,18 @@ components:
           type: string
           format: password
           example: zaq1@WSX
+    PostAccountResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          example: ZWVnaDhhZWg4bGVpbDJhaQo=:XBlaW5nZWViNWFpU2hlaGUKa
     PostAccountEmailConfirmationRequest:
       type: object
       properties:
         token:
           type: string
-          example: ZWVnaDhhZWg4bGVpbDJhaXBlaW5nZWViNWFpU2hlaGUK
+          example: ZWVnaDhhZWg4bGVpbDJhaQo=:XBlaW5nZWViNWFpU2hlaGUKa
     PostAccountEmailRequest:
       type: object
       properties:
@@ -1125,7 +1202,7 @@ components:
       properties:
         token:
           type: string
-          example: ZWVnaDhhZWg4bGVpbDJhaXBlaW5nZWViNWFpU2hlaGUK
+          example: ZWVnaDhhZWg4bGVpbDJhaQo=:XBlaW5nZWViNWFpU2hlaGUKa
 
 
     PostBusinessAccountRequest:
