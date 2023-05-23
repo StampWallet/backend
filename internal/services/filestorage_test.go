@@ -54,7 +54,7 @@ func readAndCompare(t *testing.T, org string, service *FileStorageServiceImpl, p
 
 // Tests
 
-func TestBusinessManagerCreateStub(t *testing.T) {
+func TestFileStorageServiceCreateStub(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	service := GetFileStorageService(ctrl)
 	defer os.RemoveAll(service.basePath)
@@ -67,7 +67,7 @@ func TestBusinessManagerCreateStub(t *testing.T) {
 	require.Falsef(t, metadata.Uploaded.Valid, "Metadata has upload date")
 }
 
-func TestBusinessManagerGetData(t *testing.T) {
+func TestFileStorageServiceGetData(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	service := GetFileStorageService(ctrl)
 	defer os.RemoveAll(service.basePath)
@@ -86,7 +86,7 @@ func TestBusinessManagerGetData(t *testing.T) {
 	readAndCompare(t, toWrite, service, metadata.PublicId)
 }
 
-func TestBusinessManagerGetDataInvalid(t *testing.T) {
+func TestFileStorageServiceGetDataInvalid(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	service := GetFileStorageService(ctrl)
 	defer os.RemoveAll(service.basePath)
@@ -96,7 +96,7 @@ func TestBusinessManagerGetDataInvalid(t *testing.T) {
 	require.ErrorAsf(t, err, NoSuchFile, "service.GetData returned a file")
 }
 
-func TestBusinessManagerGetDataNotUploaded(t *testing.T) {
+func TestFileStorageServiceGetDataNotUploaded(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	service := GetFileStorageService(ctrl)
 	defer os.RemoveAll(service.basePath)
@@ -115,7 +115,7 @@ func TestBusinessManagerGetDataNotUploaded(t *testing.T) {
 	require.ErrorAsf(t, err, FileNotUploaded, "service.GetData returned a file")
 }
 
-func TestBusinessManagerUpload(t *testing.T) {
+func TestFileStorageServiceUpload(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	service := GetFileStorageService(ctrl)
 	defer os.RemoveAll(service.basePath)
@@ -155,7 +155,7 @@ func TestBusinessManagerUpload(t *testing.T) {
 	require.Equal(t, newFileMetadata.OwnerId, fileMetadataDb.OwnerId)
 }
 
-func TestBusinessManagerUploadInvalidMimeType(t *testing.T) {
+func TestFileStorageServiceUploadInvalidMimeType(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	service := GetFileStorageService(ctrl)
 	defer os.RemoveAll(service.basePath)
@@ -178,7 +178,7 @@ func TestBusinessManagerUploadInvalidMimeType(t *testing.T) {
 	require.Nilf(t, newFileMetadata, "FileStorageService.Upload did not return nil FileMetadata")
 }
 
-func TestBusinessManagerRemove(t *testing.T) {
+func TestFileStorageServiceRemove(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	service := GetFileStorageService(ctrl)
 	defer os.RemoveAll(service.basePath)
@@ -215,7 +215,7 @@ func TestBusinessManagerRemove(t *testing.T) {
 	require.Falsef(t, fileMetadataDb.ContentType.Valid, "fileMetadataDb.ContentType.Valid is not false")
 }
 
-func TestBusinessManagerRemoveNotUploaded(t *testing.T) {
+func TestFileStorageServiceRemoveNotUploaded(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	service := GetFileStorageService(ctrl)
 	defer os.RemoveAll(service.basePath)
