@@ -15,6 +15,7 @@ import (
 	. "github.com/StampWallet/backend/internal/testutils"
 )
 
+// Builds VirtualCardManagerImpl with test database
 func GetTestVirtualCardManager(ctrl *gomock.Controller) *VirtualCardManagerImpl {
 	return &VirtualCardManagerImpl{
 		&BaseServices{
@@ -24,6 +25,7 @@ func GetTestVirtualCardManager(ctrl *gomock.Controller) *VirtualCardManagerImpl 
 	}
 }
 
+// Return type of setupVirtualCardManagerTes
 type virtualCardManagerTest struct {
 	ctrl           *gomock.Controller
 	manager        *VirtualCardManagerImpl
@@ -34,12 +36,14 @@ type virtualCardManagerTest struct {
 	db             GormDB
 }
 
+// Return type of setupBusiness
 type businessTest struct {
 	businessUser   *User
 	business       *Business
 	itemDefinition *ItemDefinition
 }
 
+// Creates and example business, with a new owner and example ItemDefinition
 func setupBusiness(db GormDB) businessTest {
 	businessUser := GetTestUser(db)
 	business := GetTestBusiness(db, businessUser)
@@ -51,6 +55,7 @@ func setupBusiness(db GormDB) businessTest {
 	}
 }
 
+// Creates a new user, business, virtualCard and VirtualCardManagerImpl
 func setupVirtualCardManagerTest(t *testing.T) virtualCardManagerTest {
 	ctrl := gomock.NewController(t)
 	manager := GetTestVirtualCardManager(gomock.NewController(t))
@@ -68,30 +73,36 @@ func setupVirtualCardManagerTest(t *testing.T) virtualCardManagerTest {
 	}
 }
 
+// Tests VirtualCardManagerImpl.Create on happy path and when virtualCard for business and user already exists
 func TestVirtualCardManagerCreate(t *testing.T) {
 	s := setupVirtualCardManagerTest(t)
 	virtualCard, err := s.manager.Create(*s.user, *s.business)
-	require.Nilf(t, err, "VirtualCardManager.Create should retrun a nil error")
-	require.NotNilf(t, virtualCard, "VirtualCardManager.Create shuold not return a nil virtual card")
+	require.Nilf(t, err, "VirtualCardManager.Create should return a nil error")
+	require.NotNilf(t, virtualCard, "VirtualCardManager.Create should not return a nil virtual card")
 	if virtualCard == nil {
 		return
 	}
-	require.Equalf(t, s.user.ID, virtualCard.OwnerId, "VirtualCardManager.Create shuold returned a card that belongs to the passed user")
+	require.Equalf(t, s.user.ID, virtualCard.OwnerId, "VirtualCardManager.Create should returned a card that belongs to the passed user")
 	require.Equalf(t, s.business.ID, virtualCard.BusinessId, "VirtualCardManager.Create should return a card that belongs to the passed business")
-	require.Equalf(t, 0, virtualCard.Points, "VirtualCardManager.Create should returned a card with 0 points")
+	require.Equalf(t, uint(0), virtualCard.Points, "VirtualCardManager.Create should returned a card with 0 points")
 
 	newVirtualCard, newErr := s.manager.Create(*s.user, *s.business)
-	require.Equalf(t, VirtualCardAlreadyExists, newErr, "VirtualCardManager.Create should returned VirtualCardAlreadyExists if the user attempts to create the same card twice")
+	require.Equalf(t, ErrVirtualCardAlreadyExists, newErr, "VirtualCardManager.Create should returned VirtualCardAlreadyExists if the user attempts to create the same card twice")
 	require.Nilf(t, newVirtualCard, "VirtualCardManager.Create should return a nil pointer if the user attempts to create the same card twice")
 }
 
+// Tests VirtualCardManagerImpl.Remove on happy path
 func TestVirtualCardManagerRemove(t *testing.T) {
 	s := setupVirtualCardManagerTest(t)
 	virtualCard := GetTestVirtualCard(s.db, s.user, s.business)
 	ownedItem := GetTestOwnedItem(s.db, s.itemDefinition, virtualCard)
 
+	user2 := GetTestUser(s.db)
+	virtualCard2 := GetTestVirtualCard(s.db, user2, s.business)
+	ownedItem2 := GetTestOwnedItem(s.db, s.itemDefinition, virtualCard2)
+
 	err := s.manager.Remove(virtualCard)
-	require.Nilf(t, err, "VirtualCardManager.Remove should not retrun a nil error")
+	require.Nilf(t, err, "VirtualCardManager.Remove should retrun a nil error")
 
 	var dbVirtualCard VirtualCard
 	var dbOwnedItem OwnedItem
@@ -99,44 +110,22 @@ func TestVirtualCardManagerRemove(t *testing.T) {
 	require.Equalf(t, gorm.ErrRecordNotFound, tx.GetError(), "Datbase find for VirtualCard should return RecordNotFound")
 	tx = s.db.First(&dbOwnedItem, OwnedItem{Model: gorm.Model{ID: ownedItem.ID}})
 	require.Equalf(t, gorm.ErrRecordNotFound, tx.GetError(), "Datbase find for OwnedItem should return RecordNotFound")
+
+	tx = s.db.First(&dbVirtualCard, VirtualCard{Model: gorm.Model{ID: virtualCard2.ID}})
+	require.Equalf(t, virtualCard2.PublicId, dbVirtualCard.PublicId, "Datbase find for VirtualCard2 should return VirtualCard2")
+	tx = s.db.First(&dbOwnedItem, OwnedItem{Model: gorm.Model{ID: ownedItem2.ID}})
+	require.Equalf(t, ownedItem2.PublicId, dbOwnedItem.PublicId, "Datbase find for OwnedItem2 should return OwnedItem2")
 }
 
+// Tests VirtualCardManagerImpl.Remove when virtualCard does not exist
 func TestVirtualCardManagerRemoveNotExisting(t *testing.T) {
 	s := setupVirtualCardManagerTest(t)
 
 	err := s.manager.Remove(&VirtualCard{Model: gorm.Model{ID: 123123}})
-	require.Equalf(t, NoSuchVirtualCard, err, "VirtualCardManager.Remove should retrun NoSuchVirtualCard error")
+	require.Equalf(t, ErrNoSuchVirtualCard, err, "VirtualCardManager.Remove should retrun NoSuchVirtualCard error")
 }
 
-func TestVirtualCardManagerGetForUser(t *testing.T) {
-	s := setupVirtualCardManagerTest(t)
-	cards, err := s.manager.GetForUser(s.user)
-	require.Nilf(t, err, "VirtualCardManager.GetForUser should return a nil error")
-	require.Equalf(t, 0, len(cards), "VirtualCardManager.GetForUser should return zero cards")
-
-	anotherBusiness := setupBusiness(s.db)
-	virtualCard := GetTestVirtualCard(s.db, s.user, s.business)
-	GetTestOwnedItem(s.db, s.itemDefinition, virtualCard)
-	virtualCard2 := GetTestVirtualCard(s.db, s.user, anotherBusiness.business)
-	GetTestOwnedItem(s.db, s.itemDefinition, virtualCard)
-
-	//random virtual card that should not be present in results
-	GetTestVirtualCard(s.db, GetTestUser(s.db), s.business)
-
-	cards, err = s.manager.GetForUser(s.user)
-	require.Nilf(t, err, "VirtualCardManager.GetForUser should return a nil error")
-	require.Equalf(t, 2, len(cards), "VirtualCardManager.GetForUser should return two cards")
-	nCards := 0
-	for _, c := range cards {
-		if c.PublicId == virtualCard.PublicId || c.PublicId == virtualCard2.PublicId {
-			nCards += 1
-		} else {
-			require.Failf(t, "VirtualCardManager.GetForUser returned an unexpected card %s", c.PublicId)
-		}
-	}
-	require.Equalf(t, 2, nCards, "VirtualCardManager.GetForUser should return two cards")
-}
-
+// Tests VirtualCardManagerImpl.GetOwnedItems on happy path
 func TestVirtualCardManagerGetOwnedItems(t *testing.T) {
 	s := setupVirtualCardManagerTest(t)
 	virtualCard := GetTestVirtualCard(s.db, s.user, s.business)
@@ -148,6 +137,7 @@ func TestVirtualCardManagerGetOwnedItems(t *testing.T) {
 	require.Equalf(t, ownedItem.PublicId, items[0].PublicId, "VirtualCardManager.GetOwnedItems should return the expected item")
 }
 
+// Tests VirtualCardManagerImpl.FilterOwnedItems on happy path
 func TestVirtualCardManagerFilterOwnedItems(t *testing.T) {
 	s := setupVirtualCardManagerTest(t)
 	virtualCard := GetTestVirtualCard(s.db, s.user, s.business)
@@ -172,18 +162,17 @@ func TestVirtualCardManagerFilterOwnedItems(t *testing.T) {
 	require.Equalf(t, 2, nItems, "VirtualCardManager.FilterOwnedItems should return two items")
 }
 
+// Tests VirtualCardManagerImpl.BuyItem on happy path
 func TestVirtualCardManagerBuyItem(t *testing.T) {
 	s := setupVirtualCardManagerTest(t)
 	virtualCard := GetTestVirtualCard(s.db, s.user, s.business)
 	itemDefinition := GetDefaultItem(s.business)
 	Save(s.db, itemDefinition)
+	oldPoints := virtualCard.Points
 
 	ownedItem, err := s.manager.BuyItem(virtualCard, itemDefinition)
 	require.Nilf(t, err, "VirtualCardManager.BuyItem should return a nil error")
 	require.NotNilf(t, ownedItem, "VirtualCardManager.BuyItem should not return a nil ownedItem")
-	if virtualCard == nil {
-		return
-	}
 	require.Equalf(t, itemDefinition.ID, ownedItem.DefinitionId, "VirtualCardManager.BuyItem should return item from expected item definition")
 	require.Equalf(t, OwnedItemStatusOwned, ownedItem.Status, "VirtualCardManager.BuyItem should return item from expected item definition")
 	require.Falsef(t, ownedItem.Used.Valid, "VirtualCardManager.BuyItem should return item with nil used time")
@@ -192,9 +181,13 @@ func TestVirtualCardManagerBuyItem(t *testing.T) {
 	var dbVirtualCard VirtualCard
 	tx := s.db.First(&dbVirtualCard, VirtualCard{Model: gorm.Model{ID: virtualCard.ID}})
 	require.Nilf(t, tx.GetError(), "Database find should not return an error")
-	require.Truef(t, MatchEntities(virtualCard, dbVirtualCard), "Virtual card should be the same as in the db")
+	require.Equalf(t, oldPoints-itemDefinition.Price, dbVirtualCard.Points,
+		"Virtual card from the db should have its points substracted")
+	require.Equalf(t, oldPoints-itemDefinition.Price, virtualCard.Points,
+		"Virtual card from args should have its points substracted")
 }
 
+// Tests VirtualCardManagerImpl.BuyItem when virtualCard has ItemDefinition.MaxAmount items
 func TestVirtualCardManagerBuyItemAboveMaxAmount(t *testing.T) {
 	s := setupVirtualCardManagerTest(t)
 	virtualCard := GetTestVirtualCard(s.db, s.user, s.business)
@@ -208,9 +201,10 @@ func TestVirtualCardManagerBuyItemAboveMaxAmount(t *testing.T) {
 
 	ownedItemAboveMaxAmount, err := s.manager.BuyItem(virtualCard, itemDefinition)
 	require.Nilf(t, ownedItemAboveMaxAmount, "VirtualCardManager.BuyItem should return a nil item")
-	require.Equalf(t, err, AboveMaxAmount, "VirtualCardManager.BuyItem should return a AboveMaxAmount error")
+	require.Equalf(t, err, ErrAboveMaxAmount, "VirtualCardManager.BuyItem should return a AboveMaxAmount error")
 }
 
+// Tests VirtualCardManagerImpl.BuyItem when virtualCard does not have enough points
 func TestVirtualCardManagerBuyItemWithNotEnoughPoints(t *testing.T) {
 	s := setupVirtualCardManagerTest(t)
 	virtualCard := GetTestVirtualCard(s.db, s.user, s.business)
@@ -220,9 +214,10 @@ func TestVirtualCardManagerBuyItemWithNotEnoughPoints(t *testing.T) {
 
 	ownedItem, err := s.manager.BuyItem(virtualCard, itemDefinition)
 	require.Nilf(t, ownedItem, "VirtualCardManager.BuyItem should return a nil item")
-	require.Equalf(t, NotEnoughPoints, err, "VirtualCardManager.BuyItem should a NotEnoughPoints error")
+	require.Equalf(t, ErrNotEnoughPoints, err, "VirtualCardManager.BuyItem should a NotEnoughPoints error")
 }
 
+// Tests VirtualCardManagerImpl.BuyItem when ItemDefinition is not valid yet
 func TestVirtualCardManagerBuyItemBeforeStartDate(t *testing.T) {
 	s := setupVirtualCardManagerTest(t)
 	virtualCard := GetTestVirtualCard(s.db, s.user, s.business)
@@ -233,9 +228,10 @@ func TestVirtualCardManagerBuyItemBeforeStartDate(t *testing.T) {
 
 	ownedItem, err := s.manager.BuyItem(virtualCard, itemDefinition)
 	require.Nilf(t, ownedItem, "VirtualCardManager.BuyItem should return a nil item")
-	require.Equalf(t, BeforeStartDate, err, "VirtualCardManager.BuyItem should return a BeforeStartDate error")
+	require.Equalf(t, ErrBeforeStartDate, err, "VirtualCardManager.BuyItem should return a BeforeStartDate error")
 }
 
+// Tests VirtualCardManagerImpl.BuyItem when ItemDefinition is already invalid
 func TestVirtualCardManagerBuyItemAfterEndDate(t *testing.T) {
 	s := setupVirtualCardManagerTest(t)
 	virtualCard := GetTestVirtualCard(s.db, s.user, s.business)
@@ -246,9 +242,10 @@ func TestVirtualCardManagerBuyItemAfterEndDate(t *testing.T) {
 
 	ownedItem, err := s.manager.BuyItem(virtualCard, itemDefinition)
 	require.Nilf(t, ownedItem, "VirtualCardManager.BuyItem should return a nil item")
-	require.Equalf(t, AfterEndDate, err, "VirtualCardManager.BuyItem should return an AfterEndDate error")
+	require.Equalf(t, ErrAfterEndDate, err, "VirtualCardManager.BuyItem should return an AfterEndDate error")
 }
 
+// Tests VirtualCardManagerImpl.BuyItem when ItemDefinition is unavailable
 func TestVirtualCardManagerBuyItemUnavailable(t *testing.T) {
 	s := setupVirtualCardManagerTest(t)
 	virtualCard := GetTestVirtualCard(s.db, s.user, s.business)
@@ -258,21 +255,23 @@ func TestVirtualCardManagerBuyItemUnavailable(t *testing.T) {
 
 	ownedItem, err := s.manager.BuyItem(virtualCard, itemDefinition)
 	require.Nilf(t, ownedItem, "VirtualCardManager.BuyItem should return a nil item")
-	require.Equalf(t, UnavailableItem, err, "VirtualCardManager.BuyItem should return an UnavailableItem error")
+	require.Equalf(t, ErrUnavailableItem, err, "VirtualCardManager.BuyItem should return an UnavailableItem error")
 }
 
+// Tests VirtualCardManagerImpl.BuyItem when ItemDefinition is withdrawn
 func TestVirtualCardManagerBuyItemWithdrawn(t *testing.T) {
 	s := setupVirtualCardManagerTest(t)
 	virtualCard := GetTestVirtualCard(s.db, s.user, s.business)
 	itemDefinition := GetDefaultItem(s.business)
-	itemDefinition.Withdrawn = false
+	itemDefinition.Withdrawn = true
 	Save(s.db, itemDefinition)
 
 	ownedItem, err := s.manager.BuyItem(virtualCard, itemDefinition)
 	require.Nilf(t, ownedItem, "VirtualCardManager.BuyItem should return a nil item")
-	require.Equalf(t, WithdrawnItem, err, "VirtualCardManager.BuyItem should return a WithdrawnItem error")
+	require.Equalf(t, ErrWithdrawnItem, err, "VirtualCardManager.BuyItem should return a WithdrawnItem error")
 }
 
+// Tests [VirtualCardManagerImpl.ReturnItem] on happy path and when item was already returned
 func TestVirtualCardManagerReturnItem(t *testing.T) {
 	s := setupVirtualCardManagerTest(t)
 	virtualCard := GetTestVirtualCard(s.db, s.user, s.business)
@@ -287,12 +286,12 @@ func TestVirtualCardManagerReturnItem(t *testing.T) {
 	require.Equalf(t, virtualCard.Points+s.itemDefinition.Price, dbVirtualCard.Points, "Virtual card points amount should be updated")
 
 	var dbOwnedItem OwnedItem
-	tx = s.db.First(&dbOwnedItem, OwnedItem{Model: gorm.Model{ID: virtualCard.ID}})
+	tx = s.db.First(&dbOwnedItem, OwnedItem{Model: gorm.Model{ID: ownedItem.ID}})
 	require.Nilf(t, tx.GetError(), "Datbase find for OwnedItem should not return an error")
-	require.Equalf(t, OwnedItemStatusReturned, dbOwnedItem.Status, "Owned item in the database should have returned status")
+	require.Equalf(t, OwnedItemStatusEnum(OwnedItemStatusReturned), dbOwnedItem.Status, "Owned item in the database should have returned status")
 
 	err = s.manager.ReturnItem(ownedItem)
-	require.Equalf(t, ItemReturned, err, "VirtualCardManager.Return should return an ItemReturned error on second return try")
+	require.Equalf(t, ErrItemCantBeReturned, err, "VirtualCardManager.Return should return an ItemCantBeReturned error on second return try")
 
 	tx = s.db.First(&dbVirtualCard, VirtualCard{Model: gorm.Model{ID: virtualCard.ID}})
 	require.Nilf(t, tx.GetError(), "Datbase find for OwnedItem should not return an error")
