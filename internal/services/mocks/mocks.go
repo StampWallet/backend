@@ -53,12 +53,13 @@ func (mr *MockTokenServiceMockRecorder) Check(arg0, arg1 interface{}) *gomock.Ca
 }
 
 // Create mocks base method.
-func (m *MockTokenService) Create(arg0 database.User, arg1 database.TokenPurposeEnum, arg2 time.Time) (*database.Token, error) {
+func (m *MockTokenService) Create(arg0 *database.User, arg1 database.TokenPurposeEnum, arg2 time.Time) (*database.Token, string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Create", arg0, arg1, arg2)
 	ret0, _ := ret[0].(*database.Token)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret1, _ := ret[1].(string)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // Create indicates an expected call of Create.
@@ -68,7 +69,7 @@ func (mr *MockTokenServiceMockRecorder) Create(arg0, arg1, arg2 interface{}) *go
 }
 
 // Invalidate mocks base method.
-func (m *MockTokenService) Invalidate(arg0 database.Token) (*database.User, *database.Token, error) {
+func (m *MockTokenService) Invalidate(arg0 *database.Token) (*database.User, *database.Token, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Invalidate", arg0)
 	ret0, _ := ret[0].(*database.User)
@@ -144,10 +145,10 @@ func (m *MockFileStorageService) EXPECT() *MockFileStorageServiceMockRecorder {
 }
 
 // CreateStub mocks base method.
-func (m *MockFileStorageService) CreateStub(arg0 *database.User) (database.FileMetadata, error) {
+func (m *MockFileStorageService) CreateStub(arg0 *database.User) (*database.FileMetadata, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateStub", arg0)
-	ret0, _ := ret[0].(database.FileMetadata)
+	ret0, _ := ret[0].(*database.FileMetadata)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -188,10 +189,10 @@ func (mr *MockFileStorageServiceMockRecorder) Remove(arg0 interface{}) *gomock.C
 }
 
 // Upload mocks base method.
-func (m *MockFileStorageService) Upload(arg0 database.FileMetadata, arg1 os.File, arg2 string) (string, error) {
+func (m *MockFileStorageService) Upload(arg0 database.FileMetadata, arg1 *os.File, arg2 string) (*database.FileMetadata, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Upload", arg0, arg1, arg2)
-	ret0, _ := ret[0].(string)
+	ret0, _ := ret[0].(*database.FileMetadata)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
