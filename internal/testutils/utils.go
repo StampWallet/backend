@@ -33,14 +33,14 @@ func MatchEntities(matcher interface{}, Obj interface{}) bool {
 			mtf := mt.Field(i)
 			of := o.FieldByName(mtf.Name)
 			mf := m.FieldByName(mtf.Name)
-			if (mf.Kind() == reflect.Pointer || mf.Kind() == reflect.Interface) && !mf.IsNil() && !of.Equal(mf.Elem()) {
-				return false
-			} else if (mf.Kind() == reflect.Array || mf.Kind() == reflect.Slice) && !reflect.DeepEqual(of, mf) {
-				return false
-			} else if mf.Kind() == reflect.Struct && !MatchEntities(of, mf) {
-				return false
-			} else if !of.Equal(mf) {
-				return false
+			if !of.Equal(mf) {
+				if (mf.Kind() == reflect.Pointer || mf.Kind() == reflect.Interface) && !mf.IsNil() && !of.Equal(mf.Elem()) {
+					return false
+				} else if (mf.Kind() == reflect.Array || mf.Kind() == reflect.Slice) && !reflect.DeepEqual(of, mf) {
+					return false
+				} else if mf.Kind() == reflect.Struct && !MatchEntities(of, mf) {
+					return false
+				}
 			}
 		}
 		return true
