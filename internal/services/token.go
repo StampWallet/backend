@@ -33,6 +33,6 @@ func (service *TokenServiceImpl) Check(tokenId string, tokenSecret string) (*Use
 	return nil, nil, nil
 }
 
-func (service *TokenServiceImpl) Invalidate(token Token) (*User, *Token, error) {
+func (service *TokenServiceImpl) Invalidate(token *Token) (*User, *Token, error) {
 	return nil, nil, nil
 }

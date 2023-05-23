@@ -228,7 +228,7 @@ func (handler *AuthHandlers) postAccountEmail(c *gin.Context) {
 	c.JSON(200, api.DefaultResponse{Status: api.OK})
 }
 
-func (handler *AuthHandlers) Connect(rg *gin.RouterGroup, authMiddleware middleware.AuthMiddleware) {
+func (handler *AuthHandlers) Connect(rg *gin.RouterGroup, authMiddleware *middleware.AuthMiddleware) {
 	account := rg.Group("/account")
 	{
 		account.POST("", handler.postAccount)
