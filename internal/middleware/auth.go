@@ -10,14 +10,24 @@ import (
 	services "github.com/StampWallet/backend/internal/services"
 )
 
+// Middleware that checks if the requests contains a valid (not expired, not recalled) session token.
+// Session token is expected to be in the Authorization HTTP header. Expected HTTP authorization scheme is "Bearer".
+// Token is expected to be in the following format: {{.TokenId}}:{{.TokenSecret}}
+// If the token is valid, database.User object of the token owner is inserted into the context under "user" key and
+// the request is passed to the next handler.
+// If the token is not valid, the middleware returns 401 Unauthorized and the request is not passed to the next handler.
 type AuthMiddleware struct {
 	logger       *log.Logger
 	tokenService services.TokenService
 }
 
+// Gin handler function for the middleware
 func (middleware *AuthMiddleware) Handle(c *gin.Context) {
+	// Parse Authorization header value - divide on spaces
 	auth_header := c.GetHeader("Authorization")
 	header_value_split := strings.Split(auth_header, " ")
+
+	// Make sure that Authorization scheme is Bearer and that the headers contains a single token
 	if len(header_value_split) != 2 || header_value_split[0] != "Bearer" {
 		c.JSON(401, api.DefaultResponse{
 			Status: api.UNAUTHORIZED,
@@ -25,6 +35,7 @@ func (middleware *AuthMiddleware) Handle(c *gin.Context) {
 		return
 	}
 
+	// Split the token by :
 	token_split := strings.Split(header_value_split[1], ":")
 	if len(token_split) != 2 {
 		c.JSON(401, api.DefaultResponse{
@@ -33,6 +44,7 @@ func (middleware *AuthMiddleware) Handle(c *gin.Context) {
 		return
 	}
 
+	// Call TokenService to make sure that the token is valid
 	user, token, err := middleware.tokenService.Check(token_split[0], token_split[1])
 	if err == services.UnknownToken {
 		c.JSON(401, api.DefaultResponse{
@@ -49,4 +61,5 @@ func (middleware *AuthMiddleware) Handle(c *gin.Context) {
 
 	c.Set("user", user)
 	c.Set("token", token)
+	c.Next()
 }
