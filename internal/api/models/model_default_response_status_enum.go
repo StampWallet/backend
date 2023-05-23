@@ -21,5 +21,5 @@ const (
 	ALREADY_EXISTS  DefaultResponseStatusEnum = "ALREADY_EXISTS"
 	UNAUTHORIZED    DefaultResponseStatusEnum = "UNAUTHORIZED"
 	INVALID_REQUEST DefaultResponseStatusEnum = "INVALID_REQUEST"
-	CONFLICT        DefaultResponseStatusEnum = "CONFLICT"
+	UNKNOWN_ERROR   DefaultResponseStatusEnum = "UNKNOWN_ERROR"
 )
