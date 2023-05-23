@@ -10,9 +10,9 @@ import (
 var UnknownToken = errors.New("Invalid token")
 
 type TokenService interface {
-	Create(user User, purpose TokenPurposeEnum, expiration time.Time) (*Token, string, error)
+	Create(user *User, purpose TokenPurposeEnum, expiration time.Time) (*Token, string, error)
 	Check(tokenId string, tokenSecret string) (*User, *Token, error)
-	Invalidate(token Token) (*User, *Token, error)
+	Invalidate(token *Token) (*User, *Token, error)
 }
 
 type TokenServiceImpl struct {
@@ -25,7 +25,7 @@ func CreateTokenServiceImpl(baseServices BaseServices) *TokenServiceImpl {
 	}
 }
 
-func (service *TokenServiceImpl) Create(user User, purpose TokenPurposeEnum, expiration time.Time) (*Token, string, error) {
+func (service *TokenServiceImpl) Create(user *User, purpose TokenPurposeEnum, expiration time.Time) (*Token, string, error) {
 	return nil, "", nil
 }
 

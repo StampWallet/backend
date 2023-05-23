@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/lithammer/shortuuid/v4"
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 
 	. "github.com/StampWallet/backend/internal/database"
@@ -172,4 +173,23 @@ func GetDefaultItem(business *Business) *ItemDefinition {
 	}
 	business.ItemDefinitions = append(business.ItemDefinitions, *itemDefinition)
 	return itemDefinition
+}
+
+func GetTestToken(db GormDB, user *User) (*Token, string) {
+	secret := shortuuid.New()
+	hash, err := bcrypt.GenerateFromPassword([]byte(secret), 10)
+	if err != nil {
+		panic(fmt.Sprintf("failed to create token hash %s", err))
+	}
+	token := Token{
+		TokenId:      shortuuid.New(),
+		TokenHash:    string(hash),
+		Expires:      time.Now().Add(24 * time.Hour),
+		TokenPurpose: TokenPurposeEmail,
+		Used:         false,
+		Recalled:     false,
+		User:         user,
+	}
+	Save(db, &token)
+	return &token, secret
 }
