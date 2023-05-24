@@ -18,6 +18,8 @@ import (
 	. "github.com/StampWallet/backend/internal/testutils"
 )
 
+// Subset of database.User that allows to check if some keys match using StructMatcher
+// nil == ignore key
 type userMatcher struct {
 	ID           *uint
 	Email        *string
@@ -27,6 +29,8 @@ type userMatcher struct {
 	EmailVerified *bool
 }
 
+// Subset of database.Token that allows to check if some keys match using StructMatcher
+// nil == ignore key
 type tokenMatcher struct {
 	OwnerId      *uint
 	TokenId      *string
@@ -47,6 +51,7 @@ func getAuthManager(ctrl *gomock.Controller) (*AuthManagerImpl, error) {
 	}, nil
 }
 
+// Returns example user model
 func getExampleUser() User {
 	hash, err := bcrypt.GenerateFromPassword([]byte("zaq1@WSX"), 10)
 	if err != nil {
@@ -71,6 +76,7 @@ func getExampleUser() User {
 	}
 }
 
+// Mocks user in the database
 func mockExampleUser(database *MockGormDB) User {
 	user := getExampleUser()
 	database.
@@ -90,6 +96,7 @@ func mockExampleUser(database *MockGormDB) User {
 	return user
 }
 
+// Retuns example Token model
 func createExampleToken(tokenId string, tokenPurpose TokenPurposeEnum) Token {
 	hash, err := bcrypt.GenerateFromPassword([]byte("test_hash"), 10)
 	if err != nil {
@@ -115,6 +122,7 @@ func createExampleToken(tokenId string, tokenPurpose TokenPurposeEnum) Token {
 	return token
 }
 
+// Mocks example Token model in the database
 func mockExampleUserEmailVerificationToken(database *MockGormDB) Token {
 	token := createExampleToken("test_email", TokenPurposeEmail)
 	database.
@@ -129,6 +137,7 @@ func mockExampleUserEmailVerificationToken(database *MockGormDB) Token {
 	return token
 }
 
+// Returns example session token for example user
 func getExampleUserLogin() Token {
 	hash, err := bcrypt.GenerateFromPassword([]byte("test_hash"), 10)
 	if err != nil {
@@ -154,6 +163,7 @@ func getExampleUserLogin() Token {
 	return token
 }
 
+// Mocks example session token in the database
 func mockExampleUserLogin(tokenService *MockTokenService) Token {
 	user := getExampleUser()
 	token := getExampleUserLogin()
@@ -164,6 +174,7 @@ func mockExampleUserLogin(tokenService *MockTokenService) Token {
 	return token
 }
 
+// Mocks transaction begin
 func mockBegin(db GormDB) {
 	db.(*MockGormDB).
 		EXPECT().
@@ -171,6 +182,7 @@ func mockBegin(db GormDB) {
 		Return(db)
 }
 
+// Mocks transaction rollback
 func mockRollback(db GormDB) {
 	db.(*MockGormDB).
 		EXPECT().
@@ -178,6 +190,7 @@ func mockRollback(db GormDB) {
 		Return(db)
 }
 
+// Mocks transaction commit
 func mockCommit(db GormDB) {
 	db.(*MockGormDB).
 		EXPECT().
@@ -185,8 +198,7 @@ func mockCommit(db GormDB) {
 		DoAndReturn(returnError0(db, nil))
 }
 
-//lol
-
+// Utility functions used to return an error in DoAndReturn, each for different amount of method arguments
 func returnError0(db GormDB, err error) func() GormDB {
 	return (func() GormDB {
 		db.(*MockGormDB).
@@ -219,6 +231,7 @@ func returnError2(db GormDB, err error) func(arg any, arg2 any) GormDB {
 
 // Tests
 
+// Tests if AuthManagerImpl.Create works correctly on the happy path
 func TestAuthManagerCreate(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -306,6 +319,7 @@ func TestAuthManagerCreate(t *testing.T) {
 	assert.Equal(t, false, token.Recalled)
 }
 
+// Tests if AuthManagerImpl.Create works correctly if provided email is invalid
 func TestAuthManagerCreateWithInvalidEmail(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -318,10 +332,11 @@ func TestAuthManagerCreateWithInvalidEmail(t *testing.T) {
 		},
 	)
 
-	require.ErrorIsf(t, InvalidEmail, err, "manager.Create should return InvalidEmail error")
+	require.ErrorIsf(t, ErrInvalidEmail, err, "manager.Create should return InvalidEmail error")
 	require.Nilf(t, user, "manager.Create should return nil user")
 }
 
+// Tests if AuthManagerImpl.Create works correctly if user with the same email exists
 func TestAuthManagerCreateWithExistingEmail(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -354,10 +369,11 @@ func TestAuthManagerCreateWithExistingEmail(t *testing.T) {
 		},
 	)
 
-	require.ErrorIsf(t, EmailExists, err, "manager.Create should return EmailExists error")
+	require.ErrorIsf(t, ErrEmailExists, err, "manager.Create should return EmailExists error")
 	require.Nilf(t, user, "manager.Create should return nil user")
 }
 
+// Tests if AuthManagerImpl.Login works correctly on the happy path
 func TestAuthManagerLogin(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -370,7 +386,7 @@ func TestAuthManagerLogin(t *testing.T) {
 		Create(&StructMatcher{userMatcher{
 			ID: &mockUser.ID,
 		}}, TokenPurposeSession, TimeGreaterThanNow{time.Now().Add(time.Hour)}).
-		DoAndReturn(func(user User, arg1 interface{}, arg2 interface{}) (*Token, string, error) {
+		DoAndReturn(func(user *User, arg1 interface{}, arg2 interface{}) (*Token, string, error) {
 			return &Token{OwnerId: user.ID, TokenId: "test", TokenHash: "test", TokenPurpose: TokenPurposeSession}, "sessionSecret", nil
 		})
 
@@ -387,8 +403,9 @@ func TestAuthManagerLogin(t *testing.T) {
 	assert.Equal(t, "sessionSecret", sessionSecret, "Invalid session secret")
 }
 
+// Asserts that user, token and sesessionSecret are nil, error is InvalidLogin - user failed to login
 func assertInvalidLogin(t *testing.T, user *User, token *Token, sessionSecret string, err error) {
-	if err != InvalidLogin {
+	if err != ErrInvalidLogin {
 		t.Errorf("Error is not InvalidLogin %s", err)
 	}
 	if user != nil {
@@ -402,6 +419,7 @@ func assertInvalidLogin(t *testing.T, user *User, token *Token, sessionSecret st
 	}
 }
 
+// Tests if AuthManagerImpl.Login works correctly if password is invalid
 func TestAuthManagerLoginInvalidPassword(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -414,6 +432,7 @@ func TestAuthManagerLoginInvalidPassword(t *testing.T) {
 	assertInvalidLogin(t, user, token, sessionSecret, err)
 }
 
+// Tests if AuthManagerImpl.Login works correctly if email is invalid
 func TestAuthManagerLoginInvalidEmail(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -431,6 +450,7 @@ func TestAuthManagerLoginInvalidEmail(t *testing.T) {
 	assertInvalidLogin(t, user, token, sessionSecret, err)
 }
 
+// Tests if AuthManagerImpl.Logiut works correctly on the happy path
 func TestAuthManagerLogout(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	manager, _ := getAuthManager(ctrl)
@@ -447,9 +467,9 @@ func TestAuthManagerLogout(t *testing.T) {
 		Invalidate(&StructMatcher{tokenMatcher{
 			TokenId: Ptr(token.TokenId),
 		}}).
-		DoAndReturn(func(token Token) (*User, *Token, error) {
+		DoAndReturn(func(token *Token) (*User, *Token, error) {
 			token.Recalled = true
-			return &user, &token, nil
+			return &user, token, nil
 		})
 
 	logoutUser, logoutToken, err := manager.Logout(token.TokenId, "test_hash")
@@ -460,6 +480,7 @@ func TestAuthManagerLogout(t *testing.T) {
 	require.Equal(t, token.TokenId, logoutToken.TokenId)
 }
 
+// Tests if AuthManagerImpl.Logout works correctly when provided session token is invalid
 func TestAuthManagerLogoutInvalidPurpose(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	manager, _ := getAuthManager(ctrl)
@@ -473,11 +494,12 @@ func TestAuthManagerLogoutInvalidPurpose(t *testing.T) {
 		Return(&user, &token, nil)
 
 	logoutUser, logoutToken, err := manager.Logout(token.TokenId, "test_hash")
-	require.ErrorIs(t, err, InvalidTokenPurpose)
+	require.ErrorIs(t, err, ErrInvalidTokenPurpose)
 	require.Nil(t, logoutUser)
 	require.Nil(t, logoutToken)
 }
 
+// Tests if AuthManagerImpl.ConfirmEmail works correctly on the happy path
 func TestAuthManagerConfirmEmail(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -515,6 +537,7 @@ func TestAuthManagerConfirmEmail(t *testing.T) {
 	require.Truef(t, changedUser.EmailVerified, "user email should be verified")
 }
 
+// Tests if AuthManagerImpl.ConfirmEmail works correctly when token id is invalid
 func TestAuthManagerConfirmEmailInvalidId(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -526,14 +549,15 @@ func TestAuthManagerConfirmEmailInvalidId(t *testing.T) {
 	manager.tokenService.(*MockTokenService).
 		EXPECT().
 		Check("invalid_id", "test_hash").
-		Return(nil, nil, InvalidToken)
+		Return(nil, nil, ErrInvalidToken)
 
 	mockRollback(db)
 
 	_, err := manager.ConfirmEmail("invalid_id", "test_hash")
-	require.ErrorIsf(t, InvalidToken, err, "ConfirmEmail should return UnknownToken")
+	require.ErrorIsf(t, ErrInvalidToken, err, "ConfirmEmail should return UnknownToken")
 }
 
+// Tests if AuthManagerImpl.ConfirmEmail works correctly when token secret is invalid
 func TestAuthManagerConfirmEmailInvalidHash(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -550,11 +574,12 @@ func TestAuthManagerConfirmEmailInvalidHash(t *testing.T) {
 	mockRollback(db)
 
 	_, err := manager.ConfirmEmail("test_email", "invalid_hash")
-	if err != InvalidToken {
+	if err != ErrInvalidToken {
 		t.Errorf("ConfirmEmail did not return InvalidToken %s", err)
 	}
 }
 
+// Tests if AuthManagerImpl.ChangePassword works correctly on the happy path
 func TestAuthManagerChangePassword(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -584,6 +609,7 @@ func TestAuthManagerChangePassword(t *testing.T) {
 	require.Nilf(t, bcryptErr, "bcrypt.CompareHashAndPassword should return a nil error")
 }
 
+// Tests if AuthManagerImpl.ChangePassword works correctly when oldPassword is invalid
 func TestAuthManagerChangePasswordInvalid(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -592,9 +618,10 @@ func TestAuthManagerChangePasswordInvalid(t *testing.T) {
 	user := getExampleUser()
 
 	_, err := manager.ChangePassword(&user, "test", "nu9AhYoo")
-	require.ErrorIsf(t, InvalidOldPassword, err, "manager.ChangePassword should return a nil error")
+	require.ErrorIsf(t, ErrInvalidOldPassword, err, "manager.ChangePassword should return a nil error")
 }
 
+// Tests if AuthManagerImpl.ChangeEmail works correctly on the happy path
 func TestAuthManagerChangeEmail(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -645,6 +672,7 @@ func TestAuthManagerChangeEmail(t *testing.T) {
 	require.Falsef(t, changedUser.EmailVerified, "ChangeEmail should return a user with EmailVerified set to false")
 }
 
+// Tests if AuthManagerImpl.ChangeEmail works correctly when email is invalid
 func TestAuthManagerChangeEmailInvalid(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -654,6 +682,6 @@ func TestAuthManagerChangeEmailInvalid(t *testing.T) {
 
 	changedUser, err := manager.ChangeEmail(&user, "asd")
 
-	require.ErrorIsf(t, InvalidEmail, err, "error should be InvalidEmail")
+	require.ErrorIsf(t, ErrInvalidEmail, err, "error should be InvalidEmail")
 	require.Nilf(t, changedUser, "changedUser should be nil")
 }

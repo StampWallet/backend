@@ -16,6 +16,7 @@ import (
 	"github.com/StampWallet/backend/internal/services"
 )
 
+// Creates server from config
 func createServer(config config.Config) (*api.APIServer, error) {
 	database, err := services.GetDatabase(config)
 	if err != nil {
@@ -54,7 +55,9 @@ func createServer(config config.Config) (*api.APIServer, error) {
 	return server, nil
 }
 
+// Entrypoint of the backend app
 func main() {
+	// CLI framework configuration
 	app := &cli.App{
 		Flags: []cli.Flag{
 			&cli.StringFlag{Name: "config", Value: "stamp_wallet_server.yaml"},
@@ -90,7 +93,6 @@ func main() {
 					}
 
 					db, err := services.GetDatabase(config)
-					println(db)
 					if err != nil {
 						return fmt.Errorf("failed to get database: %+v", err)
 					}
