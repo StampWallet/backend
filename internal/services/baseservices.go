@@ -9,11 +9,13 @@ import (
 	"gorm.io/gorm"
 )
 
+// Struct with most commonly used services
 type BaseServices struct {
 	Logger   *log.Logger
 	Database GormDB
 }
 
+// Opens database connection
 func GetDatabase(config Config) (GormDB, error) {
 	db, err := gorm.Open(postgres.Open(config.DatabaseUrl), &gorm.Config{})
 	if db != nil && err == nil {
@@ -23,6 +25,7 @@ func GetDatabase(config Config) (GormDB, error) {
 	}
 }
 
+// Creates a new logger with prefix
 func NewPrefix(logger *log.Logger, prefix string) *log.Logger {
 	if prefix[len(prefix)-1] != ' ' {
 		prefix += " "
@@ -32,6 +35,7 @@ func NewPrefix(logger *log.Logger, prefix string) *log.Logger {
 	return newLogger
 }
 
+// Creates a new logger with prefix from BaseServices
 func (b BaseServices) NewPrefix(prefix string) BaseServices {
 	return BaseServices{
 		Logger:   NewPrefix(b.Logger, prefix),

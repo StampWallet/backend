@@ -14,23 +14,25 @@ import (
 	"github.com/knadh/koanf/v2"
 )
 
+// SMTP client config
 type SMTPConfig struct {
-	ServerHostname string
-	ServerPort     uint16
-	Username       string
-	Password       string
-	SenderEmail    string
+	ServerHostname string // SMTP server hostname
+	ServerPort     uint16 // SMTP server port
+	Username       string // Authorization username
+	Password       string // Authorization password
+	SenderEmail    string // Email to use in the "From" field
 }
 
 type Config struct {
-	DatabaseUrl                  string
-	SmtpConfig                   SMTPConfig
-	ServerUrl                    string
-	StoragePath                  string
-	BackendDomain                string
-	EmailVerificationFrontendURL string
+	DatabaseUrl                  string     // Database URL
+	SmtpConfig                   SMTPConfig // SMTP Client config
+	ServerUrl                    string     // Hostname:port this server will listen on
+	StoragePath                  string     // File storage path
+	BackendDomain                string     // Public DNS domain this server is reachable from
+	EmailVerificationFrontendURL string     // URL of the email verification site
 }
 
+// Returns config with default values
 func GetDefaultConfig() Config {
 	return Config{
 		DatabaseUrl: "localhost",
@@ -48,6 +50,7 @@ func GetDefaultConfig() Config {
 	}
 }
 
+// Loads config from file under path
 func LoadConfig(path string) (Config, error) {
 	k := koanf.New(".")
 	fileSuccess := true
@@ -80,6 +83,7 @@ func LoadConfig(path string) (Config, error) {
 	return config, nil
 }
 
+// Saves config to file under path
 func SaveConfig(cfg Config, path string) error {
 	k := koanf.New(".")
 	if err := k.Load(structs.Provider(cfg, "koanf"), nil); err != nil {
