@@ -17,9 +17,23 @@ var ErrUnknownToken = errors.New("Invalid token")
 var ErrTokenExpired = errors.New("Token expired")
 var ErrTokenUsed = errors.New("Token used")
 
+// A TokenService is a service for managing tokens. Tokens are used for authorization instead of actual
+// user credentials in scenarios where temporary, disposable credentials are desirable.
+// Example scenarios: identifying user session after login, identifying the user from a verification email.
 type TokenService interface {
+	// Creates a new token. Returns database.Token and token secret (hashed secret is stored in the database).
+	// Token secret is confidential and should not be stored on the backend.
+	// purpose controls Check behavior.
+	// If TokenPurpose is TokenPurposeEmail, token is invalidated after Check is called on the token.
+	// If TokenPurpose is TokenPurposeSession, token expiration date is changed on each Check call
+	// (the date is moved exactly a week from call date, although that could change any time).
 	Create(user *User, purpose TokenPurposeEnum, expiration time.Time) (*Token, string, error)
+
+	// Checks if token with tokenId exists in the database.
+	// Returns it if tokenSecret matches database.Token.TokenHash.
 	Check(tokenId string, tokenSecret string) (*Token, error)
+
+	// Invalidates the token - the token cannot be used after that, Check will return ErrUnknownToken.
 	Invalidate(token *Token) (*Token, error)
 }
 
