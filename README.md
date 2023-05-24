@@ -12,6 +12,7 @@ Requires [Go 1.20](https://go.dev/doc/install)
 
 1. Install [Go 1.20](https://go.dev/doc/install)
 2. `make` or `make bin` to just build the binary and skip all tests
+3. Run `./stampWalletServer example-config` to generate example config
 
 ## Test
 
@@ -23,4 +24,34 @@ Tests require a working Postgres database with PostGIS extensions. Two environme
 To set up a Postgres database on docker with PostGIS (example): `sudo docker run -e POSTGRES_HOST_AUTH_METHOD=trust -p 5432:5432 -d postgis/postgis`
 
 1. `go test -v ./...` or `test . -run "^TestBusiness.*$"` to only run tests that match a string
+
+## Configuration 
+
+`example-config` subcommand will generate an example configuration file. 
+
+```yaml
+BackendDomain: localhost                                        # ?
+DatabaseUrl: 'postgresql://user:password@localhost/db'          # Postgres database URL 
+EmailVerificationFrontendURL: localhost                         # URL of email verification website
+ServerUrl: localhost:8080                                       # IP and port the server will listen on (TODO: change name)
+SmtpConfig:
+    ServerHostname: smtp.example.com                            # SMTP Server hostname
+    ServerPort: 465                                             # SMTP Server port
+    Username: test@example.com                                  # SMTP auth username
+    Password: 'password'                                        # SMTP auth password
+    SenderEmail: test@example.com                               # Email Address to put in "from" field
+StoragePath: /tmp/                                              # Where to store uploaded files
+```
+
+## Docker image 
+
+To build Docker image, run `sudo docker buildx build --progress=plain .`. [Buildkit](https://docs.docker.com/build/buildkit/) might be required.
+
+Development docker-compose file is also provided. It will set up both the backend, and the database.
+* `docker-compose -f docker-compose.yaml build` - build image
+* `docker-compose -f docker-compose.yaml start` - start the whole dev stack
+
+To configure the server, copy `docker-compose.dev.example.yaml` to `docker-compose.dev.yaml`, change values in `docker-compose.dev.yml` and add `-f docker-compose.dev.yml` to next docker-compose runs.
+
+`sudo docker-compose -f docker-compose.yaml -f docker-compose.dev.yaml up`
 

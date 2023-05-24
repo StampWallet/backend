@@ -25,3 +25,5 @@ _testmain.go
 *.prof
 
 docs/api/schema.yaml
+stamp_wallet_server.yaml
+docker-compose.dev.yaml

@@ -2,11 +2,13 @@ package config
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/knadh/koanf/parsers/yaml"
-	//"github.com/knadh/koanf/providers/env"
+	"github.com/knadh/koanf/providers/env"
 	"github.com/knadh/koanf/providers/file"
 	"github.com/knadh/koanf/providers/structs"
 	"github.com/knadh/koanf/v2"
@@ -51,8 +53,29 @@ func GetDefaultConfig() Config {
 // Loads config from file under path
 func LoadConfig(path string) (Config, error) {
 	k := koanf.New(".")
+	fileSuccess := true
 	if err := k.Load(file.Provider(path), yaml.Parser()); err != nil {
+		fmt.Printf("failed to load config file: %+v\n", err)
+		fmt.Printf("continuing\n")
+		fileSuccess = false
+		//return Config{}, err
+	}
+
+	prefix := "STAMPWALLET_"
+	loaded := 0
+	err := k.Load(env.Provider(prefix, ".", func(s string) string {
+		loaded += 1
+		return strings.Replace(strings.ToLower(
+			strings.TrimPrefix(s, prefix)),
+			"_", ".", -1,
+		)
+	}), nil)
+	if err != nil {
 		return Config{}, err
+	}
+
+	if loaded == 0 && !fileSuccess {
+		return Config{}, errors.New("failed to load config both from env and file")
 	}
 
 	var config Config

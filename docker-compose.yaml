@@ -1,0 +1,37 @@
+version: "3.9"
+networks:
+  internal:
+services:
+  backend:
+    build: 
+      context: .
+    image: ghcr.io/stampwallet/backend:latest
+    networks:
+      - internal
+    depends_on:
+      - postgres
+    ports:
+      - 8080:8080
+    environment:
+      #GIN_MODE: release
+      STAMPWALLET_DATABASEURL: 'postgresql://postgres@postgres/stampwallet'
+      STAMPWALLET_EMAILVERIFICATIONFRONTENDURL: 
+      STAMPWALLET_SERVERURL: 0.0.0.0:8080
+      STAMPWALLET_SMTPCONFIG_SERVERHOSTNAME: smtp.gmail.com
+      STAMPWALLET_SMTPCONFIG_SERVERPORT: 465
+      STAMPWALLET_SMTPCONFIG_USERNAME: 
+      STAMPWALLET_SMTPCONFIG_PASSWORD: 
+      STAMPWALLET_SMTPCONFIG_SENDEREMAIL: 
+      STAMPWALLET_STORAGEPATH: /storage/
+    volumes:
+      - storage:/storage/
+  postgres:
+    image: 'postgis/postgis'
+    networks:
+      - internal
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: trust
+      POSTGRES_DB: stampwallet
+
+volumes:
+  storage:
