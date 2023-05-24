@@ -121,7 +121,7 @@ func (service *TokenServiceImpl) Check(tokenId string, tokenSecret string) (*Tok
 }
 
 func (service *TokenServiceImpl) Invalidate(token *Token) (*Token, error) {
-	// Update token in the database
+	// Invalidate token and update it in the database
 	token.Recalled = true
 	tx := service.baseServices.Database.Save(token)
 	if err := tx.GetError(); err != nil {

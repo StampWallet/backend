@@ -17,13 +17,14 @@ func GetTokenService(ctrl *gomock.Controller) *TokenServiceImpl {
 	return &TokenServiceImpl{
 		baseServices: BaseServices{
 			Logger:   log.Default(),
-			Database: GetDatabase(),
+			Database: GetTestDatabase(),
 		},
 	}
 }
 
 // Tests
 
+// Test TokenServiceImpl.Create on happy path
 func TestTokenServiceCreate(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	service := GetTokenService(ctrl)
@@ -39,8 +40,11 @@ func TestTokenServiceCreate(t *testing.T) {
 	require.Falsef(t, token.Used, "Token used should be false")
 	require.Falsef(t, token.Recalled, "Token recalled should be false")
 	require.Truef(t, time.Now().Before(token.Expires.Add(-23*time.Hour)),
-		"Token expiration date should way before now")
+		"Token expiration date be at least 23 hours after now")
+	require.Truef(t, time.Now().Add(25*time.Hour).After(token.Expires),
+		"Token expiration date be should be at most 25 hours after now")
 
+	// Check if token was propoery saved into the database
 	var dbToken Token
 	tx := service.baseServices.Database.First(&dbToken, Token{TokenId: token.TokenId})
 	require.Nilf(t, tx.GetError(), "Database.First should not return an error")
@@ -52,9 +56,12 @@ func TestTokenServiceCreate(t *testing.T) {
 	require.Falsef(t, dbToken.Recalled, "Token recalled should be false")
 	require.Equalf(t, dbToken.TokenPurpose, TokenPurposeSession, "Token purpose should be session")
 	require.Truef(t, time.Now().Before(dbToken.Expires.Add(-23*time.Hour)),
-		"Token expiration date should way before now")
+		"Token expiration date be at least 23 hours after now")
+	require.Truef(t, time.Now().Add(25*time.Hour).After(dbToken.Expires),
+		"Token expiration date be should be at most 25 hours after now")
 }
 
+// Test TokenServiceImpl.Check with TokenPurposeEmail on happy path and after the token was already used
 func TestTokenServiceCheckValid(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	service := GetTokenService(ctrl)
@@ -73,6 +80,7 @@ func TestTokenServiceCheckValid(t *testing.T) {
 	require.Equalf(t, err, ErrTokenUsed, "TokenService.Check should return ErrTokenUsed on used email token")
 }
 
+// Test TokenServiceImpl.Check with TokenPurposeSession on happy path
 func TestTokenServiceCheckValidSessionToken(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	service := GetTokenService(ctrl)
@@ -92,6 +100,7 @@ func TestTokenServiceCheckValidSessionToken(t *testing.T) {
 	require.Nilf(t, err, "TokenService.Check should not return ErrTokenUsed on used session token")
 }
 
+// Test TokenServiceImpl.Check when tokenId is invalid
 func TestTokenServiceCheckInvalidId(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	service := GetTokenService(ctrl)
@@ -103,6 +112,7 @@ func TestTokenServiceCheckInvalidId(t *testing.T) {
 	require.Nilf(t, nToken, "TokenService.Check should return a nil token")
 }
 
+// Test TokenServiceImpl.Check when tokenId is valid, but token secret does not match
 func TestTokenServiceCheckInvalidSecret(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	service := GetTokenService(ctrl)
@@ -114,6 +124,7 @@ func TestTokenServiceCheckInvalidSecret(t *testing.T) {
 	require.Nilf(t, nToken, "TokenService.Check should return a nil token")
 }
 
+// Test TokenServiceImpl.Invalidate on happy path
 func TestTokenServiceInvalidate(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	service := GetTokenService(ctrl)
