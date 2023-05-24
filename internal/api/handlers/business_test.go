@@ -590,7 +590,8 @@ func TestBusinessHandlersGetTransactionOk(t *testing.T) {
 	respBodyExpected := &api.GetBusinessTransactionResponse{
 		PublicId:      testTransaction.PublicId,
 		VirtualCardId: int32(testVcard.ID),
-		State:         testTransaction.State, // TODO: type mismatch?
+		State:         api.TransactionStateEnum(testTransaction.State), // TODO: type mismatch?
+		//TODO I'm not sure if this is guaranteed to work always
 		Items: []api.TransactionItemDetailApiModel{
 			{
 				PublicId:         testOwnedItem.PublicId,

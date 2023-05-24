@@ -35,6 +35,7 @@ func TestTokenServiceCreate(t *testing.T) {
 	bcryptErr := bcrypt.CompareHashAndPassword([]byte(token.TokenHash), []byte(secret))
 	require.Nilf(t, bcryptErr, "Bcrypt validation should pass")
 	require.Equalf(t, user.ID, token.OwnerId, "Token ownerId should match")
+	require.Equalf(t, token.TokenPurpose, TokenPurposeSession, "Token purpose should be session")
 	require.Falsef(t, token.Used, "Token used should be false")
 	require.Falsef(t, token.Recalled, "Token recalled should be false")
 	require.Truef(t, time.Now().Before(token.Expires.Add(-23*time.Hour)),
@@ -49,6 +50,7 @@ func TestTokenServiceCreate(t *testing.T) {
 	require.Equalf(t, user.ID, dbToken.OwnerId, "Token ownerId should match")
 	require.Falsef(t, dbToken.Used, "Token used should be false")
 	require.Falsef(t, dbToken.Recalled, "Token recalled should be false")
+	require.Equalf(t, dbToken.TokenPurpose, TokenPurposeSession, "Token purpose should be session")
 	require.Truef(t, time.Now().Before(dbToken.Expires.Add(-23*time.Hour)),
 		"Token expiration date should way before now")
 }
@@ -57,7 +59,7 @@ func TestTokenServiceCheckValid(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	service := GetTokenService(ctrl)
 	user := GetTestUser(service.baseServices.Database)
-	token, secret := GetTestToken(service.baseServices.Database, user)
+	token, secret := GetTestToken(service.baseServices.Database, user) //returns email token
 
 	nToken, err := service.Check(token.TokenId, secret)
 	require.Nilf(t, err, "TokenService.Check should not return an error")

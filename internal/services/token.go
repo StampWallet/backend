@@ -29,6 +29,12 @@ type TokenServiceImpl struct {
 
 // TODO maybe TokenService should decide about expiration date instead of the caller
 // especially since it will handle
+func CreateTokenServiceImpl(baseServices BaseServices) *TokenServiceImpl {
+	return &TokenServiceImpl{
+		baseServices: baseServices,
+	}
+}
+
 func (service *TokenServiceImpl) Create(user *User, purpose TokenPurposeEnum, expiration time.Time) (*Token, string, error) {
 	secret := shortuuid.New()
 	hash, err := bcrypt.GenerateFromPassword([]byte(secret), 10)
