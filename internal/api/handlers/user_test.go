@@ -63,61 +63,6 @@ func getLocalCardHandlers(ctrl *gomock.Controller) *UserLocalCardHandlers {
 	}
 }
 
-func setupBusinessHandlersPostAccount() (
-	w *httptest.ResponseRecorder,
-	context *gin.Context,
-	testBusinessUser *database.User,
-	testBusiness *database.Business,
-	testBusinessDetails *managers.BusinessDetails,
-	respBodyExpected *api.PostBusinessAccountResponse,
-) {
-	testBusinessUser = GetDefaultUser()
-	testBusiness = GetDefaultBusiness(testBusinessUser)
-	testBusinessDetails = &managers.BusinessDetails{
-		Name:        testBusiness.Name,
-		Description: testBusiness.Description,
-		Address:     testBusiness.Address,
-		// GPSCoordinates: testBusiness.GPSCoordinates, TODO GPSCoordinates to string
-		NIP:       testBusiness.NIP,
-		KRS:       testBusiness.KRS,
-		REGON:     testBusiness.REGON,
-		OwnerName: testBusiness.OwnerName,
-	}
-
-	payload := api.PostBusinessAccountRequest{
-		Name:    testBusiness.Name,
-		Address: testBusiness.Address,
-		// GpsCoordinates: testBusiness.GPSCoordinates, TODO GPSCoordinates to string
-		Nip:       testBusiness.NIP,
-		Krs:       testBusiness.KRS,
-		Regon:     testBusiness.REGON,
-		OwnerName: testBusiness.OwnerName,
-	}
-	payloadJson, _ := json.Marshal(payload)
-
-	gin.SetMode(gin.TestMode)
-	w = httptest.NewRecorder()
-
-	context = NewTestContextBuilder(w).
-		SetDefaultUrl().
-		SetEndpoint("/business/account").
-		SetUser(testBusinessUser).
-		SetMethod("POST").
-		SetHeader("Accept", "application/json").
-		SetHeader("Content-Type", "application/json").
-		SetDefaultToken().
-		SetBody(payloadJson).
-		Context
-
-	respBodyExpected = &api.PostBusinessAccountResponse{
-		PublicId:      testBusiness.PublicId,
-		BannerImageId: testBusiness.BannerImageId,
-		IconImageId:   testBusiness.IconImageId,
-	}
-
-	return w, context, testBusinessUser, testBusiness, testBusinessDetails, respBodyExpected
-}
-
 func TestUserVirtualCardHandlersPostCard(t *testing.T) {
 	testUser := GetDefaultUser()
 	testBusinessUser := GetDefaultUser()

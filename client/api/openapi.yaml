@@ -1,0 +1,1776 @@
+openapi: 3.0.3
+info:
+  contact:
+    email: fbstachura@gmail.com
+  description: StampWallet API Server REST Specification
+  title: StampWallet API Server
+  version: 0.1.0
+servers:
+- url: /
+paths:
+  /auth/account:
+    post:
+      description: "Create a new account with specified password and email, send a\
+        \ confirmation email"
+      operationId: createAccount
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostAccountRequest'
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              example:
+                status: CREATED
+              schema:
+                $ref: '#/components/schemas/PostAccountResponse'
+          description: Successful operation
+        "400":
+          content:
+            application/json:
+              example:
+                status: INVALID_REQUEST
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+          description: "Invalid request format, email or password"
+        "409":
+          content:
+            application/json:
+              example:
+                status: ALREADY_EXISTS
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+          description: Account with email already exists
+      summary: Create a new account
+      tags:
+      - account
+  /auth/account/emailConfirmation:
+    post:
+      description: "When an account is created, user receives an email with a link\
+        \ to a static website. That website simply posts it's parameters (unique to\
+        \ each email) to this endpoint. The parameters will be unique and hard to\
+        \ guess, allowing to verify that user really has access to the email address."
+      operationId: confirmEmail
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostAccountEmailConfirmationRequest'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                token: ZWVnaDhhZWg4bGVpbDJhaQo=:XBlaW5nZWViNWFpU2hlaGUKa
+              schema:
+                $ref: '#/components/schemas/PostAccountResponse'
+          description: Successful operation
+        "400":
+          content:
+            application/json:
+              example:
+                status: INVALID_REQUEST
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+          description: Invalid request format
+        "401":
+          content:
+            application/json:
+              example:
+                status: UNAUTHORIZED
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+          description: Unauthorized - invalid token
+      summary: Confirm email
+      tags:
+      - account
+  /auth/account/email:
+    post:
+      description: This endpoint can be used to change email address of currently
+        logged in user. Changing email address requires email confirmation
+      operationId: changeEmail
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostAccountEmailRequest'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                status: OK
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+          description: Successful operation
+        "400":
+          content:
+            application/json:
+              example:
+                status: INVALID_REQUEST
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+          description: Invalid request format
+        "409":
+          content:
+            application/json:
+              example:
+                status: CONFLICT
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+          description: Email already exists
+      security:
+      - sessionToken: []
+      summary: Change email
+      tags:
+      - account
+  /auth/account/password:
+    post:
+      description: This endpoint can be used to change password of currently logged
+        in user. Requires the user to provide their old password
+      operationId: changePassword
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DefaultResponse'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                status: OK
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+          description: Successful operation
+        "400":
+          content:
+            application/json:
+              example:
+                status: INVALID_REQUEST
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+          description: Invalid request format or invalid old password
+      security:
+      - sessionToken: []
+      summary: Change password
+      tags:
+      - account
+  /auth/sessions:
+    delete:
+      description: This endpoint invalidates session token passed with the request.
+      operationId: logout
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                status: OK
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+          description: Successful operation
+        "401":
+          content:
+            application/json:
+              example:
+                status: UNAUTHORIZED
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+          description: "Unauthorized, no credentials"
+      security:
+      - sessionToken: []
+      summary: Logout
+      tags:
+      - sessions
+    post:
+      description: This endpoint is used to exchange user credentials for temporary
+        credentials that allow access to the API.
+      operationId: login
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostAccountSessionRequest'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                token: ZWVnaDhhZWg4bGVpbDJhaXBlaW5nZWViNWFpU2hlaGUK
+              schema:
+                $ref: '#/components/schemas/PostAccountSessionResponse'
+          description: Successful operation
+        "400":
+          content:
+            application/json:
+              example:
+                status: INVALID_REQUEST
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+          description: Invalid request format
+        "401":
+          content:
+            application/json:
+              example:
+                status: UNAUTHORIZED
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+          description: Invalid credentials
+      summary: Login
+      tags:
+      - sessions
+  /business/account:
+    post:
+      description: "This endpoint is used to attach a new business account to an existing,\
+        \ logged in user account. Busies details are provided in the request. Responds\
+        \ with business id and ids of banner and icon image slots."
+      operationId: createBusinessAccount
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostBusinessAccountRequest'
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostBusinessAccountResponse'
+          description: Successful operation
+        "400":
+          content:
+            application/json:
+              example:
+                status: INVALID_REQUEST
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+          description: Invalid request format
+        "401":
+          content:
+            application/json:
+              example:
+                status: UNAUTHORIZED
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+          description: Invalid credentials
+      security:
+      - sessionToken: []
+      summary: Create a business account
+      tags:
+      - business
+  /business/info:
+    get:
+      description: Responds with information about business owned by the logged in
+        user.
+      operationId: getBusinessAccountInfo
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetBusinessAccountResponse'
+          description: Successful operation
+        "401":
+          content:
+            application/json:
+              example:
+                status: UNAUTHORIZED
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+          description: Invalid credentials
+        "404":
+          content:
+            application/json:
+              example:
+                status: NOT_FOUND
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+          description: Does not exist or forbidden
+      security:
+      - sessionToken: []
+      summary: Get business info
+      tags:
+      - business
+    patch:
+      description: This endpoint is used to update business account data
+      operationId: updateBusinessAccount
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchBusinessAccountRequest'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                status: OK
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+          description: Successful operation
+        "400":
+          content:
+            application/json:
+              example:
+                status: INVALID_REQUEST
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+          description: Invalid request format
+      security:
+      - sessionToken: []
+      summary: Update business account
+      tags:
+      - business
+  /business/menuImages/:
+    post:
+      description: This endpoint is used to add a new menu image to business details.
+        Returns a new fileId to be used with '/file/' endpoints.
+      operationId: addMenuImage
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostBusinessAccountMenuImageResponse'
+          description: Successful operation
+        "400":
+          content:
+            application/json:
+              example:
+                status: INVALID_REQUEST
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+          description: Invalid request format
+      security:
+      - sessionToken: []
+      summary: Add menu image to business
+      tags:
+      - business
+  /business/menuImages/{menuImageId}:
+    delete:
+      description: This endpoint is used to delete a menu image from business details.
+      operationId: deleteMenuImage
+      parameters:
+      - description: Public id of the menu image to be deleted
+        explode: false
+        in: path
+        name: menuImageId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+          description: Successful operation
+        "403":
+          content:
+            application/json:
+              example:
+                status: FORBIDDEN
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+          description: Forbidden
+      security:
+      - sessionToken: []
+      summary: Delete menu image from business
+      tags:
+      - business
+  /business/itemDefinitions:
+    get:
+      description: This endpoint is used to retrieve data about existing item definitions
+        (benefits).
+      operationId: getItemDefinitions
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetBusinessItemDefinitionsResponse'
+          description: Successful operation
+      security:
+      - sessionToken: []
+      summary: Get list of item definitions
+      tags:
+      - itemDefinitions
+    post:
+      description: This endpoint is used to add new item definitions (benefits).
+      operationId: AddItemDefinition
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostBusinessItemDefinitionRequest'
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              example:
+                status: CREATED
+              schema:
+                $ref: '#/components/schemas/PostBusinessItemDefinitionResponse'
+          description: Successful operation
+        "400":
+          content:
+            application/json:
+              example:
+                status: INVALID_REQUEST
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+          description: Invalid request format
+      security:
+      - sessionToken: []
+      summary: Add a new item definition
+      tags:
+      - itemDefinitions
+  /business/itemDefinitions/{definitionId}:
+    delete:
+      description: This endpoint is used to delete existing item definitions (benefits).
+      operationId: DeleteItemDefinition
+      parameters:
+      - description: Public id of the definition to update
+        explode: false
+        in: path
+        name: definitionId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                status: OK
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+          description: Successful operation
+        "400":
+          content:
+            application/json:
+              example:
+                status: INVALID_REQUEST
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+          description: Invalid request format
+        "404":
+          content:
+            application/json:
+              example:
+                status: NOT_FOUND
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+          description: Does not exist or forbidden
+      security:
+      - sessionToken: []
+      summary: Delete an exiting item definition
+      tags:
+      - itemDefinitions
+    patch:
+      description: This endpoint is used to change details of existing item definitions
+        (benefits).
+      operationId: UpdateItemDefinition
+      parameters:
+      - description: Public id of the definition to update
+        explode: false
+        in: path
+        name: definitionId
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchBusinessItemDefinitionRequest'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                status: OK
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+          description: Successful operation
+        "400":
+          content:
+            application/json:
+              example:
+                status: INVALID_REQUEST
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+          description: Invalid request format
+        "404":
+          content:
+            application/json:
+              example:
+                status: NOT_FOUND
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+          description: Does not exist or forbidden
+      security:
+      - sessionToken: []
+      summary: Update an exiting item definition
+      tags:
+      - itemDefinitions
+  /business/transactions/{transactionCode}:
+    get:
+      description: "This endpoint is used in the second step of transaction processing,\
+        \ the app should use it to retrieve details about a transaction started by\
+        \ a user, after scanning user's transaction code."
+      operationId: GetTransactionDetails
+      parameters:
+      - description: Transaction code (scanned or typed in)
+        explode: false
+        in: path
+        name: transactionCode
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetBusinessTransactionResponse'
+          description: Successful operation
+        "404":
+          content:
+            application/json:
+              example:
+                status: NOT_FOUND
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+          description: Does not exist or forbidden
+      security:
+      - sessionToken: []
+      summary: Get info about a started transaction
+      tags:
+      - transactions
+    post:
+      description: "This endpoint is used in the third step of transaction processing,\
+        \ the app should use it to update transaction details with data about points\
+        \ added to user's account and actions that were taken on items included in\
+        \ the transaction."
+      operationId: FinishTransaction
+      parameters:
+      - description: Transaction code (scanned or typed in)
+        explode: false
+        in: path
+        name: transactionCode
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostBusinessTransactionRequest'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                status: OK
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+          description: Successful operation
+        "400":
+          content:
+            application/json:
+              example:
+                status: INVALID_REQUEST
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+          description: Invalid request
+        "404":
+          content:
+            application/json:
+              example:
+                status: NOT_FOUND
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+          description: Does not exist or forbidden
+      security:
+      - sessionToken: []
+      summary: Finish a transaction
+      tags:
+      - transactions
+  /user/cards:
+    get:
+      description: This endpoint is used to retrieve a list of currently logged in
+        user's cards.
+      operationId: GetUserCards
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetUserCardsResponse'
+          description: Successful operation
+      security:
+      - sessionToken: []
+      summary: Get list of user's cards
+      tags:
+      - cards
+  /user/cards/local:
+    post:
+      description: This endpoint is used to add a new local card to user's account.
+      operationId: AddLocalCards
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostUserLocalCardsRequest'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+          description: Successful operation
+        "400":
+          content:
+            application/json:
+              example:
+                status: INVALID_REQUEST
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+          description: Invalid request
+      security:
+      - sessionToken: []
+      summary: Add a new local card
+      tags:
+      - localCards
+  /user/cards/local/types:
+    get:
+      description: This endpoint is used to get a list of supported local card types.
+      operationId: GetLocalCardTypes
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetUserLocalCardTypesResponse'
+          description: Successful operation
+      security:
+      - sessionToken: []
+      summary: Get list of local card types
+      tags:
+      - localCards
+  /user/cards/local/{cardId}:
+    delete:
+      description: This endpoint is used to delete a local card from account of the
+        currently logged in user.
+      operationId: DeleteLocalCard
+      parameters:
+      - description: Public id of the card to delete
+        explode: false
+        in: path
+        name: cardId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                status: OK
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+          description: Successful operation
+        "404":
+          content:
+            application/json:
+              example:
+                status: NOT_FOUND
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+          description: Unknown card or forbidden
+      security:
+      - sessionToken: []
+      summary: Delete a local card
+      tags:
+      - localCards
+  /user/cards/virtual/{businessId}:
+    delete:
+      description: This endpoint is used to delete a virtual card from the account
+        of the currently logged in user.
+      operationId: DeleteVirtualCard
+      parameters:
+      - description: Public ID of the business which card was requested to be deleted
+          from the account
+        explode: false
+        in: path
+        name: businessId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                status: OK
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+          description: Successful operation
+        "404":
+          content:
+            application/json:
+              example:
+                status: NOT_FOUND
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+          description: No such card
+      security:
+      - sessionToken: []
+      summary: Delete a virtual card
+      tags:
+      - virtualCards
+    get:
+      description: This endpoint is used to retrieve details of a virtual card owned
+        by the currently logged in user.
+      operationId: GetVirtualCard
+      parameters:
+      - description: Public ID of the business which card was requested
+        explode: false
+        in: path
+        name: businessId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetUserVirtualCardResponse'
+          description: Successful operation
+        "404":
+          content:
+            application/json:
+              example:
+                status: NOT_FOUND
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+          description: No such card
+      security:
+      - sessionToken: []
+      summary: Get info about a virtual card
+      tags:
+      - virtualCards
+    post:
+      description: This endpoint is used to register a new virtual card to the account
+        of the currently logged in user.
+      operationId: AddVirtualCard
+      parameters:
+      - description: Public ID of the business which card was requested to be added
+          by user
+        explode: false
+        in: path
+        name: businessId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                status: OK
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+          description: Successful operation
+        "404":
+          content:
+            application/json:
+              example:
+                status: NOT_FOUND
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+          description: Unknown business
+        "409":
+          content:
+            application/json:
+              example:
+                status: ALREADY_EXISTS
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+          description: Card already exists
+      security:
+      - sessionToken: []
+      summary: Add a new virtual card
+      tags:
+      - virtualCards
+  /user/cards/virtual/{businessId}/items/{itemDefinitionId}:
+    post:
+      description: This endpoint is used to buy an item for points from the virtual
+        card.
+      operationId: BuyItem
+      parameters:
+      - description: Public ID of the business which card was requested
+        explode: false
+        in: path
+        name: businessId
+        required: true
+        schema:
+          type: string
+        style: simple
+      - description: Public ID of the item definition requested by the user
+        explode: false
+        in: path
+        name: itemDefinitionId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostUserVirtualCardItemResponse'
+          description: Successful operation
+        "404":
+          content:
+            application/json:
+              example:
+                status: NOT_FOUND
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+          description: No such item or item does not belong to this business
+      security:
+      - sessionToken: []
+      summary: Buy an item
+      tags:
+      - virtualCards
+  /user/cards/virtual/{businessId}/items/{itemId}:
+    delete:
+      description: "This endpoint is used to return an item, and get back points that\
+        \ were spent on that item."
+      operationId: DeleteItem
+      parameters:
+      - description: Public ID of the business which card was requested
+        explode: false
+        in: path
+        name: businessId
+        required: true
+        schema:
+          type: string
+        style: simple
+      - description: Public ID of the item requested to be deleted
+        explode: false
+        in: path
+        name: itemId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                status: OK
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+          description: Successful operation
+        "404":
+          content:
+            application/json:
+              example:
+                status: NOT_FOUND
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+          description: No such item
+      security:
+      - sessionToken: []
+      summary: Delete an item
+      tags:
+      - virtualCards
+  /user/cards/virtual/{businessId}/transactions:
+    post:
+      description: "This endpoint is used in the first step of transaction processing,\
+        \ the app should use it to start a transaction optionally providing items\
+        \ to be exchanged."
+      operationId: StartTransaction
+      parameters:
+      - description: Public ID of the business which card was requested
+        explode: false
+        in: path
+        name: businessId
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostUserVirtualCardTransactionRequest'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostUserVirtualCardTransactionResponse'
+          description: Successful operation
+        "400":
+          content:
+            application/json:
+              example:
+                status: INVALID_REQUEST
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+          description: Invalid request
+        "404":
+          content:
+            application/json:
+              example:
+                status: NOT_FOUND
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+          description: No such item
+      security:
+      - sessionToken: []
+      summary: Start a transaction
+      tags:
+      - transaction
+  /user/cards/virtual/{businessId}/transactions/{transactionCode}:
+    get:
+      description: "This endpoint is used in the last step of transaction processing,\
+        \ it's used to check the status of the transaction."
+      operationId: GetTransactionStatus
+      parameters:
+      - description: Public ID of the business which card was requested
+        explode: false
+        in: path
+        name: businessId
+        required: true
+        schema:
+          type: string
+        style: simple
+      - description: Transaction code
+        explode: false
+        in: path
+        name: transactionCode
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetUserVirtualCardTransactionResponse'
+          description: Successful operation
+        "404":
+          content:
+            application/json:
+              example:
+                status: NOT_FOUND
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+          description: No such transaction or business
+      security:
+      - sessionToken: []
+      summary: Get info about a transaction
+      tags:
+      - transaction
+  /user/businesses:
+    get:
+      description: This endpoint is used to search businesses that match the provided
+        text query or are close to a specified point.
+      operationId: SearchBusinesses
+      parameters:
+      - description: Filter by business name
+        explode: true
+        in: query
+        name: text
+        required: false
+        schema:
+          type: string
+        style: form
+      - description: Filter by business location
+        explode: true
+        in: query
+        name: location
+        required: false
+        schema:
+          format: ISO 6709
+          type: string
+        style: form
+      - description: Filter by distance from location in meters
+        explode: true
+        in: query
+        name: proximity
+        required: false
+        schema:
+          type: integer
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetUserBusinessesSearchResponse'
+          description: Successful operation
+        "400":
+          content:
+            application/json:
+              example:
+                status: INVALID_REQUEST
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+          description: Invalid request
+      security:
+      - sessionToken: []
+      summary: Search businesses
+      tags:
+      - user
+  /file/{fileId}:
+    delete:
+      description: This endpoint is used to delete files.
+      operationId: Delete file
+      parameters:
+      - description: ID of file to delete
+        explode: false
+        in: path
+        name: fileId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                status: OK
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+          description: Successful operation
+        "400":
+          content:
+            application/json:
+              example:
+                status: INVALID_REQUEST
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+          description: Invalid request
+        "403":
+          content:
+            application/json:
+              example:
+                status: FORBIDDEN
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+          description: "Forbidden, no permissions to delete this file"
+      security:
+      - sessionToken: []
+      summary: Delete a file
+      tags:
+      - file
+    get:
+      description: This endpoint is used to download files by ID.
+      operationId: GetFile
+      parameters:
+      - description: ID of file to download
+        explode: false
+        in: path
+        name: fileId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            image/png:
+              schema:
+                format: binary
+                type: string
+            image/jpeg:
+              schema:
+                format: binary
+                type: string
+          description: Successful operation
+        "400":
+          content:
+            application/json:
+              example:
+                status: INVALID_REQUEST
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+          description: Invalid request
+      security:
+      - sessionToken: []
+      summary: Get file
+      tags:
+      - file
+    post:
+      description: This endpoint is used to upload files.
+      operationId: UploadFile
+      parameters:
+      - description: ID of file to upload/replace
+        explode: false
+        in: path
+        name: fileId
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          image/png:
+            schema:
+              format: binary
+              type: string
+          image/jpg:
+            schema:
+              format: binary
+              type: string
+        description: File data
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+          description: Successful operation
+        "400":
+          content:
+            application/json:
+              example:
+                status: INVALID_REQUEST
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+          description: Invalid request
+        "403":
+          content:
+            application/json:
+              example:
+                status: FORBIDDEN
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+          description: "Forbidden, no permissions to upload to this file"
+      security:
+      - sessionToken: []
+      summary: Upload file
+      tags:
+      - file
+components:
+  schemas:
+    DefaultResponse:
+      example:
+        message: message
+        status: null
+      properties:
+        status:
+          $ref: '#/components/schemas/DefaultResponseStatusEnum'
+        message:
+          type: string
+      type: object
+    DefaultResponseStatusEnum:
+      enum:
+      - OK
+      - CREATED
+      - NOT_FOUND
+      - FORBIDDEN
+      - ALREADY_EXISTS
+      - UNAUTHORIZED
+      - INVALID_REQUEST
+      - UNKNOWN_ERROR
+      - CONFLICT
+      type: string
+    PostAccountRequest:
+      example:
+        password: zaq1@WSX
+        email: test@example.com
+      properties:
+        email:
+          example: test@example.com
+          format: email
+          type: string
+        password:
+          example: zaq1@WSX
+          format: password
+          type: string
+      type: object
+    PostAccountResponse:
+      example:
+        token: ZWVnaDhhZWg4bGVpbDJhaQo=:XBlaW5nZWViNWFpU2hlaGUKa
+      properties:
+        token:
+          example: ZWVnaDhhZWg4bGVpbDJhaQo=:XBlaW5nZWViNWFpU2hlaGUKa
+          type: string
+      type: object
+    PostAccountEmailConfirmationRequest:
+      example:
+        token: ZWVnaDhhZWg4bGVpbDJhaQo=:XBlaW5nZWViNWFpU2hlaGUKa
+      properties:
+        token:
+          example: ZWVnaDhhZWg4bGVpbDJhaQo=:XBlaW5nZWViNWFpU2hlaGUKa
+          type: string
+      type: object
+    PostAccountEmailRequest:
+      example:
+        email: test@example.com
+      properties:
+        email:
+          example: test@example.com
+          type: string
+      type: object
+    PostAccountPasswordRequest:
+      properties:
+        password:
+          example: zaq1@WSX
+          type: string
+        oldPassword:
+          example: password123
+          type: string
+      type: object
+    PostAccountSessionRequest:
+      example:
+        password: zaq1@WSX
+        email: test@example.com
+      properties:
+        email:
+          example: test@example.com
+          format: email
+          type: string
+        password:
+          example: zaq1@WSX
+          format: password
+          type: string
+      type: object
+    PostAccountSessionResponse:
+      example:
+        token: ZWVnaDhhZWg4bGVpbDJhaQo=:XBlaW5nZWViNWFpU2hlaGUKa
+      properties:
+        token:
+          example: ZWVnaDhhZWg4bGVpbDJhaQo=:XBlaW5nZWViNWFpU2hlaGUKa
+          type: string
+      type: object
+    PostBusinessAccountRequest:
+      example:
+        name: test business
+        address: ul. Łojasiewicza 6 Kraków Polska
+        gpsCoordinates: +48.8577+002.295/
+        nip: 1234567899
+        krs: 1234567890
+        regon: 12345678901234
+        ownerName: Jan Kowalski
+      properties:
+        name:
+          type: string
+        address:
+          type: string
+        gpsCoordinates:
+          type: string
+        nip:
+          type: string
+        krs:
+          type: string
+        regon:
+          type: string
+        ownerName:
+          type: string
+      type: object
+    PostBusinessAccountResponse:
+      example:
+        publicId: eGVlbGlCaWU5Z2FoCg
+        bannerImageId: eGVlbGlCaWU5Z2FoCg
+        iconImageId: eGVlbGlCaWU5Z2FoCg
+      properties:
+        publicId:
+          type: string
+        bannerImageId:
+          type: string
+        iconImageId:
+          type: string
+      type: object
+    GetBusinessAccountResponse:
+      allOf:
+      - $ref: '#/components/schemas/PublicBusinessDetailsAPIModel'
+      - $ref: '#/components/schemas/GetBusinessAccountResponse_allOf'
+    PatchBusinessAccountRequest:
+      example:
+        name: test
+      properties:
+        name:
+          type: string
+      type: object
+    PostBusinessAccountMenuImageResponse:
+      example:
+        imageId: S2VlNWVlQ2Foajh1Cg
+      properties:
+        imageId:
+          example: S2VlNWVlQ2Foajh1Cg
+          type: string
+      type: object
+    PatchBusinessItemDefinitionRequest:
+      allOf:
+      - $ref: '#/components/schemas/ItemDefinitionAPIModel'
+    PostBusinessItemDefinitionRequest:
+      allOf:
+      - $ref: '#/components/schemas/ItemDefinitionAPIModel'
+    PostBusinessItemDefinitionResponse:
+      example:
+        publicId: ZmVlQ2ExYWlnaDRPCg
+      properties:
+        publicId:
+          example: ZmVlQ2ExYWlnaDRPCg
+          type: string
+      type: object
+    GetBusinessItemDefinitionsResponse:
+      example:
+        itemDefinitions:
+        - publicId: QWl5ZWlwaG8ySWl2Cg
+          name: Cool item
+          price: 10
+          description: idk
+          imageId: QWhDOXBvdTdhaTZQCg
+          startDate: 2023-04-21T15:25:37+02:00
+          endDate: 2024-04-21T17:25:37+02:00
+          maxAmount: 2
+          available: true
+        - publicId: QWl5ZWlwaG8ySWl2Cg
+          name: Cool item
+          price: 10
+          description: idk
+          imageId: QWhDOXBvdTdhaTZQCg
+          startDate: 2023-04-21T15:25:37+02:00
+          endDate: 2024-04-21T17:25:37+02:00
+          maxAmount: 2
+          available: true
+      properties:
+        itemDefinitions:
+          items:
+            $ref: '#/components/schemas/ItemDefinitionAPIModel'
+          type: array
+      type: object
+    GetBusinessTransactionResponse:
+      example:
+        publicId: aWtlaXY5QWl0aDllCg
+        virtualCardId: YXBpMWhhZXhhaUhvCg
+        state: STARTED
+        items:
+        - publicId: SW9zMmxhaHBoZXF1Cg
+          itemDefinitionId: SW9zMmxhaHBoZXF1Cg
+      properties:
+        publicId:
+          type: string
+        virtualCardId:
+          type: integer
+        state:
+          $ref: '#/components/schemas/TransactionStateEnum'
+        items:
+          items:
+            $ref: '#/components/schemas/TransactionItemDetailAPIModel'
+          type: array
+      type: object
+    PostBusinessTransactionRequest:
+      example:
+        addedPoints: 10
+        itemActions:
+        - itemId: bWlhOGFoYnVKYWl0Cg
+          action: REDEEMED
+        - itemId: dGhlaTNYb284b2VzCg
+          action: RECALLED
+        - itemId: Q2hpZW1vbzRpZUZhCg
+          action: CANCELLED
+      properties:
+        addedPoints:
+          type: integer
+        itemActions:
+          items:
+            $ref: '#/components/schemas/ItemActionAPIModel'
+          type: array
+      type: object
+    TransactionItemDetailAPIModel:
+      properties:
+        publicId:
+          example: YWV2ZXhvMEVlR2VpCg
+          type: string
+        itemDefinitionId:
+          example: Y2hvaDFJZXRoZWV5Cg
+          type: string
+      type: object
+    TransactionStateEnum:
+      enum:
+      - STARTED
+      - PROCESSING
+      - FINISHED
+      - EXPIRED
+      type: string
+    GetUserCardsResponse:
+      example:
+        localCards:
+        - publicId: d29oU29vdm9pNW9vCg
+          name: test card
+          type: aWVuZWVnZWVZYWkyCg
+          code: "1234567890"
+        - publicId: d29oU29vdm9pNW9vCg
+          name: test card
+          type: aWVuZWVnZWVZYWkyCg
+          code: "1234567890"
+        virtualCards:
+        - businessDetails:
+            publicId: cG9leWlWb283c2h1Cg
+            name: Business
+            description: Coffee shop or whatever
+            gpsCoordinates: +48.8577+002.295/
+            bannerImageId: b29naG9oVGhhaG42Cg
+            iconImageId: b29naG9oVGhhaG42Cg
+          points: 0
+        - businessDetails:
+            publicId: cG9leWlWb283c2h1Cg
+            name: Business
+            description: Coffee shop or whatever
+            gpsCoordinates: +48.8577+002.295/
+            bannerImageId: b29naG9oVGhhaG42Cg
+            iconImageId: b29naG9oVGhhaG42Cg
+          points: 0
+      properties:
+        localCards:
+          items:
+            $ref: '#/components/schemas/LocalCardAPIModel'
+          type: array
+        virtualCards:
+          items:
+            $ref: '#/components/schemas/ShortVirtualCardAPIModel'
+          type: array
+      type: object
+    PostUserLocalCardsRequest:
+      example:
+        code: "1234567890"
+        name: test card
+        type: VmlpOW9OZ2llUGl1Cg
+      properties:
+        name:
+          example: test card
+          type: string
+        type:
+          example: VmlpOW9OZ2llUGl1Cg
+          type: string
+        code:
+          example: "1234567890"
+          type: string
+      type: object
+    GetUserLocalCardTypesResponse:
+      example:
+        types:
+        - types
+        - types
+      properties:
+        types:
+          items:
+            type: string
+          type: array
+      type: object
+    GetUserVirtualCardResponse:
+      example:
+        ownedItems:
+        - publicId: Q2hhOGRvYTZlaXRlCg
+          definitionId: bGVlNnF1YTNTZW85Cg
+        - publicId: Q2hhOGRvYTZlaXRlCg
+          definitionId: bGVlNnF1YTNTZW85Cg
+        businessDetails:
+          publicId: ZUNoYWkyYWV4aVRhCg
+          name: test
+          address: ul. Łojasiewicza 6
+          gpsCoordinates: +48.8577+002.295/
+          bannerImageId: WG9ocGg2b0h1ZWNoCg
+          iconImageId: c2VlbGVlNEVlV29vCg
+          menuImageIds:
+          - bXU5YWltMm1haUdpCg
+          itemDefinitions:
+          - publicId: QWl5ZWlwaG8ySWl2Cg
+            name: Cool item
+            price: 10
+            description: idk
+            imageId: QWhDOXBvdTdhaTZQCg
+            startDate: 2023-04-21T15:25:37+02:00
+            endDate: 2024-04-21T17:25:37+02:00
+            maxAmount: 2
+            available: true
+        points: 0
+      properties:
+        points:
+          type: integer
+        ownedItems:
+          items:
+            $ref: '#/components/schemas/OwnedItemAPIModel'
+          type: array
+        businessDetails:
+          $ref: '#/components/schemas/PublicBusinessDetailsAPIModel'
+      type: object
+    PostUserVirtualCardTransactionRequest:
+      example:
+        itemIds:
+        - cGllMHBoZWlsZThBCg
+        - Y2VoMElhbnV1c2g1Cg
+      properties:
+        itemIds:
+          items:
+            type: string
+          type: array
+      type: object
+    PostUserVirtualCardTransactionResponse:
+      example:
+        publicId: cGllOG1haDBPaHY3Cg
+        Code: 1234567890
+      properties:
+        publicId:
+          type: string
+        Code:
+          type: string
+      type: object
+    GetUserBusinessesSearchResponse:
+      example:
+        businesses:
+        - publicId: cG9leWlWb283c2h1Cg
+          name: Business
+          description: Coffee shop or whatever
+          gpsCoordinates: +48.8577+002.295/
+          bannerImageId: b29naG9oVGhhaG42Cg
+          iconImageId: b29naG9oVGhhaG42Cg
+      properties:
+        businesses:
+          items:
+            $ref: '#/components/schemas/ShortBusinessDetailsAPIModel'
+          type: array
+      type: object
+    GetUserBusinessesResponse:
+      $ref: '#/components/schemas/PublicBusinessDetailsAPIModel'
+    PostUserVirtualCardItemResponse:
+      example:
+        itemId: aWVSOGplZXdlaW1pCg
+      properties:
+        itemId:
+          type: string
+      type: object
+    GetUserVirtualCardTransactionResponse:
+      example:
+        itemId: Y2FoMWFpTmcwaGllCg
+        state: FINISHED
+        addedPoints: 20
+        itemActions:
+          itemId: bWlhOGFoYnVKYWl0Cg
+          action: REDEEMED
+      properties:
+        itemId:
+          type: string
+        state:
+          $ref: '#/components/schemas/TransactionStateEnum'
+        addedPoints:
+          type: integer
+        itemActions:
+          items:
+            $ref: '#/components/schemas/ItemActionAPIModel'
+          type: array
+      type: object
+    ShortBusinessDetailsAPIModel:
+      example:
+        publicId: cG9leWlWb283c2h1Cg
+        name: Business
+        description: Coffee shop or whatever
+        gpsCoordinates: +48.8577+002.295/
+        bannerImageId: b29naG9oVGhhaG42Cg
+        iconImageId: b29naG9oVGhhaG42Cg
+      properties:
+        publicId:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        gpsCoordinates:
+          type: string
+        bannerImageId:
+          type: string
+        iconImageId:
+          type: string
+      type: object
+    OwnedItemAPIModel:
+      example:
+        publicId: Q2hhOGRvYTZlaXRlCg
+        definitionId: bGVlNnF1YTNTZW85Cg
+      properties:
+        publicId:
+          type: string
+        definitionId:
+          type: string
+      type: object
+    LocalCardAPIModel:
+      example:
+        publicId: d29oU29vdm9pNW9vCg
+        name: test card
+        type: aWVuZWVnZWVZYWkyCg
+        code: "1234567890"
+      properties:
+        publicId:
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+        code:
+          type: string
+      type: object
+    ShortVirtualCardAPIModel:
+      example:
+        businessDetails:
+          publicId: cG9leWlWb283c2h1Cg
+          name: Business
+          description: Coffee shop or whatever
+          gpsCoordinates: +48.8577+002.295/
+          bannerImageId: b29naG9oVGhhaG42Cg
+          iconImageId: b29naG9oVGhhaG42Cg
+        points: 0
+      properties:
+        businessDetails:
+          $ref: '#/components/schemas/ShortBusinessDetailsAPIModel'
+        points:
+          type: integer
+      type: object
+    PublicBusinessDetailsAPIModel:
+      example:
+        publicId: ZUNoYWkyYWV4aVRhCg
+        name: test
+        address: ul. Łojasiewicza 6
+        gpsCoordinates: +48.8577+002.295/
+        bannerImageId: WG9ocGg2b0h1ZWNoCg
+        iconImageId: c2VlbGVlNEVlV29vCg
+        menuImageIds:
+        - bXU5YWltMm1haUdpCg
+        itemDefinitions:
+        - publicId: QWl5ZWlwaG8ySWl2Cg
+          name: Cool item
+          price: 10
+          description: idk
+          imageId: QWhDOXBvdTdhaTZQCg
+          startDate: 2023-04-21T15:25:37+02:00
+          endDate: 2024-04-21T17:25:37+02:00
+          maxAmount: 2
+          available: true
+      properties:
+        publicId:
+          type: string
+        name:
+          type: string
+        address:
+          type: string
+        gpsCoordinates:
+          type: string
+        bannerImageId:
+          type: string
+        iconImageId:
+          type: string
+        menuImageIds:
+          items:
+            type: string
+          type: array
+        itemDefinitions:
+          items:
+            $ref: '#/components/schemas/ItemDefinitionAPIModel'
+          type: array
+      type: object
+    ItemDefinitionAPIModel:
+      example:
+        publicId: QWl5ZWlwaG8ySWl2Cg
+        name: Cool item
+        price: 10
+        description: idk
+        imageId: QWhDOXBvdTdhaTZQCg
+        startDate: 2023-04-21T15:25:37+02:00
+        endDate: 2024-04-21T17:25:37+02:00
+        maxAmount: 2
+        available: true
+      properties:
+        publicId:
+          type: string
+        name:
+          type: string
+        price:
+          type: integer
+        description:
+          type: string
+        imageId:
+          type: string
+        startDate:
+          format: date-time
+          nullable: true
+          type: string
+        endDate:
+          format: date-time
+          nullable: true
+          type: string
+        maxAmount:
+          type: integer
+        available:
+          type: boolean
+      type: object
+    ItemActionAPIModel:
+      example:
+        itemId: bWlhOGFoYnVKYWl0Cg
+        action: REDEEMED
+      properties:
+        itemId:
+          type: string
+        action:
+          $ref: '#/components/schemas/ItemActionTypeEnum'
+      type: object
+    ItemActionTypeEnum:
+      enum:
+      - REDEEMED
+      - RECALLED
+      - CANCELLED
+      type: string
+    GetBusinessAccountResponse_allOf:
+      properties:
+        nip:
+          type: string
+        krs:
+          type: string
+        regon:
+          type: string
+        ownerName:
+          type: string
+      type: object
+      example: null
+  securitySchemes:
+    sessionToken:
+      bearerFormat: "Just the token string received from the API. In reality consists\
+        \ of the token id and the actual token, separated by a colon."
+      scheme: bearer
+      type: http

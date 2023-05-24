@@ -3,6 +3,7 @@ package middleware
 import (
 	"log"
 	"net/http/httptest"
+	"reflect"
 	"testing"
 	"time"
 
@@ -16,6 +17,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// Create AuthMiddleware
 func getAuthMiddleware(ctrl *gomock.Controller) *AuthMiddleware {
 	return &AuthMiddleware{
 		logger:       log.Default(),
@@ -23,6 +25,7 @@ func getAuthMiddleware(ctrl *gomock.Controller) *AuthMiddleware {
 	}
 }
 
+// Test AuthMiddleware on the happy path
 func TestHandleOk(t *testing.T) {
 	// data prep
 	gin.SetMode(gin.TestMode)
@@ -72,7 +75,7 @@ func TestHandleOk(t *testing.T) {
 	if ok == false {
 		t.Errorf("Context holds no user")
 	}
-	require.Truef(t, MatchEntities(testUser, user), "User entity provided by authenticator failed validation")
+	require.Truef(t, reflect.DeepEqual(testUser, user), "User entity provided by authenticator failed validation")
 	// TODO: test MatchEntities usage
 }
 
@@ -133,7 +136,8 @@ func TestHandleNok_EmailToken(t *testing.T) {
 	require.Truef(t, userPtr == nil && userExists == false, "User field was overwritten despite no valid user existing")
 }
 
-func testHandleTokenError(t *testing.T, err error) {
+// Test AuthMiddleware when the token is invalid
+func TestHandleNok_UnknownToken(t *testing.T) {
 	// data prep
 	gin.SetMode(gin.TestMode)
 	w := httptest.NewRecorder()
@@ -172,7 +176,7 @@ func testHandleTokenError(t *testing.T, err error) {
 
 	require.Nilf(t, respParseErr, "Failed to parse JSON response")
 	require.Equalf(t, respCode, int(401), "Response returned unexpected status code")
-	require.Truef(t, MatchEntities(respBodyExpected, respBody), "Status inside default response body does not match expected")
+	require.Truef(t, reflect.DeepEqual(respBodyExpected, *respBody), "Status inside default response body does not match expected")
 	// TODO: MatchEntities
 
 	userPtr, userExists := context.Get("user")

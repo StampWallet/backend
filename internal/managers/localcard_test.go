@@ -17,7 +17,7 @@ func GetLocalCardManager(ctrl *gomock.Controller) *LocalCardManagerImpl {
 	return &LocalCardManagerImpl{
 		&BaseServices{
 			Logger:   log.Default(),
-			Database: GetDatabase(),
+			Database: GetTestDatabase(),
 		},
 	}
 }

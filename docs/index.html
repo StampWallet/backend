@@ -199,14 +199,16 @@ font-style: italic;
   <div class="method-summary"></div>
   <h4><a href="#Account">Account</a></h4>
   <ul>
+  <li><a href="#changeEmail"><code><span class="http-method">post</span> /auth/account/email</code></a></li>
+  <li><a href="#changePassword"><code><span class="http-method">post</span> /auth/account/password</code></a></li>
   <li><a href="#confirmEmail"><code><span class="http-method">post</span> /auth/account/emailConfirmation</code></a></li>
   <li><a href="#createAccount"><code><span class="http-method">post</span> /auth/account</code></a></li>
   </ul>
   <h4><a href="#Business">Business</a></h4>
   <ul>
-  <li><a href="#addMenuImage"><code><span class="http-method">post</span> /business/menuImage/</code></a></li>
+  <li><a href="#addMenuImage"><code><span class="http-method">post</span> /business/menuImages/</code></a></li>
   <li><a href="#createBusinessAccount"><code><span class="http-method">post</span> /business/account</code></a></li>
-  <li><a href="#deleteMenuImage"><code><span class="http-method">delete</span> /business/menuImage/{menuImageId}</code></a></li>
+  <li><a href="#deleteMenuImage"><code><span class="http-method">delete</span> /business/menuImages/{menuImageId}</code></a></li>
   <li><a href="#getBusinessAccountInfo"><code><span class="http-method">get</span> /business/info</code></a></li>
   <li><a href="#updateBusinessAccount"><code><span class="http-method">patch</span> /business/info</code></a></li>
   </ul>
@@ -233,10 +235,6 @@ font-style: italic;
   <li><a href="#deleteLocalCard"><code><span class="http-method">delete</span> /user/cards/local/{cardId}</code></a></li>
   <li><a href="#getLocalCardTypes"><code><span class="http-method">get</span> /user/cards/local/types</code></a></li>
   </ul>
-  <h4><a href="#Search">Search</a></h4>
-  <ul>
-  <li><a href="#searchBusinesses"><code><span class="http-method">get</span> /user/businesses</code></a></li>
-  </ul>
   <h4><a href="#Sessions">Sessions</a></h4>
   <ul>
   <li><a href="#login"><code><span class="http-method">post</span> /auth/sessions</code></a></li>
@@ -244,13 +242,13 @@ font-style: italic;
   </ul>
   <h4><a href="#Transaction">Transaction</a></h4>
   <ul>
-  <li><a href="#getTransactionStatus"><code><span class="http-method">get</span> /user/cards/virtual/{businessId}/transaction/{transactionCode}</code></a></li>
-  <li><a href="#startTransaction"><code><span class="http-method">post</span> /user/cards/virtual/{businessId}/transaction</code></a></li>
+  <li><a href="#getTransactionStatus"><code><span class="http-method">get</span> /user/cards/virtual/{businessId}/transactions/{transactionCode}</code></a></li>
+  <li><a href="#startTransaction"><code><span class="http-method">post</span> /user/cards/virtual/{businessId}/transactions</code></a></li>
   </ul>
   <h4><a href="#Transactions">Transactions</a></h4>
   <ul>
-  <li><a href="#finishTransaction"><code><span class="http-method">post</span> /business/transaction/{transactionCode}</code></a></li>
-  <li><a href="#getTransactionDetails"><code><span class="http-method">get</span> /business/transaction/{transactionCode}</code></a></li>
+  <li><a href="#finishTransaction"><code><span class="http-method">post</span> /business/transactions/{transactionCode}</code></a></li>
+  <li><a href="#getTransactionDetails"><code><span class="http-method">get</span> /business/transactions/{transactionCode}</code></a></li>
   </ul>
   <h4><a href="#User">User</a></h4>
   <ul>
@@ -266,12 +264,12 @@ font-style: italic;
   </ul>
 
   <h1><a name="Account">Account</a></h1>
-  <div class="method"><a name="confirmEmail"/>
+  <div class="method"><a name="changeEmail"/>
     <div class="method-path">
     <a class="up" href="#__Methods">Up</a>
-    <pre class="post"><code class="huge"><span class="http-method">post</span> /auth/account/emailConfirmation</code></pre></div>
-    <div class="method-summary">Confirm email (<span class="nickname">confirmEmail</span>)</div>
-    <div class="method-notes">When an account is created, the user receives an email with a link to a static website. That website simply posts it's parameters (unique to each email) to this endpoint.</div>
+    <pre class="post"><code class="huge"><span class="http-method">post</span> /auth/account/email</code></pre></div>
+    <div class="method-summary">Change email (<span class="nickname">changeEmail</span>)</div>
+    <div class="method-notes">This endpoint can be used to change email address of currently logged in user. Changing email address requires email confirmation</div>
 
 
     <h3 class="field-label">Consumes</h3>
@@ -282,7 +280,7 @@ font-style: italic;
 
     <h3 class="field-label">Request body</h3>
     <div class="field-items">
-      <div class="param">PostAccountEmailConfirmationRequest <a href="#PostAccountEmailConfirmationRequest">PostAccountEmailConfirmationRequest</a> (required)</div>
+      <div class="param">PostAccountEmailRequest <a href="#PostAccountEmailRequest">PostAccountEmailRequest</a> (required)</div>
 
       <div class="param-desc"><span class="param-type">Body Parameter</span> &mdash;  </div>
 
@@ -319,17 +317,17 @@ font-style: italic;
     <h4 class="field-label">400</h4>
     Invalid request format
         <a href="#DefaultResponse">DefaultResponse</a>
-    <h4 class="field-label">404</h4>
-    Token not found
+    <h4 class="field-label">409</h4>
+    Email already exists
         <a href="#DefaultResponse">DefaultResponse</a>
   </div> <!-- method -->
   <hr/>
-  <div class="method"><a name="createAccount"/>
+  <div class="method"><a name="changePassword"/>
     <div class="method-path">
     <a class="up" href="#__Methods">Up</a>
-    <pre class="post"><code class="huge"><span class="http-method">post</span> /auth/account</code></pre></div>
-    <div class="method-summary">Create a new account (<span class="nickname">createAccount</span>)</div>
-    <div class="method-notes">Create a new account with specified password and email, send a confirmation email</div>
+    <pre class="post"><code class="huge"><span class="http-method">post</span> /auth/account/password</code></pre></div>
+    <div class="method-summary">Change password (<span class="nickname">changePassword</span>)</div>
+    <div class="method-notes">This endpoint can be used to change password of currently logged in user. Requires the user to provide their old password</div>
 
 
     <h3 class="field-label">Consumes</h3>
@@ -340,7 +338,7 @@ font-style: italic;
 
     <h3 class="field-label">Request body</h3>
     <div class="field-items">
-      <div class="param">PostAccountRequest <a href="#PostAccountRequest">PostAccountRequest</a> (required)</div>
+      <div class="param">DefaultResponse <a href="#DefaultResponse">DefaultResponse</a> (required)</div>
 
       <div class="param-desc"><span class="param-type">Body Parameter</span> &mdash;  </div>
 
@@ -371,9 +369,123 @@ font-style: italic;
     </ul>
 
     <h3 class="field-label">Responses</h3>
-    <h4 class="field-label">201</h4>
+    <h4 class="field-label">200</h4>
     Successful operation
         <a href="#DefaultResponse">DefaultResponse</a>
+    <h4 class="field-label">400</h4>
+    Invalid request format or invalid old password
+        <a href="#DefaultResponse">DefaultResponse</a>
+  </div> <!-- method -->
+  <hr/>
+  <div class="method"><a name="confirmEmail"/>
+    <div class="method-path">
+    <a class="up" href="#__Methods">Up</a>
+    <pre class="post"><code class="huge"><span class="http-method">post</span> /auth/account/emailConfirmation</code></pre></div>
+    <div class="method-summary">Confirm email (<span class="nickname">confirmEmail</span>)</div>
+
+    <div class="method-notes">When an account is created, user receives an email with a link to a static website. That website simply posts it's parameters (unique to each email) to this endpoint. The parameters will be unique and hard to guess, allowing to verify that user really has access to the email address.</div>
+
+
+    <h3 class="field-label">Consumes</h3>
+    This API call consumes the following media types via the <span class="header">Content-Type</span> request header:
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Request body</h3>
+    <div class="field-items">
+      <div class="param">PostAccountEmailConfirmationRequest <a href="#PostAccountEmailConfirmationRequest">PostAccountEmailConfirmationRequest</a> (required)</div>
+
+      <div class="param-desc"><span class="param-type">Body Parameter</span> &mdash;  </div>
+
+    </div>  <!-- field-items -->
+
+
+
+
+    <h3 class="field-label">Return type</h3>
+    <div class="return-type">
+      <a href="#PostAccountResponse">PostAccountResponse</a>
+      
+    </div>
+
+    <!--Todo: process Response Object and its headers, schema, examples -->
+
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>{
+  "token" : "ZWVnaDhhZWg4bGVpbDJhaQo=:XBlaW5nZWViNWFpU2hlaGUKa"
+}</code></pre>
+
+    <h3 class="field-label">Produces</h3>
+    This API call produces the following media types according to the <span class="header">Accept</span> request header;
+    the media type will be conveyed by the <span class="header">Content-Type</span> response header.
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Responses</h3>
+    <h4 class="field-label">200</h4>
+    Successful operation
+        <a href="#PostAccountResponse">PostAccountResponse</a>
+    <h4 class="field-label">400</h4>
+    Invalid request format
+        <a href="#DefaultResponse">DefaultResponse</a>
+    <h4 class="field-label">401</h4>
+    Unauthorized - invalid token
+        <a href="#DefaultResponse">DefaultResponse</a>
+  </div> <!-- method -->
+  <hr/>
+  <div class="method"><a name="createAccount"/>
+    <div class="method-path">
+    <a class="up" href="#__Methods">Up</a>
+    <pre class="post"><code class="huge"><span class="http-method">post</span> /auth/account</code></pre></div>
+    <div class="method-summary">Create a new account (<span class="nickname">createAccount</span>)</div>
+    <div class="method-notes">Create a new account with specified password and email, send a confirmation email</div>
+
+
+    <h3 class="field-label">Consumes</h3>
+    This API call consumes the following media types via the <span class="header">Content-Type</span> request header:
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Request body</h3>
+    <div class="field-items">
+      <div class="param">PostAccountRequest <a href="#PostAccountRequest">PostAccountRequest</a> (required)</div>
+
+      <div class="param-desc"><span class="param-type">Body Parameter</span> &mdash;  </div>
+
+    </div>  <!-- field-items -->
+
+
+
+
+    <h3 class="field-label">Return type</h3>
+    <div class="return-type">
+      <a href="#PostAccountResponse">PostAccountResponse</a>
+      
+    </div>
+
+    <!--Todo: process Response Object and its headers, schema, examples -->
+
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>{
+  "token" : "ZWVnaDhhZWg4bGVpbDJhaQo=:XBlaW5nZWViNWFpU2hlaGUKa"
+}</code></pre>
+
+    <h3 class="field-label">Produces</h3>
+    This API call produces the following media types according to the <span class="header">Accept</span> request header;
+    the media type will be conveyed by the <span class="header">Content-Type</span> response header.
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Responses</h3>
+    <h4 class="field-label">201</h4>
+    Successful operation
+        <a href="#PostAccountResponse">PostAccountResponse</a>
     <h4 class="field-label">400</h4>
     Invalid request format, email or password
         <a href="#DefaultResponse">DefaultResponse</a>
@@ -386,7 +498,7 @@ font-style: italic;
   <div class="method"><a name="addMenuImage"/>
     <div class="method-path">
     <a class="up" href="#__Methods">Up</a>
-    <pre class="post"><code class="huge"><span class="http-method">post</span> /business/menuImage/</code></pre></div>
+    <pre class="post"><code class="huge"><span class="http-method">post</span> /business/menuImages/</code></pre></div>
     <div class="method-summary">Add menu image to business (<span class="nickname">addMenuImage</span>)</div>
     <div class="method-notes">This endpoint is used to add a new menu image to business details. Returns a new fileId to be used with '/file/' endpoints.</div>
 
@@ -431,7 +543,7 @@ font-style: italic;
     <a class="up" href="#__Methods">Up</a>
     <pre class="post"><code class="huge"><span class="http-method">post</span> /business/account</code></pre></div>
     <div class="method-summary">Create a business account (<span class="nickname">createBusinessAccount</span>)</div>
-    <div class="method-notes">This endpoint is used to attach a new business account to an existing, logged in user accout. Busiess details are provided in the request. Responds with business id and ids of banner and icon image slots.</div>
+    <div class="method-notes">This endpoint is used to attach a new business account to an existing, logged in user account. Busies details are provided in the request. Responds with business id and ids of banner and icon image slots.</div>
 
 
     <h3 class="field-label">Consumes</h3>
@@ -475,7 +587,7 @@ font-style: italic;
     </ul>
 
     <h3 class="field-label">Responses</h3>
-    <h4 class="field-label">200</h4>
+    <h4 class="field-label">201</h4>
     Successful operation
         <a href="#PostBusinessAccountResponse">PostBusinessAccountResponse</a>
     <h4 class="field-label">400</h4>
@@ -489,7 +601,7 @@ font-style: italic;
   <div class="method"><a name="deleteMenuImage"/>
     <div class="method-path">
     <a class="up" href="#__Methods">Up</a>
-    <pre class="delete"><code class="huge"><span class="http-method">delete</span> /business/menuImage/{menuImageId}</code></pre></div>
+    <pre class="delete"><code class="huge"><span class="http-method">delete</span> /business/menuImages/{menuImageId}</code></pre></div>
     <div class="method-summary">Delete menu image from business (<span class="nickname">deleteMenuImage</span>)</div>
     <div class="method-notes">This endpoint is used to delete a menu image from business details.</div>
 
@@ -540,7 +652,7 @@ font-style: italic;
     <a class="up" href="#__Methods">Up</a>
     <pre class="get"><code class="huge"><span class="http-method">get</span> /business/info</code></pre></div>
     <div class="method-summary">Get business info (<span class="nickname">getBusinessAccountInfo</span>)</div>
-    <div class="method-notes">Responds with information about business owned by the logged in user</div>
+    <div class="method-notes">Responds with information about business owned by the logged in user.</div>
 
 
 
@@ -571,6 +683,12 @@ font-style: italic;
     <h4 class="field-label">200</h4>
     Successful operation
         <a href="#GetBusinessAccountResponse">GetBusinessAccountResponse</a>
+    <h4 class="field-label">401</h4>
+    Invalid credentials
+        <a href="#DefaultResponse">DefaultResponse</a>
+    <h4 class="field-label">404</h4>
+    Does not exist or forbidden
+        <a href="#DefaultResponse">DefaultResponse</a>
   </div> <!-- method -->
   <hr/>
   <div class="method"><a name="updateBusinessAccount"/>
@@ -634,7 +752,7 @@ font-style: italic;
     <a class="up" href="#__Methods">Up</a>
     <pre class="get"><code class="huge"><span class="http-method">get</span> /user/cards</code></pre></div>
     <div class="method-summary">Get list of user's cards (<span class="nickname">getUserCards</span>)</div>
-    <div class="method-notes">This endpoint is used to retrieve list of currently logged in user's cards</div>
+    <div class="method-notes">This endpoint is used to retrieve a list of currently logged in user's cards.</div>
 
 
 
@@ -706,7 +824,7 @@ font-style: italic;
     <a class="up" href="#__Methods">Up</a>
     <pre class="delete"><code class="huge"><span class="http-method">delete</span> /file/{fileId}</code></pre></div>
     <div class="method-summary">Delete a file (<span class="nickname">delete file</span>)</div>
-    <div class="method-notes">This endpoint is used to delete files by id</div>
+    <div class="method-notes">This endpoint is used to delete files.</div>
 
     <h3 class="field-label">Path parameters</h3>
     <div class="field-items">
@@ -758,7 +876,7 @@ font-style: italic;
     <a class="up" href="#__Methods">Up</a>
     <pre class="get"><code class="huge"><span class="http-method">get</span> /file/{fileId}</code></pre></div>
     <div class="method-summary">Get file (<span class="nickname">getFile</span>)</div>
-    <div class="method-notes">This endpoint is used to download files by ID</div>
+    <div class="method-notes">This endpoint is used to download files by ID.</div>
 
     <h3 class="field-label">Path parameters</h3>
     <div class="field-items">
@@ -804,7 +922,7 @@ font-style: italic;
     <a class="up" href="#__Methods">Up</a>
     <pre class="post"><code class="huge"><span class="http-method">post</span> /file/{fileId}</code></pre></div>
     <div class="method-summary">Upload file (<span class="nickname">uploadFile</span>)</div>
-    <div class="method-notes">This endpoint is used to upload files by id</div>
+    <div class="method-notes">This endpoint is used to upload files.</div>
 
     <h3 class="field-label">Path parameters</h3>
     <div class="field-items">
@@ -980,19 +1098,7 @@ font-style: italic;
     <div class="method-notes">This endpoint is used to retrieve data about existing item definitions (benefits).</div>
 
 
-    <h3 class="field-label">Consumes</h3>
-    This API call consumes the following media types via the <span class="header">Content-Type</span> request header:
-    <ul>
-      <li><code>application/json</code></li>
-    </ul>
 
-    <h3 class="field-label">Request body</h3>
-    <div class="field-items">
-      <div class="param">GetBusinessItemDefinitionsResponse <a href="#GetBusinessItemDefinitionsResponse">GetBusinessItemDefinitionsResponse</a> (required)</div>
-
-      <div class="param-desc"><span class="param-type">Body Parameter</span> &mdash;  </div>
-
-    </div>  <!-- field-items -->
 
 
 
@@ -1114,7 +1220,7 @@ font-style: italic;
     <a class="up" href="#__Methods">Up</a>
     <pre class="post"><code class="huge"><span class="http-method">post</span> /user/cards/local</code></pre></div>
     <div class="method-summary">Add a new local card (<span class="nickname">addLocalCards</span>)</div>
-    <div class="method-notes">This endpoint is used to add a new local card to user's account</div>
+    <div class="method-notes">This endpoint is used to add a new local card to user's account.</div>
 
 
     <h3 class="field-label">Consumes</h3>
@@ -1169,7 +1275,7 @@ font-style: italic;
     <a class="up" href="#__Methods">Up</a>
     <pre class="delete"><code class="huge"><span class="http-method">delete</span> /user/cards/local/{cardId}</code></pre></div>
     <div class="method-summary">Delete a local card (<span class="nickname">deleteLocalCard</span>)</div>
-    <div class="method-notes">This endpoint is used to delete a local card from account of the currently logged user</div>
+    <div class="method-notes">This endpoint is used to delete a local card from account of the currently logged in user.</div>
 
     <h3 class="field-label">Path parameters</h3>
     <div class="field-items">
@@ -1218,7 +1324,7 @@ font-style: italic;
     <a class="up" href="#__Methods">Up</a>
     <pre class="get"><code class="huge"><span class="http-method">get</span> /user/cards/local/types</code></pre></div>
     <div class="method-summary">Get list of local card types (<span class="nickname">getLocalCardTypes</span>)</div>
-    <div class="method-notes">This endpoint is used to get a list of supported local card types</div>
+    <div class="method-notes">This endpoint is used to get a list of supported local card types.</div>
 
 
 
@@ -1253,74 +1359,13 @@ font-style: italic;
         <a href="#GetUserLocalCardTypesResponse">GetUserLocalCardTypesResponse</a>
   </div> <!-- method -->
   <hr/>
-  <h1><a name="Search">Search</a></h1>
-  <div class="method"><a name="searchBusinesses"/>
-    <div class="method-path">
-    <a class="up" href="#__Methods">Up</a>
-    <pre class="get"><code class="huge"><span class="http-method">get</span> /user/businesses</code></pre></div>
-    <div class="method-summary">Search businesses (<span class="nickname">searchBusinesses</span>)</div>
-    <div class="method-notes">This endpoint is used to search businesses that match the provided text query or are</div>
-
-
-
-
-
-    <h3 class="field-label">Query parameters</h3>
-    <div class="field-items">
-      <div class="param">text (optional)</div>
-
-      <div class="param-desc"><span class="param-type">Query Parameter</span> &mdash; Filter by business name default: null </div><div class="param">location (optional)</div>
-
-      <div class="param-desc"><span class="param-type">Query Parameter</span> &mdash; Filter by business location default: null format: ISO 6709</div><div class="param">proximity (optional)</div>
-
-      <div class="param-desc"><span class="param-type">Query Parameter</span> &mdash; Filter by distance from location in meters default: null </div>
-    </div>  <!-- field-items -->
-
-
-    <h3 class="field-label">Return type</h3>
-    <div class="return-type">
-      <a href="#GetUserBusinessesSearchResponse">GetUserBusinessesSearchResponse</a>
-      
-    </div>
-
-    <!--Todo: process Response Object and its headers, schema, examples -->
-
-    <h3 class="field-label">Example data</h3>
-    <div class="example-data-content-type">Content-Type: application/json</div>
-    <pre class="example"><code>{
-  "businesses" : [ {
-    "publicId" : "cG9leWlWb283c2h1Cg",
-    "name" : "Business",
-    "description" : "Coffee shop or whatever",
-    "gpsCoordinates" : "+48.8577+002.295/",
-    "bannerImageId" : "b29naG9oVGhhaG42Cg",
-    "iconImageId" : "b29naG9oVGhhaG42Cg"
-  } ]
-}</code></pre>
-
-    <h3 class="field-label">Produces</h3>
-    This API call produces the following media types according to the <span class="header">Accept</span> request header;
-    the media type will be conveyed by the <span class="header">Content-Type</span> response header.
-    <ul>
-      <li><code>application/json</code></li>
-    </ul>
-
-    <h3 class="field-label">Responses</h3>
-    <h4 class="field-label">200</h4>
-    Successful operation
-        <a href="#GetUserBusinessesSearchResponse">GetUserBusinessesSearchResponse</a>
-    <h4 class="field-label">400</h4>
-    Invalid request
-        <a href="#DefaultResponse">DefaultResponse</a>
-  </div> <!-- method -->
-  <hr/>
   <h1><a name="Sessions">Sessions</a></h1>
   <div class="method"><a name="login"/>
     <div class="method-path">
     <a class="up" href="#__Methods">Up</a>
     <pre class="post"><code class="huge"><span class="http-method">post</span> /auth/sessions</code></pre></div>
     <div class="method-summary">Login (<span class="nickname">login</span>)</div>
-    <div class="method-notes">This endpoint is used to exchange user credentials to temporary credentials that allow access to the API.</div>
+    <div class="method-notes">This endpoint is used to exchange user credentials for temporary credentials that allow access to the API.</div>
 
 
     <h3 class="field-label">Consumes</h3>
@@ -1342,7 +1387,7 @@ font-style: italic;
 
     <h3 class="field-label">Return type</h3>
     <div class="return-type">
-      <a href="#DefaultResponse">DefaultResponse</a>
+      <a href="#PostAccountSessionResponse">PostAccountSessionResponse</a>
       
     </div>
 
@@ -1351,7 +1396,7 @@ font-style: italic;
     <h3 class="field-label">Example data</h3>
     <div class="example-data-content-type">Content-Type: application/json</div>
     <pre class="example"><code>{
-  "message" : "message"
+  "token" : "ZWVnaDhhZWg4bGVpbDJhaQo=:XBlaW5nZWViNWFpU2hlaGUKa"
 }</code></pre>
 
     <h3 class="field-label">Produces</h3>
@@ -1364,7 +1409,7 @@ font-style: italic;
     <h3 class="field-label">Responses</h3>
     <h4 class="field-label">200</h4>
     Successful operation
-        <a href="#DefaultResponse">DefaultResponse</a>
+        <a href="#PostAccountSessionResponse">PostAccountSessionResponse</a>
     <h4 class="field-label">400</h4>
     Invalid request format
         <a href="#DefaultResponse">DefaultResponse</a>
@@ -1378,7 +1423,7 @@ font-style: italic;
     <a class="up" href="#__Methods">Up</a>
     <pre class="delete"><code class="huge"><span class="http-method">delete</span> /auth/sessions</code></pre></div>
     <div class="method-summary">Logout (<span class="nickname">logout</span>)</div>
-    <div class="method-notes">This endpoint invalidates used session token</div>
+    <div class="method-notes">This endpoint invalidates session token passed with the request.</div>
 
 
 
@@ -1420,9 +1465,9 @@ font-style: italic;
   <div class="method"><a name="getTransactionStatus"/>
     <div class="method-path">
     <a class="up" href="#__Methods">Up</a>
-    <pre class="get"><code class="huge"><span class="http-method">get</span> /user/cards/virtual/{businessId}/transaction/{transactionCode}</code></pre></div>
+    <pre class="get"><code class="huge"><span class="http-method">get</span> /user/cards/virtual/{businessId}/transactions/{transactionCode}</code></pre></div>
     <div class="method-summary">Get info about a transaction (<span class="nickname">getTransactionStatus</span>)</div>
-    <div class="method-notes">This endpoint is used in the last step of transaction processing, it's used to check transaction status</div>
+    <div class="method-notes">This endpoint is used in the last step of transaction processing, it's used to check the status of the transaction.</div>
 
     <h3 class="field-label">Path parameters</h3>
     <div class="field-items">
@@ -1477,9 +1522,9 @@ font-style: italic;
   <div class="method"><a name="startTransaction"/>
     <div class="method-path">
     <a class="up" href="#__Methods">Up</a>
-    <pre class="post"><code class="huge"><span class="http-method">post</span> /user/cards/virtual/{businessId}/transaction</code></pre></div>
+    <pre class="post"><code class="huge"><span class="http-method">post</span> /user/cards/virtual/{businessId}/transactions</code></pre></div>
     <div class="method-summary">Start a transaction (<span class="nickname">startTransaction</span>)</div>
-    <div class="method-notes">This endpoint is used in the first step of transaction processing, app should use it to start a transaction optionally providing items for exchange</div>
+    <div class="method-notes">This endpoint is used in the first step of transaction processing, the app should use it to start a transaction optionally providing items to be exchanged.</div>
 
     <h3 class="field-label">Path parameters</h3>
     <div class="field-items">
@@ -1543,9 +1588,9 @@ font-style: italic;
   <div class="method"><a name="finishTransaction"/>
     <div class="method-path">
     <a class="up" href="#__Methods">Up</a>
-    <pre class="post"><code class="huge"><span class="http-method">post</span> /business/transaction/{transactionCode}</code></pre></div>
+    <pre class="post"><code class="huge"><span class="http-method">post</span> /business/transactions/{transactionCode}</code></pre></div>
     <div class="method-summary">Finish a transaction (<span class="nickname">finishTransaction</span>)</div>
-    <div class="method-notes">This endpoint is used in the third step of transaction processing, app should use it to update transaction details with data about points added to user's account and items that were redeemed</div>
+    <div class="method-notes">This endpoint is used in the third step of transaction processing, the app should use it to update transaction details with data about points added to user's account and actions that were taken on items included in the transaction.</div>
 
     <h3 class="field-label">Path parameters</h3>
     <div class="field-items">
@@ -1607,9 +1652,9 @@ font-style: italic;
   <div class="method"><a name="getTransactionDetails"/>
     <div class="method-path">
     <a class="up" href="#__Methods">Up</a>
-    <pre class="get"><code class="huge"><span class="http-method">get</span> /business/transaction/{transactionCode}</code></pre></div>
+    <pre class="get"><code class="huge"><span class="http-method">get</span> /business/transactions/{transactionCode}</code></pre></div>
     <div class="method-summary">Get info about a started transaction (<span class="nickname">getTransactionDetails</span>)</div>
-    <div class="method-notes">This endpoint is used in the second step of transaction processing, app should use it to retrieve details about transaction started by a user, after scanning user's transaction code.</div>
+    <div class="method-notes">This endpoint is used in the second step of transaction processing, the app should use it to retrieve details about a transaction started by a user, after scanning user's transaction code.</div>
 
     <h3 class="field-label">Path parameters</h3>
     <div class="field-items">
@@ -1665,7 +1710,7 @@ font-style: italic;
     <a class="up" href="#__Methods">Up</a>
     <pre class="get"><code class="huge"><span class="http-method">get</span> /user/businesses</code></pre></div>
     <div class="method-summary">Search businesses (<span class="nickname">searchBusinesses</span>)</div>
-    <div class="method-notes">This endpoint is used to search businesses that match the provided text query or are</div>
+    <div class="method-notes">This endpoint is used to search businesses that match the provided text query or are close to a specified point.</div>
 
 
 
@@ -1726,7 +1771,7 @@ font-style: italic;
     <a class="up" href="#__Methods">Up</a>
     <pre class="post"><code class="huge"><span class="http-method">post</span> /user/cards/virtual/{businessId}</code></pre></div>
     <div class="method-summary">Add a new virtual card (<span class="nickname">addVirtualCard</span>)</div>
-    <div class="method-notes">This endpoint is used to register a new virtual card to the account of currently logged in user</div>
+    <div class="method-notes">This endpoint is used to register a new virtual card to the account of the currently logged in user.</div>
 
     <h3 class="field-label">Path parameters</h3>
     <div class="field-items">
@@ -1778,7 +1823,7 @@ font-style: italic;
     <a class="up" href="#__Methods">Up</a>
     <pre class="post"><code class="huge"><span class="http-method">post</span> /user/cards/virtual/{businessId}/items/{itemDefinitionId}</code></pre></div>
     <div class="method-summary">Buy an item (<span class="nickname">buyItem</span>)</div>
-    <div class="method-notes">This endpoint is used to buy an item for points from the virtual card</div>
+    <div class="method-notes">This endpoint is used to buy an item for points from the virtual card.</div>
 
     <h3 class="field-label">Path parameters</h3>
     <div class="field-items">
@@ -1828,8 +1873,8 @@ font-style: italic;
     <div class="method-path">
     <a class="up" href="#__Methods">Up</a>
     <pre class="delete"><code class="huge"><span class="http-method">delete</span> /user/cards/virtual/{businessId}/items/{itemId}</code></pre></div>
-    <div class="method-summary">Buy an item (<span class="nickname">deleteItem</span>)</div>
-    <div class="method-notes">This endpoint is used to delete an item for points from the virtual card</div>
+    <div class="method-summary">Delete an item (<span class="nickname">deleteItem</span>)</div>
+    <div class="method-notes">This endpoint is used to return an item, and get back points that were spent on that item.</div>
 
     <h3 class="field-label">Path parameters</h3>
     <div class="field-items">
@@ -1880,13 +1925,13 @@ font-style: italic;
     <a class="up" href="#__Methods">Up</a>
     <pre class="delete"><code class="huge"><span class="http-method">delete</span> /user/cards/virtual/{businessId}</code></pre></div>
     <div class="method-summary">Delete a virtual card (<span class="nickname">deleteVirtualCard</span>)</div>
-    <div class="method-notes">This endpoint is used to delete a virtual from the account of currently logged in user</div>
+    <div class="method-notes">This endpoint is used to delete a virtual card from the account of the currently logged in user.</div>
 
     <h3 class="field-label">Path parameters</h3>
     <div class="field-items">
       <div class="param">businessId (required)</div>
 
-      <div class="param-desc"><span class="param-type">Path Parameter</span> &mdash; Public ID of the business which card was requested to be deleted from user's account default: null </div>
+      <div class="param-desc"><span class="param-type">Path Parameter</span> &mdash; Public ID of the business which card was requested to be deleted from the account default: null </div>
     </div>  <!-- field-items -->
 
 
@@ -1929,7 +1974,7 @@ font-style: italic;
     <a class="up" href="#__Methods">Up</a>
     <pre class="get"><code class="huge"><span class="http-method">get</span> /user/cards/virtual/{businessId}</code></pre></div>
     <div class="method-summary">Get info about a virtual card (<span class="nickname">getVirtualCard</span>)</div>
-    <div class="method-notes">This endpoint is used to retrive details of a virtual card owned by the currently logged in user</div>
+    <div class="method-notes">This endpoint is used to retrieve details of a virtual card owned by the currently logged in user.</div>
 
     <h3 class="field-label">Path parameters</h3>
     <div class="field-items">
@@ -2028,6 +2073,7 @@ font-style: italic;
     <li><a href="#PostAccountEmailRequest"><code>PostAccountEmailRequest</code> - </a></li>
     <li><a href="#PostAccountPasswordRequest"><code>PostAccountPasswordRequest</code> - </a></li>
     <li><a href="#PostAccountRequest"><code>PostAccountRequest</code> - </a></li>
+    <li><a href="#PostAccountResponse"><code>PostAccountResponse</code> - </a></li>
     <li><a href="#PostAccountSessionRequest"><code>PostAccountSessionRequest</code> - </a></li>
     <li><a href="#PostAccountSessionResponse"><code>PostAccountSessionResponse</code> - </a></li>
     <li><a href="#PostBusinessAccountMenuImageResponse"><code>PostBusinessAccountMenuImageResponse</code> - </a></li>
@@ -2244,6 +2290,13 @@ font-style: italic;
     <div class="field-items">
       <div class="param">email (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  format: email</div>
 <div class="param">password (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  format: password</div>
+    </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="PostAccountResponse"><code>PostAccountResponse</code> - </a> <a class="up" href="#__Models">Up</a></h3>
+    <div class='model-description'></div>
+    <div class="field-items">
+      <div class="param">token (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
     </div>  <!-- field-items -->
   </div>
   <div class="model">

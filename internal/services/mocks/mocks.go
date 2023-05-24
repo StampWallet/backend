@@ -68,13 +68,12 @@ func (mr *MockTokenServiceMockRecorder) Create(arg0, arg1, arg2 interface{}) *go
 }
 
 // Invalidate mocks base method.
-func (m *MockTokenService) Invalidate(arg0 *database.Token) (*database.User, *database.Token, error) {
+func (m *MockTokenService) Invalidate(arg0 *database.Token) (*database.Token, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Invalidate", arg0)
-	ret0, _ := ret[0].(*database.User)
-	ret1, _ := ret[1].(*database.Token)
-	ret2, _ := ret[2].(error)
-	return ret0, ret1, ret2
+	ret0, _ := ret[0].(*database.Token)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // Invalidate indicates an expected call of Invalidate.
@@ -144,10 +143,10 @@ func (m *MockFileStorageService) EXPECT() *MockFileStorageServiceMockRecorder {
 }
 
 // CreateStub mocks base method.
-func (m *MockFileStorageService) CreateStub(arg0 *database.User) (database.FileMetadata, error) {
+func (m *MockFileStorageService) CreateStub(arg0 *database.User) (*database.FileMetadata, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateStub", arg0)
-	ret0, _ := ret[0].(database.FileMetadata)
+	ret0, _ := ret[0].(*database.FileMetadata)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -188,10 +187,10 @@ func (mr *MockFileStorageServiceMockRecorder) Remove(arg0 interface{}) *gomock.C
 }
 
 // Upload mocks base method.
-func (m *MockFileStorageService) Upload(arg0 database.FileMetadata, arg1 os.File, arg2 string) (string, error) {
+func (m *MockFileStorageService) Upload(arg0 database.FileMetadata, arg1 *os.File, arg2 string) (*database.FileMetadata, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Upload", arg0, arg1, arg2)
-	ret0, _ := ret[0].(string)
+	ret0, _ := ret[0].(*database.FileMetadata)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
