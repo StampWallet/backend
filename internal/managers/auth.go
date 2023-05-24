@@ -180,7 +180,7 @@ func (manager *AuthManagerImpl) Login(email string, password string) (*User, *To
 
 func (manager *AuthManagerImpl) Logout(tokenId string, tokenSecret string) (*User, *Token, error) {
 	// Find token
-	_, token, err := manager.tokenService.Check(tokenId, tokenSecret)
+	token, err := manager.tokenService.Check(tokenId, tokenSecret)
 	if err != nil {
 		manager.baseServices.Logger.Printf("tokenService.Check returned an error: %s", err)
 		return nil, nil, ErrInvalidToken
@@ -190,20 +190,20 @@ func (manager *AuthManagerImpl) Logout(tokenId string, tokenSecret string) (*Use
 	}
 
 	// Invalidate token
-	user, invalidatedToken, err := manager.tokenService.Invalidate(token)
+	invalidatedToken, err := manager.tokenService.Invalidate(token)
 	if err != nil {
 		manager.baseServices.Logger.Printf("tokenService.Invalidate returned an error: %s", err)
 		return nil, nil, ErrInvalidToken
 	}
-	return user, invalidatedToken, nil
+	return invalidatedToken.User, invalidatedToken, nil
 }
 
 func (manager *AuthManagerImpl) ConfirmEmail(tokenId string, tokenSecret string) (*User, error) {
 	tx := manager.baseServices.Database.Begin()
 
 	// Find email token
-	user, token, err := manager.tokenService.Check(tokenId, tokenSecret)
-	if err == UnknownToken {
+	token, err := manager.tokenService.Check(tokenId, tokenSecret)
+	if err == ErrUnknownToken {
 		tx.Rollback()
 		return nil, ErrInvalidToken
 	} else if err != nil {
@@ -222,15 +222,15 @@ func (manager *AuthManagerImpl) ConfirmEmail(tokenId string, tokenSecret string)
 	}
 
 	// Change email verification status
-	user.EmailVerified = true
-	txSave := tx.Save(user)
+	token.User.EmailVerified = true
+	txSave := tx.Save(token.User)
 	if err = txSave.GetError(); err != nil {
 		tx.Rollback()
 		return nil, err
 	}
 
 	// Invalidate token
-	user, token, err = manager.tokenService.Invalidate(token)
+	token, err = manager.tokenService.Invalidate(token)
 	if err != nil {
 		tx.Rollback()
 		return nil, err
@@ -241,7 +241,7 @@ func (manager *AuthManagerImpl) ConfirmEmail(tokenId string, tokenSecret string)
 		// TODO make sure that user cannot get locked up here if transaction fails and token is invalidated
 		return nil, err
 	}
-	return user, nil
+	return token.User, nil
 }
 
 func (manager *AuthManagerImpl) ChangePassword(user *User, oldPassword string, newPassword string) (*User, error) {

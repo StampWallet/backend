@@ -52,13 +52,13 @@ func (middleware *AuthMiddleware) Handle(c *gin.Context) {
 	}
 
 	// Call TokenService to make sure that the token is valid
-	user, token, err := middleware.tokenService.Check(token_split[0], token_split[1])
-	if err == services.UnknownToken {
+	token, err := middleware.tokenService.Check(token_split[0], token_split[1])
+	if err == services.ErrUnknownToken {
 		c.JSON(401, api.DefaultResponse{
 			Status: api.UNAUTHORIZED,
 		})
 		return
-	} else if err != nil || user == nil || token == nil {
+	} else if err != nil || token.User == nil || token == nil {
 		c.JSON(500, api.DefaultResponse{
 			Status: api.UNKNOWN_ERROR,
 		})
@@ -66,7 +66,7 @@ func (middleware *AuthMiddleware) Handle(c *gin.Context) {
 		return
 	}
 
-	c.Set("user", user)
+	c.Set("user", token.User)
 	c.Set("token", token)
 	c.Next()
 }
