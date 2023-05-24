@@ -20,7 +20,7 @@ func GetItemDefinitionManager(ctrl *gomock.Controller) *ItemDefinitionManagerImp
 	return &ItemDefinitionManagerImpl{
 		&BaseServices{
 			Logger:   log.Default(),
-			Database: GetDatabase(),
+			Database: GetTestDatabase(),
 		},
 		NewMockFileStorageService(ctrl),
 	}

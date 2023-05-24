@@ -92,9 +92,10 @@ func (entity *Token) GetUserId(_ GormDB) (uint, error) {
 
 type FileMetadata struct {
 	gorm.Model
-	PublicId string `gorm:"uniqueIndex;not null"`
-	OwnerId  uint   `gorm:"not null"`
-	Uploaded sql.NullTime
+	PublicId    string `gorm:"uniqueIndex;not null"`
+	OwnerId     uint   `gorm:"not null"`
+	ContentType sql.NullString
+	Uploaded    sql.NullTime
 
 	User *User `gorm:"foreignkey:OwnerId"`
 }
@@ -107,9 +108,9 @@ func (entity *FileMetadata) GetUserId(_ GormDB) (uint, error) {
 
 type User struct {
 	gorm.Model
-	PublicId      string `gorm:"uniqueIndex;not null"`
-	FirstName     string `gorm:"not null"`
-	LastName      string `gorm:"not null"`
+	PublicId string `gorm:"uniqueIndex;not null"`
+	//FirstName     string `gorm:"not null"`
+	//LastName      string `gorm:"not null"`
 	Email         string `gorm:"uniqueIndex;not null"`
 	PasswordHash  string `gorm:"not null"`
 	EmailVerified bool   `gorm:"default:false;not null"`

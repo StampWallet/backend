@@ -33,14 +33,14 @@ func MatchEntities(matcher interface{}, Obj interface{}) bool {
 			mtf := mt.Field(i)
 			of := o.FieldByName(mtf.Name)
 			mf := m.FieldByName(mtf.Name)
-			if (mf.Kind() == reflect.Pointer || mf.Kind() == reflect.Interface) && !mf.IsNil() && !of.Equal(mf.Elem()) {
-				return false
-			} else if (mf.Kind() == reflect.Array || mf.Kind() == reflect.Slice) && !reflect.DeepEqual(of, mf) {
-				return false
-			} else if mf.Kind() == reflect.Struct && !MatchEntities(of, mf) {
-				return false
-			} else if !of.Equal(mf) {
-				return false
+			if !of.Equal(mf) {
+				if (mf.Kind() == reflect.Pointer || mf.Kind() == reflect.Interface) && !mf.IsNil() && !of.Equal(mf.Elem()) {
+					return false
+				} else if (mf.Kind() == reflect.Array || mf.Kind() == reflect.Slice) && !reflect.DeepEqual(of, mf) {
+					return false
+				} else if mf.Kind() == reflect.Struct && !MatchEntities(of, mf) {
+					return false
+				}
 			}
 		}
 		return true
@@ -69,6 +69,17 @@ func (matcher TimeGreaterThanNow) Matches(x interface{}) bool {
 
 func (TimeGreaterThanNow) String() string {
 	return "TimeGreaterThanNow"
+}
+
+type TimeJustBeforeNow struct {
+}
+
+func (matcher TimeJustBeforeNow) Matches(x interface{}) bool {
+	return time.Now().After(x.(time.Time)) && time.Now().Add(-5*time.Minute).Before(x.(time.Time))
+}
+
+func (TimeJustBeforeNow) String() string {
+	return "TimeJustBeforeNow"
 }
 
 type Copyable interface {
@@ -154,4 +165,8 @@ func ExtractResponse[T any](w *httptest.ResponseRecorder) (*T, int, error) {
 	bodyPtr := new(T)
 	err := json.Unmarshal(bodyBytes, bodyPtr)
 	return bodyPtr, w.Code, err
+}
+
+func TimeJustAroundNow(x time.Time) bool {
+	return time.Now().After(x) && time.Now().Add(-5*time.Minute).Before(x)
 }

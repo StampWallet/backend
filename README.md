@@ -11,8 +11,7 @@ Requires [Go 1.20](https://go.dev/doc/install)
 ## Build
 
 1. Install [Go 1.20](https://go.dev/doc/install)
-2. `go generate -v ./...`
-3. `go build -v ./...`
+2. `make` or `make bin` to just build the binary and skip all tests
 
 ## Test
 
