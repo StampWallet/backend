@@ -123,7 +123,8 @@ func (service *TokenServiceImpl) Check(tokenId string, tokenSecret string) (*Tok
 func (service *TokenServiceImpl) Invalidate(token *Token) (*Token, error) {
 	// Invalidate token and update it in the database
 	token.Recalled = true
-	tx := service.baseServices.Database.Save(token)
+
+	tx := service.baseServices.Database.Preload("User").Save(token)
 	if err := tx.GetError(); err != nil {
 		return nil, fmt.Errorf("%s database failed to update token: %+v", CallerFilename(), err)
 	}

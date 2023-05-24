@@ -18,6 +18,8 @@ import (
 	. "github.com/StampWallet/backend/internal/testutils"
 )
 
+// cool experiment but i will never mock a database/orm ever again
+
 // Subset of database.User that allows to check if some keys match using StructMatcher
 // nil == ignore key
 type userMatcher struct {
@@ -457,19 +459,20 @@ func TestAuthManagerLogout(t *testing.T) {
 
 	user := getExampleUser()
 	token := getExampleUserLogin()
+	token.User = &user
 	manager.tokenService.(*MockTokenService).
 		EXPECT().
 		Check(token.TokenId, "test_hash").
-		Return(&user, &token, nil)
+		Return(&token, nil)
 
 	manager.tokenService.(*MockTokenService).
 		EXPECT().
 		Invalidate(&StructMatcher{tokenMatcher{
 			TokenId: Ptr(token.TokenId),
 		}}).
-		DoAndReturn(func(token *Token) (*User, *Token, error) {
+		DoAndReturn(func(token *Token) (*Token, error) {
 			token.Recalled = true
-			return &user, token, nil
+			return token, nil
 		})
 
 	logoutUser, logoutToken, err := manager.Logout(token.TokenId, "test_hash")
@@ -485,18 +488,47 @@ func TestAuthManagerLogoutInvalidPurpose(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	manager, _ := getAuthManager(ctrl)
 
-	user := getExampleUser()
+	getExampleUser()
 	token := getExampleUserLogin()
 	token.TokenPurpose = TokenPurposeEmail
 	manager.tokenService.(*MockTokenService).
 		EXPECT().
-		Check(token.TokenId, "test_hash").
-		Return(&user, &token, nil)
+		Check("test", "test_hah").
+		Return(nil, ErrUnknownToken)
 
-	logoutUser, logoutToken, err := manager.Logout(token.TokenId, "test_hash")
-	require.ErrorIs(t, err, ErrInvalidTokenPurpose)
-	require.Nil(t, logoutUser)
-	require.Nil(t, logoutToken)
+	logoutUser, logoutToken, err := manager.Logout("test", "test_hah")
+	if err != ErrInvalidToken {
+		t.Errorf("Logout did not return InvalidToken %s", err)
+	}
+	if logoutUser != nil {
+		t.Errorf("logoutUser is not nil")
+	}
+	if logoutToken != nil {
+		t.Errorf("logoutUser is not nil")
+	}
+}
+
+func TestAuthManagerInvalidLogoutValue(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	manager, _ := getAuthManager(ctrl)
+
+	//mockExampleUser(manager.baseServices.Database.(*MockGormDB))
+	manager.tokenService.(*MockTokenService).
+		EXPECT().
+		Check("test_invalid", "test_hash").
+		Return(nil, ErrUnknownToken)
+
+	logoutUser, logoutToken, err := manager.Logout("test_invalid", "test_hash")
+	if err != ErrInvalidToken {
+		t.Errorf("Logout did not return InvalidToken %s", err)
+	}
+	if logoutUser != nil {
+		t.Errorf("logoutUser is not nil")
+	}
+	if logoutToken != nil {
+		t.Errorf("logoutUser is not nil")
+	}
 }
 
 // Tests if AuthManagerImpl.ConfirmEmail works correctly on the happy path
@@ -508,15 +540,21 @@ func TestAuthManagerConfirmEmail(t *testing.T) {
 
 	user := getExampleUser()
 	token := createExampleToken("test_email", TokenPurposeEmail)
+	token.User = &user
 
 	mockBegin(db)
 
 	manager.tokenService.(*MockTokenService).
 		EXPECT().
 		Check("test_email", "test_hash").
-		Return(&user, &token, nil)
+		Return(&token, nil)
 
-	db.(*MockGormDB).
+	//db.(*MockGormDB).
+	//	EXPECT().
+	//	Invalidate(StructMatcher{&tokenMatcher{TokenId: Ptr("test_email")}}).
+	//	Return(&token, nil)
+
+	manager.baseServices.Database.(*MockGormDB).
 		EXPECT().
 		Save(&StructMatcher{userMatcher{
 			ID:            Ptr(user.ID),
@@ -527,7 +565,7 @@ func TestAuthManagerConfirmEmail(t *testing.T) {
 	manager.tokenService.(*MockTokenService).
 		EXPECT().
 		Invalidate(&StructMatcher{tokenMatcher{TokenId: Ptr("test_email")}}).
-		Return(&user, &token, nil)
+		Return(&token, nil)
 
 	mockCommit(db)
 
@@ -549,7 +587,7 @@ func TestAuthManagerConfirmEmailInvalidId(t *testing.T) {
 	manager.tokenService.(*MockTokenService).
 		EXPECT().
 		Check("invalid_id", "test_hash").
-		Return(nil, nil, ErrInvalidToken)
+		Return(nil, ErrInvalidToken)
 
 	mockRollback(db)
 
@@ -569,7 +607,7 @@ func TestAuthManagerConfirmEmailInvalidHash(t *testing.T) {
 	manager.tokenService.(*MockTokenService).
 		EXPECT().
 		Check("test_email", "invalid_hash").
-		Return(nil, nil, UnknownToken)
+		Return(nil, ErrUnknownToken)
 
 	mockRollback(db)
 

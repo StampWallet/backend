@@ -37,13 +37,12 @@ func (m *MockTokenService) EXPECT() *MockTokenServiceMockRecorder {
 }
 
 // Check mocks base method.
-func (m *MockTokenService) Check(arg0, arg1 string) (*database.User, *database.Token, error) {
+func (m *MockTokenService) Check(arg0, arg1 string) (*database.Token, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Check", arg0, arg1)
-	ret0, _ := ret[0].(*database.User)
-	ret1, _ := ret[1].(*database.Token)
-	ret2, _ := ret[2].(error)
-	return ret0, ret1, ret2
+	ret0, _ := ret[0].(*database.Token)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // Check indicates an expected call of Check.
@@ -69,13 +68,12 @@ func (mr *MockTokenServiceMockRecorder) Create(arg0, arg1, arg2 interface{}) *go
 }
 
 // Invalidate mocks base method.
-func (m *MockTokenService) Invalidate(arg0 *database.Token) (*database.User, *database.Token, error) {
+func (m *MockTokenService) Invalidate(arg0 *database.Token) (*database.Token, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Invalidate", arg0)
-	ret0, _ := ret[0].(*database.User)
-	ret1, _ := ret[1].(*database.Token)
-	ret2, _ := ret[2].(error)
-	return ret0, ret1, ret2
+	ret0, _ := ret[0].(*database.Token)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // Invalidate indicates an expected call of Invalidate.
