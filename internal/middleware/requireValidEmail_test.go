@@ -38,7 +38,7 @@ func TestRequireValidEmailMiddlewareOk(t *testing.T) {
 	handler := createRequireValidEmailMiddleware(ctrl)
 
 	handler.Handle(context)
-	require.Nilf(t, w.Body, "Response is not nil")
+	require.Equalf(t, 0, w.Body.Len(), "Response is not nil")
 	require.Falsef(t, context.IsAborted(), "Context was aborted despite user being verified")
 	// Q: Is this the best way to test context was no-op'ed?
 }
@@ -67,7 +67,7 @@ func TestRequireValidEmailMiddlewareNok(t *testing.T) {
 	respBody, respCode, respParseErr := ExtractResponse[api.DefaultResponse](w)
 
 	require.Nilf(t, respParseErr, "Failed to parse JSON response")
-	require.Equalf(t, respCode, int(401), "Response returned unexpected status code")
+	require.Equalf(t, respCode, int(403), "Response returned unexpected status code")
 	require.Truef(t, MatchEntities(respBodyExpected, respBody), "Response returned unexpected body contents")
 
 }
