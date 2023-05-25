@@ -9,12 +9,12 @@ import (
 	"gorm.io/gorm"
 )
 
-var InvalidCardType = errors.New("Invalid card type")
-var CardAlreadyExists = errors.New("Card already exists")
-var CardDoesNotExist = errors.New("Card does not exist")
+var ErrInvalidCardType = errors.New("Invalid card type")
+var ErrCardAlreadyExists = errors.New("Card already exists")
+var ErrCardDoesNotExist = errors.New("Card does not exist")
 
 type LocalCardManager interface {
-	Create(user *User, details *LocalCardDetails) (LocalCard, error)
+	Create(user *User, details LocalCardDetails) (LocalCard, error)
 	Remove(card *LocalCard) error
 }
 
@@ -28,7 +28,7 @@ type LocalCardManagerImpl struct {
 	baseServices *BaseServices
 }
 
-func (manager *LocalCardManagerImpl) Create(user *User, details *LocalCardDetails) (*LocalCard, error) {
+func (manager *LocalCardManagerImpl) Create(user *User, details LocalCardDetails) (*LocalCard, error) {
 	var cardType CardType
 	for _, t := range CardTypes {
 		if t.PublicId == details.Type {
@@ -37,7 +37,7 @@ func (manager *LocalCardManagerImpl) Create(user *User, details *LocalCardDetail
 		}
 	}
 	if cardType == (CardType{}) {
-		return nil, InvalidCardType
+		return nil, ErrInvalidCardType
 	}
 
 	//TODO verify code
@@ -50,7 +50,7 @@ func (manager *LocalCardManagerImpl) Create(user *User, details *LocalCardDetail
 	})
 	err := tx.GetError()
 	if err == nil {
-		return nil, CardAlreadyExists
+		return nil, ErrCardAlreadyExists
 	} else if err != gorm.ErrRecordNotFound {
 		return nil, err
 	}
@@ -73,7 +73,7 @@ func (manager *LocalCardManagerImpl) Remove(card *LocalCard) error {
 	tx := manager.baseServices.Database.Delete(card)
 	err := tx.GetError()
 	if err == gorm.ErrRecordNotFound || tx.GetRowsAffected() == 0 {
-		return CardDoesNotExist
+		return ErrCardDoesNotExist
 	} else if err != nil {
 		return err
 	}

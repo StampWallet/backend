@@ -619,12 +619,12 @@ paths:
               $ref: '#/components/schemas/PostUserLocalCardsRequest'
         required: true
       responses:
-        '200':
+        '201':
           description: Successful operation
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DefaultResponse'
+                $ref: '#/components/schemas/PostUserLocalCardsResponse'
         '400':
           description: Invalid request
           content:
@@ -1387,13 +1387,27 @@ components:
           type: string
           example: 1234567890
           x-go-custom-tag: binding:"required"
+    PostUserLocalCardsResponse:
+      type: object
+      properties:
+        publicId: 
+          type: string
+          example: "VmlpOW9OZ2llUGl1Cg"
+          x-go-custom-tag: binding:"required"
     GetUserLocalCardTypesResponse:
       type: object
       properties:
         types: 
           type: array
           items:
-            type: string  #TODO change to user card types
+            type: object 
+            properties:
+              publicId: 
+                type: string
+              name: 
+                type: string
+              code: 
+                type: string
     GetUserVirtualCardResponse:
       type: object
       properties:

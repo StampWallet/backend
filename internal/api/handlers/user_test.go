@@ -478,7 +478,7 @@ func TestUserLocalCardHandlersPostCardOk(t *testing.T) {
 			gomock.Eq(testCardDetails),
 		).
 		Return(
-			testCard,
+			*testCard,
 			nil,
 		)
 
@@ -506,6 +506,7 @@ func TestUserLocalCardHandlersDeleteCardOk(t *testing.T) {
 		SetMethod("DELETE").
 		SetHeader("Content-Type", "application/json").
 		SetDefaultToken().
+		SetParam("cardId", testCard.PublicId).
 		Context
 
 	respBodyExpected := &api.DefaultResponse{Status: api.OK}
@@ -518,7 +519,7 @@ func TestUserLocalCardHandlersDeleteCardOk(t *testing.T) {
 		EXPECT().
 		Get(
 			gomock.Eq(testUser),
-			gomock.Eq(database.LocalCard{PublicId: testCard.PublicId}),
+			gomock.Eq(&database.LocalCard{PublicId: testCard.PublicId}),
 		).
 		Return(
 			testCard,

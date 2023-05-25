@@ -31,7 +31,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**DefaultResponse**](DefaultResponse.md)
+[**PostUserLocalCardsResponse**](PostUserLocalCardsResponse.md)
 
 ### Authorization
 

@@ -646,7 +646,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DefaultResponse'
+                $ref: '#/components/schemas/PostUserLocalCardsResponse'
           description: Successful operation
         "400":
           content:
@@ -1505,15 +1505,28 @@ components:
           type: string
           x-go-custom-tag: binding:"required"
       type: object
+    PostUserLocalCardsResponse:
+      example:
+        publicId: VmlpOW9OZ2llUGl1Cg
+      properties:
+        publicId:
+          example: VmlpOW9OZ2llUGl1Cg
+          type: string
+          x-go-custom-tag: binding:"required"
+      type: object
     GetUserLocalCardTypesResponse:
       example:
         types:
-        - types
-        - types
+        - code: code
+          name: name
+          publicId: publicId
+        - code: code
+          name: name
+          publicId: publicId
       properties:
         types:
           items:
-            type: string
+            $ref: '#/components/schemas/GetUserLocalCardTypesResponse_types_inner'
           type: array
       type: object
     GetUserVirtualCardResponse:
@@ -1788,6 +1801,19 @@ components:
           type: string
       type: object
       example: null
+    GetUserLocalCardTypesResponse_types_inner:
+      example:
+        code: code
+        name: name
+        publicId: publicId
+      properties:
+        publicId:
+          type: string
+        name:
+          type: string
+        code:
+          type: string
+      type: object
   securitySchemes:
     sessionToken:
       bearerFormat: "Just the token string received from the API. In reality consists\

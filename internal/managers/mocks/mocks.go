@@ -305,7 +305,7 @@ func (m *MockLocalCardManager) EXPECT() *MockLocalCardManagerMockRecorder {
 }
 
 // Create mocks base method.
-func (m *MockLocalCardManager) Create(arg0 *database.User, arg1 *managers.LocalCardDetails) (database.LocalCard, error) {
+func (m *MockLocalCardManager) Create(arg0 *database.User, arg1 managers.LocalCardDetails) (database.LocalCard, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Create", arg0, arg1)
 	ret0, _ := ret[0].(database.LocalCard)

@@ -34,7 +34,7 @@ func (r ApiAddLocalCardsRequest) PostUserLocalCardsRequest(postUserLocalCardsReq
 	return r
 }
 
-func (r ApiAddLocalCardsRequest) Execute() (*DefaultResponse, *http.Response, error) {
+func (r ApiAddLocalCardsRequest) Execute() (*PostUserLocalCardsResponse, *http.Response, error) {
 	return r.ApiService.AddLocalCardsExecute(r)
 }
 
@@ -55,13 +55,13 @@ func (a *LocalCardsApiService) AddLocalCards(ctx context.Context) ApiAddLocalCar
 
 // Execute executes the request
 //
-//	@return DefaultResponse
-func (a *LocalCardsApiService) AddLocalCardsExecute(r ApiAddLocalCardsRequest) (*DefaultResponse, *http.Response, error) {
+//	@return PostUserLocalCardsResponse
+func (a *LocalCardsApiService) AddLocalCardsExecute(r ApiAddLocalCardsRequest) (*PostUserLocalCardsResponse, *http.Response, error) {
 	var (
 		localVarHTTPMethod  = http.MethodPost
 		localVarPostBody    interface{}
 		formFiles           []formFile
-		localVarReturnValue *DefaultResponse
+		localVarReturnValue *PostUserLocalCardsResponse
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "LocalCardsApiService.AddLocalCards")

@@ -11,5 +11,5 @@
 package api
 
 type GetUserLocalCardTypesResponse struct {
-	Types []string `json:"types,omitempty"`
+	Types []GetUserLocalCardTypesResponseTypesInner `json:"types,omitempty"`
 }

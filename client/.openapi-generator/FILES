@@ -16,6 +16,7 @@ docs/GetBusinessTransactionResponse.md
 docs/GetUserBusinessesSearchResponse.md
 docs/GetUserCardsResponse.md
 docs/GetUserLocalCardTypesResponse.md
+docs/GetUserLocalCardTypesResponseTypesInner.md
 docs/GetUserVirtualCardResponse.md
 docs/GetUserVirtualCardTransactionResponse.md
 docs/ItemActionAPIModel.md
@@ -41,6 +42,7 @@ docs/PostBusinessItemDefinitionRequest.md
 docs/PostBusinessItemDefinitionResponse.md
 docs/PostBusinessTransactionRequest.md
 docs/PostUserLocalCardsRequest.md
+docs/PostUserLocalCardsResponse.md
 docs/PostUserVirtualCardItemResponse.md
 docs/PostUserVirtualCardTransactionRequest.md
 docs/PostUserVirtualCardTransactionResponse.md

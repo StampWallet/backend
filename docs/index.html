@@ -1241,7 +1241,7 @@ font-style: italic;
 
     <h3 class="field-label">Return type</h3>
     <div class="return-type">
-      <a href="#DefaultResponse">DefaultResponse</a>
+      <a href="#PostUserLocalCardsResponse">PostUserLocalCardsResponse</a>
       
     </div>
 
@@ -1250,7 +1250,7 @@ font-style: italic;
     <h3 class="field-label">Example data</h3>
     <div class="example-data-content-type">Content-Type: application/json</div>
     <pre class="example"><code>{
-  "message" : "message"
+  "publicId" : "VmlpOW9OZ2llUGl1Cg"
 }</code></pre>
 
     <h3 class="field-label">Produces</h3>
@@ -1263,7 +1263,7 @@ font-style: italic;
     <h3 class="field-label">Responses</h3>
     <h4 class="field-label">200</h4>
     Successful operation
-        <a href="#DefaultResponse">DefaultResponse</a>
+        <a href="#PostUserLocalCardsResponse">PostUserLocalCardsResponse</a>
     <h4 class="field-label">400</h4>
     Invalid request
         <a href="#DefaultResponse">DefaultResponse</a>
@@ -1342,7 +1342,15 @@ font-style: italic;
     <h3 class="field-label">Example data</h3>
     <div class="example-data-content-type">Content-Type: application/json</div>
     <pre class="example"><code>{
-  "types" : [ "types", "types" ]
+  "types" : [ {
+    "code" : "code",
+    "name" : "name",
+    "publicId" : "publicId"
+  }, {
+    "code" : "code",
+    "name" : "name",
+    "publicId" : "publicId"
+  } ]
 }</code></pre>
 
     <h3 class="field-label">Produces</h3>
@@ -2059,6 +2067,7 @@ font-style: italic;
     <li><a href="#GetUserBusinessesSearchResponse"><code>GetUserBusinessesSearchResponse</code> - </a></li>
     <li><a href="#GetUserCardsResponse"><code>GetUserCardsResponse</code> - </a></li>
     <li><a href="#GetUserLocalCardTypesResponse"><code>GetUserLocalCardTypesResponse</code> - </a></li>
+    <li><a href="#GetUserLocalCardTypesResponse_types_inner"><code>GetUserLocalCardTypesResponse_types_inner</code> - </a></li>
     <li><a href="#GetUserVirtualCardResponse"><code>GetUserVirtualCardResponse</code> - </a></li>
     <li><a href="#GetUserVirtualCardTransactionResponse"><code>GetUserVirtualCardTransactionResponse</code> - </a></li>
     <li><a href="#ItemActionAPIModel"><code>ItemActionAPIModel</code> - </a></li>
@@ -2082,6 +2091,7 @@ font-style: italic;
     <li><a href="#PostBusinessItemDefinitionResponse"><code>PostBusinessItemDefinitionResponse</code> - </a></li>
     <li><a href="#PostBusinessTransactionRequest"><code>PostBusinessTransactionRequest</code> - </a></li>
     <li><a href="#PostUserLocalCardsRequest"><code>PostUserLocalCardsRequest</code> - </a></li>
+    <li><a href="#PostUserLocalCardsResponse"><code>PostUserLocalCardsResponse</code> - </a></li>
     <li><a href="#PostUserVirtualCardItemResponse"><code>PostUserVirtualCardItemResponse</code> - </a></li>
     <li><a href="#PostUserVirtualCardTransactionRequest"><code>PostUserVirtualCardTransactionRequest</code> - </a></li>
     <li><a href="#PostUserVirtualCardTransactionResponse"><code>PostUserVirtualCardTransactionResponse</code> - </a></li>
@@ -2170,7 +2180,16 @@ font-style: italic;
     <h3><a name="GetUserLocalCardTypesResponse"><code>GetUserLocalCardTypesResponse</code> - </a> <a class="up" href="#__Models">Up</a></h3>
     <div class='model-description'></div>
     <div class="field-items">
-      <div class="param">types (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">array[String]</a></span>  </div>
+      <div class="param">types (optional)</div><div class="param-desc"><span class="param-type"><a href="#GetUserLocalCardTypesResponse_types_inner">array[GetUserLocalCardTypesResponse_types_inner]</a></span>  </div>
+    </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="GetUserLocalCardTypesResponse_types_inner"><code>GetUserLocalCardTypesResponse_types_inner</code> - </a> <a class="up" href="#__Models">Up</a></h3>
+    <div class='model-description'></div>
+    <div class="field-items">
+      <div class="param">publicId (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">name (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">code (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
     </div>  <!-- field-items -->
   </div>
   <div class="model">
@@ -2379,6 +2398,13 @@ font-style: italic;
       <div class="param">name (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
 <div class="param">type (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
 <div class="param">code (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+    </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="PostUserLocalCardsResponse"><code>PostUserLocalCardsResponse</code> - </a> <a class="up" href="#__Models">Up</a></h3>
+    <div class='model-description'></div>
+    <div class="field-items">
+      <div class="param">publicId (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
     </div>  <!-- field-items -->
   </div>
   <div class="model">
