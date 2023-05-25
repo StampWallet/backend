@@ -10,6 +10,10 @@
 
 package api
 
-type GetUserLocalCardTypesResponse struct {
-	Types []GetUserLocalCardTypesResponseTypesInner `json:"types,omitempty"`
+type GetUserLocalCardTypesResponseTypesInner struct {
+	PublicId string `json:"publicId,omitempty"`
+
+	Name string `json:"name,omitempty"`
+
+	Code string `json:"code,omitempty"`
 }

@@ -48,14 +48,20 @@ type VirtualCardManager interface {
 }
 
 type VirtualCardManagerImpl struct {
-	baseServices *BaseServices
+	baseServices BaseServices
 }
 
-func (manager *VirtualCardManagerImpl) Create(user User, business Business) (*VirtualCard, error) {
+func CreateVirtualCardManagerImpl(baseServices BaseServices) *VirtualCardManagerImpl {
+	return &VirtualCardManagerImpl{
+		baseServices: baseServices,
+	}
+}
+
+func (manager *VirtualCardManagerImpl) Create(user *User, business *Business) (*VirtualCard, error) {
 	var virtualCard VirtualCard
 	err := manager.baseServices.Database.Transaction(func(tx GormDB) error {
 		// Checks if user already has this virtual card
-		result := tx.First(&virtualCard, VirtualCard{User: &user, Business: &business})
+		result := tx.First(&virtualCard, VirtualCard{User: user, Business: business})
 		err := result.GetError()
 		if err != gorm.ErrRecordNotFound && err != nil {
 			return fmt.Errorf("tx.First returned an error: %+v", err)
@@ -67,8 +73,8 @@ func (manager *VirtualCardManagerImpl) Create(user User, business Business) (*Vi
 		virtualCard = VirtualCard{
 			PublicId: shortuuid.New(),
 			Points:   0,
-			User:     &user,
-			Business: &business,
+			User:     user,
+			Business: business,
 		}
 
 		result = tx.Create(&virtualCard)

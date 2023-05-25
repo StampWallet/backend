@@ -15,7 +15,7 @@ import (
 
 func GetLocalCardManager(ctrl *gomock.Controller) *LocalCardManagerImpl {
 	return &LocalCardManagerImpl{
-		&BaseServices{
+		BaseServices{
 			Logger:   log.Default(),
 			Database: GetTestDatabase(),
 		},
@@ -27,7 +27,7 @@ func TestLocalCardManagerCreate(t *testing.T) {
 	defer ctrl.Finish()
 	manager := GetLocalCardManager(ctrl)
 	user := GetTestUser(manager.baseServices.Database)
-	localCard, err := manager.Create(user, &LocalCardDetails{
+	localCard, err := manager.Create(user, LocalCardDetails{
 		Type: "test",
 		Code: "012345678901",
 	})
@@ -49,11 +49,11 @@ func TestLocalCardManagerCreate(t *testing.T) {
 	require.Equalf(t, "test", dbLocalCard.Type, "database has invalid card type")
 	require.Equalf(t, "012345678901", dbLocalCard.Code, "database has invalid card number")
 
-	_, repeatedErr := manager.Create(user, &LocalCardDetails{
+	_, repeatedErr := manager.Create(user, LocalCardDetails{
 		Type: "test",
 		Code: "012345678901",
 	})
-	require.Equalf(t, CardAlreadyExists, repeatedErr, "repeated create did not return CardAlreadyExists error")
+	require.Equalf(t, ErrCardAlreadyExists, repeatedErr, "repeated create did not return CardAlreadyExists error")
 }
 
 func TestLocalCardManagerCreateInvalidType(t *testing.T) {
@@ -61,12 +61,12 @@ func TestLocalCardManagerCreateInvalidType(t *testing.T) {
 	defer ctrl.Finish()
 	manager := GetLocalCardManager(ctrl)
 	user := GetTestUser(manager.baseServices.Database)
-	localCard, err := manager.Create(user, &LocalCardDetails{
+	localCard, err := manager.Create(user, LocalCardDetails{
 		Type: "invalid type lol",
 		Code: "012345678901",
 	})
 
-	require.Equalf(t, InvalidCardType, err, "LocalCard.Create did not return a InvalidCardType error %w", err)
+	require.Equalf(t, ErrInvalidCardType, err, "LocalCard.Create did not return a InvalidCardType error %w", err)
 	require.Nilf(t, localCard, "LocalCard.Create did not return nil LocalCard")
 }
 
@@ -87,5 +87,5 @@ func TestLocalCardManagerRemove(t *testing.T) {
 	require.Equalf(t, 0, len(dbLocalCard), "database find returned data when no data was expected")
 
 	nErr := manager.Remove(localCard)
-	require.Equalf(t, CardDoesNotExist, nErr, "LocalCard.Remove did not return a CardDoesNotExist %w", err)
+	require.Equalf(t, ErrCardDoesNotExist, nErr, "LocalCard.Remove did not return a CardDoesNotExist %w", err)
 }

@@ -18,7 +18,7 @@ import (
 
 func GetItemDefinitionManager(ctrl *gomock.Controller) *ItemDefinitionManagerImpl {
 	return &ItemDefinitionManagerImpl{
-		&BaseServices{
+		BaseServices{
 			Logger:   log.Default(),
 			Database: GetTestDatabase(),
 		},

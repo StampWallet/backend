@@ -160,6 +160,11 @@ func (tc *TestContextBuilder) SetBody(jsonBytes []byte) *TestContextBuilder {
 	return tc
 }
 
+func (tc *TestContextBuilder) SetParam(key string, value string) *TestContextBuilder {
+	tc.Context.AddParam(key, value)
+	return tc
+}
+
 func ExtractResponse[T any](w *httptest.ResponseRecorder) (*T, int, error) {
 	bodyBytes := w.Body.Bytes()
 	bodyPtr := new(T)

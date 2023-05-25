@@ -429,7 +429,7 @@ paths:
         - itemDefinitions
       summary: Update an exiting item definition
       description: This endpoint is used to change details of existing item definitions (benefits).
-      operationId: UpdateItemDefinition
+      operationId: updateItemDefinition
       parameters:
         - in: path
           name: definitionId
@@ -475,7 +475,7 @@ paths:
         - itemDefinitions
       summary: Delete an exiting item definition
       description: This endpoint is used to delete existing item definitions (benefits).
-      operationId: DeleteItemDefinition
+      operationId: deleteItemDefinition
       parameters:
         - in: path
           name: definitionId
@@ -516,7 +516,7 @@ paths:
         - transactions
       summary: Get info about a started transaction
       description: This endpoint is used in the second step of transaction processing, the app should use it to retrieve details about a transaction started by a user, after scanning user's transaction code.
-      operationId: GetTransactionDetails
+      operationId: getTransactionDetails
       parameters:
         - in: path
           name: transactionCode
@@ -546,7 +546,7 @@ paths:
         - transactions
       summary: Finish a transaction
       description: This endpoint is used in the third step of transaction processing, the app should use it to update transaction details with data about points added to user's account and actions that were taken on items included in the transaction.
-      operationId: FinishTransaction
+      operationId: finishTransaction
       parameters:
         - in: path
           name: transactionCode
@@ -595,7 +595,7 @@ paths:
         - cards 
       summary: Get list of user's cards
       description: This endpoint is used to retrieve a list of currently logged in user's cards.
-      operationId: GetUserCards
+      operationId: getUserCards
       responses:
         '200':
           description: Successful operation
@@ -611,7 +611,7 @@ paths:
         - localCards 
       summary: Add a new local card
       description: This endpoint is used to add a new local card to user's account.
-      operationId: AddLocalCards
+      operationId: createLocalCard
       requestBody:
         content:
           application/json:
@@ -619,12 +619,12 @@ paths:
               $ref: '#/components/schemas/PostUserLocalCardsRequest'
         required: true
       responses:
-        '200':
+        '201':
           description: Successful operation
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DefaultResponse'
+                $ref: '#/components/schemas/PostUserLocalCardsResponse'
         '400':
           description: Invalid request
           content:
@@ -641,7 +641,7 @@ paths:
         - localCards 
       summary: Get list of local card types
       description: This endpoint is used to get a list of supported local card types.
-      operationId: GetLocalCardTypes
+      operationId: getLocalCardTypes
       responses:
         '200':
           description: Successful operation
@@ -657,7 +657,7 @@ paths:
         - localCards 
       summary: Delete a local card
       description: This endpoint is used to delete a local card from account of the currently logged in user.
-      operationId: DeleteLocalCard
+      operationId: deleteLocalCard
       parameters:
         - in: path
           name: cardId
@@ -691,7 +691,7 @@ paths:
         - virtualCards
       summary: Add a new virtual card
       description: This endpoint is used to register a new virtual card to the account of the currently logged in user.
-      operationId: AddVirtualCard
+      operationId: createVirtualCard
       parameters:
         - in: path
           name: businessId
@@ -731,7 +731,7 @@ paths:
         - virtualCards
       summary: Delete a virtual card
       description: This endpoint is used to delete a virtual card from the account of the currently logged in user.
-      operationId: DeleteVirtualCard
+      operationId: deleteVirtualCard
       parameters:
         - in: path
           name: businessId
@@ -763,7 +763,7 @@ paths:
         - virtualCards
       summary: Get info about a virtual card
       description: This endpoint is used to retrieve details of a virtual card owned by the currently logged in user.
-      operationId: GetVirtualCard
+      operationId: getVirtualCard
       parameters:
         - in: path
           name: businessId
@@ -796,7 +796,7 @@ paths:
         - virtualCards
       summary: Buy an item
       description: This endpoint is used to buy an item for points from the virtual card.
-      operationId: BuyItem
+      operationId: buyItem
       parameters:
         - in: path
           name: businessId
@@ -834,7 +834,7 @@ paths:
         - virtualCards
       summary: Delete an item
       description: This endpoint is used to return an item, and get back points that were spent on that item.
-      operationId: DeleteItem
+      operationId: deleteItem
       parameters:
         - in: path
           name: businessId
@@ -875,7 +875,7 @@ paths:
         - transaction
       summary: Start a transaction 
       description: This endpoint is used in the first step of transaction processing, the app should use it to start a transaction optionally providing items to be exchanged.
-      operationId: StartTransaction
+      operationId: startTransaction
       parameters:
         - in: path
           name: businessId
@@ -920,7 +920,7 @@ paths:
         - transaction
       summary: Get info about a transaction
       description: This endpoint is used in the last step of transaction processing, it's used to check the status of the transaction.
-      operationId: GetTransactionStatus
+      operationId: getTransactionStatus
       parameters:
         - in: path
           name: businessId
@@ -958,7 +958,7 @@ paths:
         - user
       summary: Search businesses
       description: This endpoint is used to search businesses that match the provided text query or are close to a specified point.
-      operationId: SearchBusinesses
+      operationId: searchBusinesses
       parameters:
         - in: query
           name: text
@@ -1003,7 +1003,7 @@ paths:
         - file
       summary: Get file
       description: This endpoint is used to download files by ID.
-      operationId: GetFile
+      operationId: getFile
       parameters:
         - in: path
           name: fileId
@@ -1038,7 +1038,7 @@ paths:
         - file
       summary: Upload file
       description: This endpoint is used to upload files.
-      operationId: UploadFile
+      operationId: uploadFile
       parameters:
         - in: path
           name: fileId
@@ -1088,7 +1088,7 @@ paths:
         - file
       summary: Delete a file
       description: This endpoint is used to delete files.
-      operationId: Delete file
+      operationId: deleteFile
       parameters:
         - in: path
           name: fileId
@@ -1387,13 +1387,27 @@ components:
           type: string
           example: 1234567890
           x-go-custom-tag: binding:"required"
+    PostUserLocalCardsResponse:
+      type: object
+      properties:
+        publicId: 
+          type: string
+          example: "VmlpOW9OZ2llUGl1Cg"
+          x-go-custom-tag: binding:"required"
     GetUserLocalCardTypesResponse:
       type: object
       properties:
         types: 
           type: array
           items:
-            type: string  #TODO change to user card types
+            type: object 
+            properties:
+              publicId: 
+                type: string
+              name: 
+                type: string
+              code: 
+                type: string
     GetUserVirtualCardResponse:
       type: object
       properties:

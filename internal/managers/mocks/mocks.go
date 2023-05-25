@@ -184,7 +184,7 @@ func (mr *MockBusinessManagerMockRecorder) Create(arg0, arg1 interface{}) *gomoc
 }
 
 // Search mocks base method.
-func (m *MockBusinessManager) Search(arg0, arg1 *string, arg2, arg3, arg4 uint) ([]database.Business, error) {
+func (m *MockBusinessManager) Search(arg0 *string, arg1 *database.GPSCoordinates, arg2, arg3, arg4 uint) ([]database.Business, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Search", arg0, arg1, arg2, arg3, arg4)
 	ret0, _ := ret[0].([]database.Business)
@@ -305,10 +305,10 @@ func (m *MockLocalCardManager) EXPECT() *MockLocalCardManagerMockRecorder {
 }
 
 // Create mocks base method.
-func (m *MockLocalCardManager) Create(arg0 *database.User, arg1 *managers.LocalCardDetails) (database.LocalCard, error) {
+func (m *MockLocalCardManager) Create(arg0 *database.User, arg1 managers.LocalCardDetails) (*database.LocalCard, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Create", arg0, arg1)
-	ret0, _ := ret[0].(database.LocalCard)
+	ret0, _ := ret[0].(*database.LocalCard)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

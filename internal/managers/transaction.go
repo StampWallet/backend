@@ -21,13 +21,19 @@ type TransactionManager interface {
 }
 
 type TransactionManagerImpl struct {
-	baseServices *BaseServices
+	baseServices BaseServices
+}
+
+func CreateTransactionManagerImpl(baseServices BaseServices) *TransactionManagerImpl {
+	return &TransactionManagerImpl{
+		baseServices: baseServices,
+	}
 }
 
 func (manager *TransactionManagerImpl) Start(card *VirtualCard, items []OwnedItem) (*Transaction, error) {
 	return nil, nil
 }
 
-func (manager *TransactionManagerImpl) Finalize(transaction *Transaction, items []ItemWithAction, points uint) (*Transaction, error) {
+func (manager *TransactionManagerImpl) Finalize(transaction *Transaction, items []ItemWithAction, points uint64) (*Transaction, error) {
 	return nil, nil
 }

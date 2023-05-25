@@ -120,7 +120,7 @@ Class | Method | HTTP request | Description
 *ItemDefinitionsApi* | [**deleteItemDefinition**](docs/ItemDefinitionsApi.md#deleteitemdefinition) | **DELETE** /business/itemDefinitions/{definitionId} | Delete an exiting item definition
 *ItemDefinitionsApi* | [**getItemDefinitions**](docs/ItemDefinitionsApi.md#getitemdefinitions) | **GET** /business/itemDefinitions | Get list of item definitions
 *ItemDefinitionsApi* | [**updateItemDefinition**](docs/ItemDefinitionsApi.md#updateitemdefinition) | **PATCH** /business/itemDefinitions/{definitionId} | Update an exiting item definition
-*LocalCardsApi* | [**addLocalCards**](docs/LocalCardsApi.md#addlocalcards) | **POST** /user/cards/local | Add a new local card
+*LocalCardsApi* | [**createLocalCard**](docs/LocalCardsApi.md#createlocalcard) | **POST** /user/cards/local | Add a new local card
 *LocalCardsApi* | [**deleteLocalCard**](docs/LocalCardsApi.md#deletelocalcard) | **DELETE** /user/cards/local/{cardId} | Delete a local card
 *LocalCardsApi* | [**getLocalCardTypes**](docs/LocalCardsApi.md#getlocalcardtypes) | **GET** /user/cards/local/types | Get list of local card types
 *SessionsApi* | [**login**](docs/SessionsApi.md#login) | **POST** /auth/sessions | Login
@@ -130,8 +130,8 @@ Class | Method | HTTP request | Description
 *TransactionsApi* | [**finishTransaction**](docs/TransactionsApi.md#finishtransaction) | **POST** /business/transactions/{transactionCode} | Finish a transaction
 *TransactionsApi* | [**getTransactionDetails**](docs/TransactionsApi.md#gettransactiondetails) | **GET** /business/transactions/{transactionCode} | Get info about a started transaction
 *UserApi* | [**searchBusinesses**](docs/UserApi.md#searchbusinesses) | **GET** /user/businesses | Search businesses
-*VirtualCardsApi* | [**addVirtualCard**](docs/VirtualCardsApi.md#addvirtualcard) | **POST** /user/cards/virtual/{businessId} | Add a new virtual card
 *VirtualCardsApi* | [**buyItem**](docs/VirtualCardsApi.md#buyitem) | **POST** /user/cards/virtual/{businessId}/items/{itemDefinitionId} | Buy an item
+*VirtualCardsApi* | [**createVirtualCard**](docs/VirtualCardsApi.md#createvirtualcard) | **POST** /user/cards/virtual/{businessId} | Add a new virtual card
 *VirtualCardsApi* | [**deleteItem**](docs/VirtualCardsApi.md#deleteitem) | **DELETE** /user/cards/virtual/{businessId}/items/{itemId} | Delete an item
 *VirtualCardsApi* | [**deleteVirtualCard**](docs/VirtualCardsApi.md#deletevirtualcard) | **DELETE** /user/cards/virtual/{businessId} | Delete a virtual card
 *VirtualCardsApi* | [**getVirtualCard**](docs/VirtualCardsApi.md#getvirtualcard) | **GET** /user/cards/virtual/{businessId} | Get info about a virtual card
@@ -148,6 +148,7 @@ Class | Method | HTTP request | Description
  - [GetUserBusinessesSearchResponse](docs/GetUserBusinessesSearchResponse.md)
  - [GetUserCardsResponse](docs/GetUserCardsResponse.md)
  - [GetUserLocalCardTypesResponse](docs/GetUserLocalCardTypesResponse.md)
+ - [GetUserLocalCardTypesResponseTypesInner](docs/GetUserLocalCardTypesResponseTypesInner.md)
  - [GetUserVirtualCardResponse](docs/GetUserVirtualCardResponse.md)
  - [GetUserVirtualCardTransactionResponse](docs/GetUserVirtualCardTransactionResponse.md)
  - [ItemActionAPIModel](docs/ItemActionAPIModel.md)
@@ -171,6 +172,7 @@ Class | Method | HTTP request | Description
  - [PostBusinessItemDefinitionResponse](docs/PostBusinessItemDefinitionResponse.md)
  - [PostBusinessTransactionRequest](docs/PostBusinessTransactionRequest.md)
  - [PostUserLocalCardsRequest](docs/PostUserLocalCardsRequest.md)
+ - [PostUserLocalCardsResponse](docs/PostUserLocalCardsResponse.md)
  - [PostUserVirtualCardItemResponse](docs/PostUserVirtualCardItemResponse.md)
  - [PostUserVirtualCardTransactionRequest](docs/PostUserVirtualCardTransactionRequest.md)
  - [PostUserVirtualCardTransactionResponse](docs/PostUserVirtualCardTransactionResponse.md)

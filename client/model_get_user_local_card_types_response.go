@@ -20,7 +20,7 @@ var _ MappedNullable = &GetUserLocalCardTypesResponse{}
 
 // GetUserLocalCardTypesResponse struct for GetUserLocalCardTypesResponse
 type GetUserLocalCardTypesResponse struct {
-	Types []string `json:"types,omitempty"`
+	Types []GetUserLocalCardTypesResponseTypesInner `json:"types,omitempty"`
 }
 
 // NewGetUserLocalCardTypesResponse instantiates a new GetUserLocalCardTypesResponse object
@@ -41,9 +41,9 @@ func NewGetUserLocalCardTypesResponseWithDefaults() *GetUserLocalCardTypesRespon
 }
 
 // GetTypes returns the Types field value if set, zero value otherwise.
-func (o *GetUserLocalCardTypesResponse) GetTypes() []string {
+func (o *GetUserLocalCardTypesResponse) GetTypes() []GetUserLocalCardTypesResponseTypesInner {
 	if o == nil || isNil(o.Types) {
-		var ret []string
+		var ret []GetUserLocalCardTypesResponseTypesInner
 		return ret
 	}
 	return o.Types
@@ -51,7 +51,7 @@ func (o *GetUserLocalCardTypesResponse) GetTypes() []string {
 
 // GetTypesOk returns a tuple with the Types field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *GetUserLocalCardTypesResponse) GetTypesOk() ([]string, bool) {
+func (o *GetUserLocalCardTypesResponse) GetTypesOk() ([]GetUserLocalCardTypesResponseTypesInner, bool) {
 	if o == nil || isNil(o.Types) {
 		return nil, false
 	}
@@ -67,8 +67,8 @@ func (o *GetUserLocalCardTypesResponse) HasTypes() bool {
 	return false
 }
 
-// SetTypes gets a reference to the given []string and assigns it to the Types field.
-func (o *GetUserLocalCardTypesResponse) SetTypes(v []string) {
+// SetTypes gets a reference to the given []GetUserLocalCardTypesResponseTypesInner and assigns it to the Types field.
+func (o *GetUserLocalCardTypesResponse) SetTypes(v []GetUserLocalCardTypesResponseTypesInner) {
 	o.Types = v
 }
 

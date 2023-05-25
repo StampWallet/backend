@@ -439,7 +439,7 @@ paths:
   /business/itemDefinitions/{definitionId}:
     delete:
       description: This endpoint is used to delete existing item definitions (benefits).
-      operationId: DeleteItemDefinition
+      operationId: deleteItemDefinition
       parameters:
       - description: Public id of the definition to update
         explode: false
@@ -482,7 +482,7 @@ paths:
     patch:
       description: This endpoint is used to change details of existing item definitions
         (benefits).
-      operationId: UpdateItemDefinition
+      operationId: updateItemDefinition
       parameters:
       - description: Public id of the definition to update
         explode: false
@@ -533,7 +533,7 @@ paths:
       description: "This endpoint is used in the second step of transaction processing,\
         \ the app should use it to retrieve details about a transaction started by\
         \ a user, after scanning user's transaction code."
-      operationId: GetTransactionDetails
+      operationId: getTransactionDetails
       parameters:
       - description: Transaction code (scanned or typed in)
         explode: false
@@ -568,7 +568,7 @@ paths:
         \ the app should use it to update transaction details with data about points\
         \ added to user's account and actions that were taken on items included in\
         \ the transaction."
-      operationId: FinishTransaction
+      operationId: finishTransaction
       parameters:
       - description: Transaction code (scanned or typed in)
         explode: false
@@ -618,7 +618,7 @@ paths:
     get:
       description: This endpoint is used to retrieve a list of currently logged in
         user's cards.
-      operationId: GetUserCards
+      operationId: getUserCards
       responses:
         "200":
           content:
@@ -634,7 +634,7 @@ paths:
   /user/cards/local:
     post:
       description: This endpoint is used to add a new local card to user's account.
-      operationId: AddLocalCards
+      operationId: createLocalCard
       requestBody:
         content:
           application/json:
@@ -642,11 +642,11 @@ paths:
               $ref: '#/components/schemas/PostUserLocalCardsRequest'
         required: true
       responses:
-        "200":
+        "201":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DefaultResponse'
+                $ref: '#/components/schemas/PostUserLocalCardsResponse'
           description: Successful operation
         "400":
           content:
@@ -664,7 +664,7 @@ paths:
   /user/cards/local/types:
     get:
       description: This endpoint is used to get a list of supported local card types.
-      operationId: GetLocalCardTypes
+      operationId: getLocalCardTypes
       responses:
         "200":
           content:
@@ -681,7 +681,7 @@ paths:
     delete:
       description: This endpoint is used to delete a local card from account of the
         currently logged in user.
-      operationId: DeleteLocalCard
+      operationId: deleteLocalCard
       parameters:
       - description: Public id of the card to delete
         explode: false
@@ -717,7 +717,7 @@ paths:
     delete:
       description: This endpoint is used to delete a virtual card from the account
         of the currently logged in user.
-      operationId: DeleteVirtualCard
+      operationId: deleteVirtualCard
       parameters:
       - description: Public ID of the business which card was requested to be deleted
           from the account
@@ -753,7 +753,7 @@ paths:
     get:
       description: This endpoint is used to retrieve details of a virtual card owned
         by the currently logged in user.
-      operationId: GetVirtualCard
+      operationId: getVirtualCard
       parameters:
       - description: Public ID of the business which card was requested
         explode: false
@@ -786,7 +786,7 @@ paths:
     post:
       description: This endpoint is used to register a new virtual card to the account
         of the currently logged in user.
-      operationId: AddVirtualCard
+      operationId: createVirtualCard
       parameters:
       - description: Public ID of the business which card was requested to be added
           by user
@@ -831,7 +831,7 @@ paths:
     post:
       description: This endpoint is used to buy an item for points from the virtual
         card.
-      operationId: BuyItem
+      operationId: buyItem
       parameters:
       - description: Public ID of the business which card was requested
         explode: false
@@ -873,7 +873,7 @@ paths:
     delete:
       description: "This endpoint is used to return an item, and get back points that\
         \ were spent on that item."
-      operationId: DeleteItem
+      operationId: deleteItem
       parameters:
       - description: Public ID of the business which card was requested
         explode: false
@@ -918,7 +918,7 @@ paths:
       description: "This endpoint is used in the first step of transaction processing,\
         \ the app should use it to start a transaction optionally providing items\
         \ to be exchanged."
-      operationId: StartTransaction
+      operationId: startTransaction
       parameters:
       - description: Public ID of the business which card was requested
         explode: false
@@ -966,7 +966,7 @@ paths:
     get:
       description: "This endpoint is used in the last step of transaction processing,\
         \ it's used to check the status of the transaction."
-      operationId: GetTransactionStatus
+      operationId: getTransactionStatus
       parameters:
       - description: Public ID of the business which card was requested
         explode: false
@@ -1008,7 +1008,7 @@ paths:
     get:
       description: This endpoint is used to search businesses that match the provided
         text query or are close to a specified point.
-      operationId: SearchBusinesses
+      operationId: searchBusinesses
       parameters:
       - description: Filter by business name
         explode: true
@@ -1058,7 +1058,7 @@ paths:
   /file/{fileId}:
     delete:
       description: This endpoint is used to delete files.
-      operationId: Delete file
+      operationId: deleteFile
       parameters:
       - description: ID of file to delete
         explode: false
@@ -1100,7 +1100,7 @@ paths:
       - file
     get:
       description: This endpoint is used to download files by ID.
-      operationId: GetFile
+      operationId: getFile
       parameters:
       - description: ID of file to download
         explode: false
@@ -1137,7 +1137,7 @@ paths:
       - file
     post:
       description: This endpoint is used to upload files.
-      operationId: UploadFile
+      operationId: uploadFile
       parameters:
       - description: ID of file to upload/replace
         explode: false
@@ -1505,15 +1505,28 @@ components:
           type: string
           x-go-custom-tag: binding:"required"
       type: object
+    PostUserLocalCardsResponse:
+      example:
+        publicId: VmlpOW9OZ2llUGl1Cg
+      properties:
+        publicId:
+          example: VmlpOW9OZ2llUGl1Cg
+          type: string
+          x-go-custom-tag: binding:"required"
+      type: object
     GetUserLocalCardTypesResponse:
       example:
         types:
-        - types
-        - types
+        - code: code
+          name: name
+          publicId: publicId
+        - code: code
+          name: name
+          publicId: publicId
       properties:
         types:
           items:
-            type: string
+            $ref: '#/components/schemas/GetUserLocalCardTypesResponse_types_inner'
           type: array
       type: object
     GetUserVirtualCardResponse:
@@ -1788,6 +1801,19 @@ components:
           type: string
       type: object
       example: null
+    GetUserLocalCardTypesResponse_types_inner:
+      example:
+        code: code
+        name: name
+        publicId: publicId
+      properties:
+        publicId:
+          type: string
+        name:
+          type: string
+        code:
+          type: string
+      type: object
   securitySchemes:
     sessionToken:
       bearerFormat: "Just the token string received from the API. In reality consists\

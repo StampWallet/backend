@@ -110,7 +110,7 @@ operation_parameters_minimum_occurrences["addItemDefinition:::PostBusinessItemDe
 operation_parameters_minimum_occurrences["deleteItemDefinition:::definitionId"]=1
 operation_parameters_minimum_occurrences["updateItemDefinition:::definitionId"]=1
 operation_parameters_minimum_occurrences["updateItemDefinition:::PatchBusinessItemDefinitionRequest"]=1
-operation_parameters_minimum_occurrences["addLocalCards:::PostUserLocalCardsRequest"]=1
+operation_parameters_minimum_occurrences["createLocalCard:::PostUserLocalCardsRequest"]=1
 operation_parameters_minimum_occurrences["deleteLocalCard:::cardId"]=1
 operation_parameters_minimum_occurrences["login:::PostAccountSessionRequest"]=1
 operation_parameters_minimum_occurrences["getTransactionStatus:::businessId"]=1
@@ -123,9 +123,9 @@ operation_parameters_minimum_occurrences["getTransactionDetails:::transactionCod
 operation_parameters_minimum_occurrences["searchBusinesses:::text"]=0
 operation_parameters_minimum_occurrences["searchBusinesses:::location"]=0
 operation_parameters_minimum_occurrences["searchBusinesses:::proximity"]=0
-operation_parameters_minimum_occurrences["addVirtualCard:::businessId"]=1
 operation_parameters_minimum_occurrences["buyItem:::businessId"]=1
 operation_parameters_minimum_occurrences["buyItem:::itemDefinitionId"]=1
+operation_parameters_minimum_occurrences["createVirtualCard:::businessId"]=1
 operation_parameters_minimum_occurrences["deleteItem:::businessId"]=1
 operation_parameters_minimum_occurrences["deleteItem:::itemId"]=1
 operation_parameters_minimum_occurrences["deleteVirtualCard:::businessId"]=1
@@ -153,7 +153,7 @@ operation_parameters_maximum_occurrences["addItemDefinition:::PostBusinessItemDe
 operation_parameters_maximum_occurrences["deleteItemDefinition:::definitionId"]=0
 operation_parameters_maximum_occurrences["updateItemDefinition:::definitionId"]=0
 operation_parameters_maximum_occurrences["updateItemDefinition:::PatchBusinessItemDefinitionRequest"]=0
-operation_parameters_maximum_occurrences["addLocalCards:::PostUserLocalCardsRequest"]=0
+operation_parameters_maximum_occurrences["createLocalCard:::PostUserLocalCardsRequest"]=0
 operation_parameters_maximum_occurrences["deleteLocalCard:::cardId"]=0
 operation_parameters_maximum_occurrences["login:::PostAccountSessionRequest"]=0
 operation_parameters_maximum_occurrences["getTransactionStatus:::businessId"]=0
@@ -166,9 +166,9 @@ operation_parameters_maximum_occurrences["getTransactionDetails:::transactionCod
 operation_parameters_maximum_occurrences["searchBusinesses:::text"]=0
 operation_parameters_maximum_occurrences["searchBusinesses:::location"]=0
 operation_parameters_maximum_occurrences["searchBusinesses:::proximity"]=0
-operation_parameters_maximum_occurrences["addVirtualCard:::businessId"]=0
 operation_parameters_maximum_occurrences["buyItem:::businessId"]=0
 operation_parameters_maximum_occurrences["buyItem:::itemDefinitionId"]=0
+operation_parameters_maximum_occurrences["createVirtualCard:::businessId"]=0
 operation_parameters_maximum_occurrences["deleteItem:::businessId"]=0
 operation_parameters_maximum_occurrences["deleteItem:::itemId"]=0
 operation_parameters_maximum_occurrences["deleteVirtualCard:::businessId"]=0
@@ -193,7 +193,7 @@ operation_parameters_collection_type["addItemDefinition:::PostBusinessItemDefini
 operation_parameters_collection_type["deleteItemDefinition:::definitionId"]=""
 operation_parameters_collection_type["updateItemDefinition:::definitionId"]=""
 operation_parameters_collection_type["updateItemDefinition:::PatchBusinessItemDefinitionRequest"]=""
-operation_parameters_collection_type["addLocalCards:::PostUserLocalCardsRequest"]=""
+operation_parameters_collection_type["createLocalCard:::PostUserLocalCardsRequest"]=""
 operation_parameters_collection_type["deleteLocalCard:::cardId"]=""
 operation_parameters_collection_type["login:::PostAccountSessionRequest"]=""
 operation_parameters_collection_type["getTransactionStatus:::businessId"]=""
@@ -206,9 +206,9 @@ operation_parameters_collection_type["getTransactionDetails:::transactionCode"]=
 operation_parameters_collection_type["searchBusinesses:::text"]=""
 operation_parameters_collection_type["searchBusinesses:::location"]=""
 operation_parameters_collection_type["searchBusinesses:::proximity"]=""
-operation_parameters_collection_type["addVirtualCard:::businessId"]=""
 operation_parameters_collection_type["buyItem:::businessId"]=""
 operation_parameters_collection_type["buyItem:::itemDefinitionId"]=""
+operation_parameters_collection_type["createVirtualCard:::businessId"]=""
 operation_parameters_collection_type["deleteItem:::businessId"]=""
 operation_parameters_collection_type["deleteItem:::itemId"]=""
 operation_parameters_collection_type["deleteVirtualCard:::businessId"]=""
@@ -644,7 +644,7 @@ echo "  $ops" | column -t -s ';'
     echo ""
     echo -e "${BOLD}${WHITE}[localCards]${OFF}"
 read -r -d '' ops <<EOF
-  ${CYAN}addLocalCards${OFF};Add a new local card (AUTH)
+  ${CYAN}createLocalCard${OFF};Add a new local card (AUTH)
   ${CYAN}deleteLocalCard${OFF};Delete a local card (AUTH)
   ${CYAN}getLocalCardTypes${OFF};Get list of local card types (AUTH)
 EOF
@@ -679,8 +679,8 @@ echo "  $ops" | column -t -s ';'
     echo ""
     echo -e "${BOLD}${WHITE}[virtualCards]${OFF}"
 read -r -d '' ops <<EOF
-  ${CYAN}addVirtualCard${OFF};Add a new virtual card (AUTH)
   ${CYAN}buyItem${OFF};Buy an item (AUTH)
+  ${CYAN}createVirtualCard${OFF};Add a new virtual card (AUTH)
   ${CYAN}deleteItem${OFF};Delete an item (AUTH)
   ${CYAN}deleteVirtualCard${OFF};Delete a virtual card (AUTH)
   ${CYAN}getVirtualCard${OFF};Get info about a virtual card (AUTH)
@@ -1096,12 +1096,12 @@ print_updateItemDefinition_help() {
 }
 ##############################################################################
 #
-# Print help for addLocalCards operation
+# Print help for createLocalCard operation
 #
 ##############################################################################
-print_addLocalCards_help() {
+print_createLocalCard_help() {
     echo ""
-    echo -e "${BOLD}${WHITE}addLocalCards - Add a new local card${OFF}${BLUE}(AUTH - BASIC)${OFF}" | paste -sd' ' | fold -sw 80 | sed '2,$s/^/    /'
+    echo -e "${BOLD}${WHITE}createLocalCard - Add a new local card${OFF}${BLUE}(AUTH - BASIC)${OFF}" | paste -sd' ' | fold -sw 80 | sed '2,$s/^/    /'
     echo -e ""
     echo -e "This endpoint is used to add a new local card to user's account." | paste -sd' ' | fold -sw 80
     echo -e ""
@@ -1110,8 +1110,8 @@ print_addLocalCards_help() {
     echo -e ""
     echo ""
     echo -e "${BOLD}${WHITE}Responses${OFF}"
-    code=200
-    echo -e "${result_color_table[${code:0:1}]}  200;Successful operation${OFF}" | paste -sd' ' | column -t -s ';' | fold -sw 80 | sed '2,$s/^/       /'
+    code=201
+    echo -e "${result_color_table[${code:0:1}]}  201;Successful operation${OFF}" | paste -sd' ' | column -t -s ';' | fold -sw 80 | sed '2,$s/^/       /'
     code=400
     echo -e "${result_color_table[${code:0:1}]}  400;Invalid request${OFF}" | paste -sd' ' | column -t -s ';' | fold -sw 80 | sed '2,$s/^/       /'
 }
@@ -1308,28 +1308,6 @@ print_searchBusinesses_help() {
 }
 ##############################################################################
 #
-# Print help for addVirtualCard operation
-#
-##############################################################################
-print_addVirtualCard_help() {
-    echo ""
-    echo -e "${BOLD}${WHITE}addVirtualCard - Add a new virtual card${OFF}${BLUE}(AUTH - BASIC)${OFF}" | paste -sd' ' | fold -sw 80 | sed '2,$s/^/    /'
-    echo -e ""
-    echo -e "This endpoint is used to register a new virtual card to the account of the currently logged in user." | paste -sd' ' | fold -sw 80
-    echo -e ""
-    echo -e "${BOLD}${WHITE}Parameters${OFF}"
-    echo -e "  * ${GREEN}businessId${OFF} ${BLUE}[string]${OFF} ${RED}(required)${OFF} ${CYAN}(default: null)${OFF} - Public ID of the business which card was requested to be added by user ${YELLOW}Specify as: businessId=value${OFF}" | paste -sd' ' | fold -sw 80 | sed '2,$s/^/    /'
-    echo ""
-    echo -e "${BOLD}${WHITE}Responses${OFF}"
-    code=200
-    echo -e "${result_color_table[${code:0:1}]}  200;Successful operation${OFF}" | paste -sd' ' | column -t -s ';' | fold -sw 80 | sed '2,$s/^/       /'
-    code=404
-    echo -e "${result_color_table[${code:0:1}]}  404;Unknown business${OFF}" | paste -sd' ' | column -t -s ';' | fold -sw 80 | sed '2,$s/^/       /'
-    code=409
-    echo -e "${result_color_table[${code:0:1}]}  409;Card already exists${OFF}" | paste -sd' ' | column -t -s ';' | fold -sw 80 | sed '2,$s/^/       /'
-}
-##############################################################################
-#
 # Print help for buyItem operation
 #
 ##############################################################################
@@ -1348,6 +1326,28 @@ print_buyItem_help() {
     echo -e "${result_color_table[${code:0:1}]}  201;Successful operation${OFF}" | paste -sd' ' | column -t -s ';' | fold -sw 80 | sed '2,$s/^/       /'
     code=404
     echo -e "${result_color_table[${code:0:1}]}  404;No such item or item does not belong to this business${OFF}" | paste -sd' ' | column -t -s ';' | fold -sw 80 | sed '2,$s/^/       /'
+}
+##############################################################################
+#
+# Print help for createVirtualCard operation
+#
+##############################################################################
+print_createVirtualCard_help() {
+    echo ""
+    echo -e "${BOLD}${WHITE}createVirtualCard - Add a new virtual card${OFF}${BLUE}(AUTH - BASIC)${OFF}" | paste -sd' ' | fold -sw 80 | sed '2,$s/^/    /'
+    echo -e ""
+    echo -e "This endpoint is used to register a new virtual card to the account of the currently logged in user." | paste -sd' ' | fold -sw 80
+    echo -e ""
+    echo -e "${BOLD}${WHITE}Parameters${OFF}"
+    echo -e "  * ${GREEN}businessId${OFF} ${BLUE}[string]${OFF} ${RED}(required)${OFF} ${CYAN}(default: null)${OFF} - Public ID of the business which card was requested to be added by user ${YELLOW}Specify as: businessId=value${OFF}" | paste -sd' ' | fold -sw 80 | sed '2,$s/^/    /'
+    echo ""
+    echo -e "${BOLD}${WHITE}Responses${OFF}"
+    code=200
+    echo -e "${result_color_table[${code:0:1}]}  200;Successful operation${OFF}" | paste -sd' ' | column -t -s ';' | fold -sw 80 | sed '2,$s/^/       /'
+    code=404
+    echo -e "${result_color_table[${code:0:1}]}  404;Unknown business${OFF}" | paste -sd' ' | column -t -s ';' | fold -sw 80 | sed '2,$s/^/       /'
+    code=409
+    echo -e "${result_color_table[${code:0:1}]}  409;Card already exists${OFF}" | paste -sd' ' | column -t -s ';' | fold -sw 80 | sed '2,$s/^/       /'
 }
 ##############################################################################
 #
@@ -2402,10 +2402,10 @@ call_updateItemDefinition() {
 
 ##############################################################################
 #
-# Call addLocalCards operation
+# Call createLocalCard operation
 #
 ##############################################################################
-call_addLocalCards() {
+call_createLocalCard() {
     # ignore error about 'path_parameter_names' being unused; passed by reference
     # shellcheck disable=SC2034
     local path_parameter_names=()
@@ -2930,19 +2930,19 @@ call_searchBusinesses() {
 
 ##############################################################################
 #
-# Call addVirtualCard operation
+# Call buyItem operation
 #
 ##############################################################################
-call_addVirtualCard() {
+call_buyItem() {
     # ignore error about 'path_parameter_names' being unused; passed by reference
     # shellcheck disable=SC2034
-    local path_parameter_names=(businessId)
+    local path_parameter_names=(businessId itemDefinitionId)
     # ignore error about 'query_parameter_names' being unused; passed by reference
     # shellcheck disable=SC2034
     local query_parameter_names=(  )
     local path
 
-    if ! path=$(build_request_path "/user/cards/virtual/{businessId}" path_parameter_names query_parameter_names); then
+    if ! path=$(build_request_path "/user/cards/virtual/{businessId}/items/{itemDefinitionId}" path_parameter_names query_parameter_names); then
         ERROR_MSG=$path
         exit 1
     fi
@@ -2966,19 +2966,19 @@ call_addVirtualCard() {
 
 ##############################################################################
 #
-# Call buyItem operation
+# Call createVirtualCard operation
 #
 ##############################################################################
-call_buyItem() {
+call_createVirtualCard() {
     # ignore error about 'path_parameter_names' being unused; passed by reference
     # shellcheck disable=SC2034
-    local path_parameter_names=(businessId itemDefinitionId)
+    local path_parameter_names=(businessId)
     # ignore error about 'query_parameter_names' being unused; passed by reference
     # shellcheck disable=SC2034
     local query_parameter_names=(  )
     local path
 
-    if ! path=$(build_request_path "/user/cards/virtual/{businessId}/items/{itemDefinitionId}" path_parameter_names query_parameter_names); then
+    if ! path=$(build_request_path "/user/cards/virtual/{businessId}" path_parameter_names query_parameter_names); then
         ERROR_MSG=$path
         exit 1
     fi
@@ -3256,8 +3256,8 @@ case $key in
     updateItemDefinition)
     operation="updateItemDefinition"
     ;;
-    addLocalCards)
-    operation="addLocalCards"
+    createLocalCard)
+    operation="createLocalCard"
     ;;
     deleteLocalCard)
     operation="deleteLocalCard"
@@ -3286,11 +3286,11 @@ case $key in
     searchBusinesses)
     operation="searchBusinesses"
     ;;
-    addVirtualCard)
-    operation="addVirtualCard"
-    ;;
     buyItem)
     operation="buyItem"
+    ;;
+    createVirtualCard)
+    operation="createVirtualCard"
     ;;
     deleteItem)
     operation="deleteItem"
@@ -3429,8 +3429,8 @@ case $operation in
     updateItemDefinition)
     call_updateItemDefinition
     ;;
-    addLocalCards)
-    call_addLocalCards
+    createLocalCard)
+    call_createLocalCard
     ;;
     deleteLocalCard)
     call_deleteLocalCard
@@ -3459,11 +3459,11 @@ case $operation in
     searchBusinesses)
     call_searchBusinesses
     ;;
-    addVirtualCard)
-    call_addVirtualCard
-    ;;
     buyItem)
     call_buyItem
+    ;;
+    createVirtualCard)
+    call_createVirtualCard
     ;;
     deleteItem)
     call_deleteItem

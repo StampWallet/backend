@@ -10,7 +10,7 @@ import (
 type APIHandlers struct {
 	AuthHandlers *AuthHandlers
 	//BusinessHandlers *BusinessHandlers
-	//UserHandlers     *UserHandlers
+	UserHandlers *UserHandlers
 	//FileHandlers     *FileHandlers
 }
 
@@ -23,8 +23,8 @@ func (handlers *APIHandlers) Connect(rg *gin.RouterGroup, authMiddleware *AuthMi
 	//business := rg.Group("/business", authMiddleware.Handle, requireValidEmailMiddleware.Handle)
 	//handlers.BusinessHandlers.Connect(business)
 
-	//user := rg.Group("/user", authMiddleware.Handle, requireValidEmailMiddleware.Handle)
-	//handlers.UserHandlers.Connect(user)
+	user := rg.Group("/user", authMiddleware.Handle, requireValidEmailMiddleware.Handle)
+	handlers.UserHandlers.Connect(user)
 
 	//file := rg.Group("/file", authMiddleware.Handle, requireValidEmailMiddleware.Handle)
 	//handlers.FileHandlers.Connect(file)

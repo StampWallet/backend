@@ -32,6 +32,14 @@ type FileStorageServiceImpl struct {
 	baseServices BaseServices
 }
 
+func CreateFileStorageServiceImpl(baseServices BaseServices, basePath string) (*FileStorageServiceImpl, error) {
+	//TODO check if path is accessible etc
+	return &FileStorageServiceImpl{
+		basePath:     basePath,
+		baseServices: baseServices,
+	}, nil
+}
+
 func (service *FileStorageServiceImpl) CreateStub(user *User) (*FileMetadata, error) {
 	return nil, nil
 }

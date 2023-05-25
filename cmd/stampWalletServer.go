@@ -11,6 +11,7 @@ import (
 	handlers "github.com/StampWallet/backend/internal/api/handlers"
 	"github.com/StampWallet/backend/internal/config"
 	"github.com/StampWallet/backend/internal/database"
+	accessors "github.com/StampWallet/backend/internal/database/accessors"
 	"github.com/StampWallet/backend/internal/managers"
 	"github.com/StampWallet/backend/internal/middleware"
 	"github.com/StampWallet/backend/internal/services"
@@ -18,7 +19,7 @@ import (
 
 // Creates server from config
 func createServer(config config.Config) (*api.APIServer, error) {
-	database, err := services.GetDatabase(config)
+	db, err := services.GetDatabase(config)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get database: %+v", err)
 	}
@@ -27,7 +28,7 @@ func createServer(config config.Config) (*api.APIServer, error) {
 	logger.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	baseServices := services.BaseServices{
 		Logger:   logger,
-		Database: database,
+		Database: db,
 	}
 
 	tokenService := services.CreateTokenServiceImpl(baseServices.NewPrefix("TokenServiceImpl"))
@@ -36,17 +37,40 @@ func createServer(config config.Config) (*api.APIServer, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to create emailService: %+v", err)
 	}
-	//fileStorageService
+	fileStorageService, err := services.CreateFileStorageServiceImpl(
+		baseServices.NewPrefix("FileStorageService"),
+		config.StoragePath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create fileStorageService: %+v", err)
+	}
 
 	authMiddleware := middleware.CreateAuthMiddleware(services.NewPrefix(logger, "AuthMiddleware"), tokenService)
 	requireValidEmailMiddleware := middleware.CreateRequireValidEmailMiddleware(
 		services.NewPrefix(logger, "RequireValidEmailMiddleware"))
 
 	authManager := managers.CreateAuthManagerImpl(baseServices, emailService, tokenService)
+	virtualCardManager := managers.CreateVirtualCardManagerImpl(baseServices)
+	itemDefinitionManager := managers.CreateItemDefinitionManagerImpl(baseServices, fileStorageService)
+	localCardManager := managers.CreateLocalCardManagerImpl(baseServices)
+	businessManager := managers.CreateBusinessManagerImpl(baseServices, fileStorageService)
+	transactionManager := managers.CreateTransactionManagerImpl(baseServices)
+
+	userAuthorizedAcessor := accessors.CreateUserAuthorizedAccessorImpl(baseServices.Database)
+	authorizedTransactionAccessor := accessors.CreateAuthorizedTransactionAccessorImpl(baseServices.Database)
 
 	//idk if this shouldnt be handled by CreateAPIServer
 	handlers := api.APIHandlers{
 		AuthHandlers: handlers.CreateAuthHandlers(authManager, services.NewPrefix(logger, "AuthHandlers")),
+		UserHandlers: handlers.CreateUserHandlers(
+			virtualCardManager,
+			localCardManager,
+			businessManager,
+			transactionManager,
+			itemDefinitionManager,
+			userAuthorizedAcessor,
+			authorizedTransactionAccessor,
+			services.NewPrefix(logger, "UserHandlers"),
+		),
 	}
 
 	server := api.CreateAPIServer(authMiddleware, requireValidEmailMiddleware, &handlers,
