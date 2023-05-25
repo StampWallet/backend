@@ -4,47 +4,12 @@ All URIs are relative to **
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
-[**addVirtualCard**](VirtualCardsApi.md#addVirtualCard) | **POST** /user/cards/virtual/{businessId} | Add a new virtual card
 [**buyItem**](VirtualCardsApi.md#buyItem) | **POST** /user/cards/virtual/{businessId}/items/{itemDefinitionId} | Buy an item
+[**createVirtualCard**](VirtualCardsApi.md#createVirtualCard) | **POST** /user/cards/virtual/{businessId} | Add a new virtual card
 [**deleteItem**](VirtualCardsApi.md#deleteItem) | **DELETE** /user/cards/virtual/{businessId}/items/{itemId} | Delete an item
 [**deleteVirtualCard**](VirtualCardsApi.md#deleteVirtualCard) | **DELETE** /user/cards/virtual/{businessId} | Delete a virtual card
 [**getVirtualCard**](VirtualCardsApi.md#getVirtualCard) | **GET** /user/cards/virtual/{businessId} | Get info about a virtual card
 
-
-
-## addVirtualCard
-
-Add a new virtual card
-
-This endpoint is used to register a new virtual card to the account of the currently logged in user.
-
-### Example
-
-```bash
- addVirtualCard businessId=value
-```
-
-### Parameters
-
-
-Name | Type | Description  | Notes
-------------- | ------------- | ------------- | -------------
- **businessId** | **string** | Public ID of the business which card was requested to be added by user | [default to null]
-
-### Return type
-
-[**DefaultResponse**](DefaultResponse.md)
-
-### Authorization
-
-[sessionToken](../README.md#sessionToken)
-
-### HTTP request headers
-
-- **Content-Type**: Not Applicable
-- **Accept**: application/json
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 
 ## buyItem
@@ -70,6 +35,41 @@ Name | Type | Description  | Notes
 ### Return type
 
 [**PostUserVirtualCardItemResponse**](PostUserVirtualCardItemResponse.md)
+
+### Authorization
+
+[sessionToken](../README.md#sessionToken)
+
+### HTTP request headers
+
+- **Content-Type**: Not Applicable
+- **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+
+## createVirtualCard
+
+Add a new virtual card
+
+This endpoint is used to register a new virtual card to the account of the currently logged in user.
+
+### Example
+
+```bash
+ createVirtualCard businessId=value
+```
+
+### Parameters
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **businessId** | **string** | Public ID of the business which card was requested to be added by user | [default to null]
+
+### Return type
+
+[**DefaultResponse**](DefaultResponse.md)
 
 ### Authorization
 

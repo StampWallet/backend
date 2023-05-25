@@ -218,7 +218,7 @@ font-style: italic;
   </ul>
   <h4><a href="#File">File</a></h4>
   <ul>
-  <li><a href="#delete file"><code><span class="http-method">delete</span> /file/{fileId}</code></a></li>
+  <li><a href="#deleteFile"><code><span class="http-method">delete</span> /file/{fileId}</code></a></li>
   <li><a href="#getFile"><code><span class="http-method">get</span> /file/{fileId}</code></a></li>
   <li><a href="#uploadFile"><code><span class="http-method">post</span> /file/{fileId}</code></a></li>
   </ul>
@@ -231,7 +231,7 @@ font-style: italic;
   </ul>
   <h4><a href="#LocalCards">LocalCards</a></h4>
   <ul>
-  <li><a href="#addLocalCards"><code><span class="http-method">post</span> /user/cards/local</code></a></li>
+  <li><a href="#createLocalCard"><code><span class="http-method">post</span> /user/cards/local</code></a></li>
   <li><a href="#deleteLocalCard"><code><span class="http-method">delete</span> /user/cards/local/{cardId}</code></a></li>
   <li><a href="#getLocalCardTypes"><code><span class="http-method">get</span> /user/cards/local/types</code></a></li>
   </ul>
@@ -256,8 +256,8 @@ font-style: italic;
   </ul>
   <h4><a href="#VirtualCards">VirtualCards</a></h4>
   <ul>
-  <li><a href="#addVirtualCard"><code><span class="http-method">post</span> /user/cards/virtual/{businessId}</code></a></li>
   <li><a href="#buyItem"><code><span class="http-method">post</span> /user/cards/virtual/{businessId}/items/{itemDefinitionId}</code></a></li>
+  <li><a href="#createVirtualCard"><code><span class="http-method">post</span> /user/cards/virtual/{businessId}</code></a></li>
   <li><a href="#deleteItem"><code><span class="http-method">delete</span> /user/cards/virtual/{businessId}/items/{itemId}</code></a></li>
   <li><a href="#deleteVirtualCard"><code><span class="http-method">delete</span> /user/cards/virtual/{businessId}</code></a></li>
   <li><a href="#getVirtualCard"><code><span class="http-method">get</span> /user/cards/virtual/{businessId}</code></a></li>
@@ -818,11 +818,11 @@ font-style: italic;
   </div> <!-- method -->
   <hr/>
   <h1><a name="File">File</a></h1>
-  <div class="method"><a name="delete file"/>
+  <div class="method"><a name="deleteFile"/>
     <div class="method-path">
     <a class="up" href="#__Methods">Up</a>
     <pre class="delete"><code class="huge"><span class="http-method">delete</span> /file/{fileId}</code></pre></div>
-    <div class="method-summary">Delete a file (<span class="nickname">delete file</span>)</div>
+    <div class="method-summary">Delete a file (<span class="nickname">deleteFile</span>)</div>
     <div class="method-notes">This endpoint is used to delete files.</div>
 
     <h3 class="field-label">Path parameters</h3>
@@ -1214,11 +1214,11 @@ font-style: italic;
   </div> <!-- method -->
   <hr/>
   <h1><a name="LocalCards">LocalCards</a></h1>
-  <div class="method"><a name="addLocalCards"/>
+  <div class="method"><a name="createLocalCard"/>
     <div class="method-path">
     <a class="up" href="#__Methods">Up</a>
     <pre class="post"><code class="huge"><span class="http-method">post</span> /user/cards/local</code></pre></div>
-    <div class="method-summary">Add a new local card (<span class="nickname">addLocalCards</span>)</div>
+    <div class="method-summary">Add a new local card (<span class="nickname">createLocalCard</span>)</div>
     <div class="method-notes">This endpoint is used to add a new local card to user's account.</div>
 
 
@@ -1261,7 +1261,7 @@ font-style: italic;
     </ul>
 
     <h3 class="field-label">Responses</h3>
-    <h4 class="field-label">200</h4>
+    <h4 class="field-label">201</h4>
     Successful operation
         <a href="#PostUserLocalCardsResponse">PostUserLocalCardsResponse</a>
     <h4 class="field-label">400</h4>
@@ -1773,58 +1773,6 @@ font-style: italic;
   </div> <!-- method -->
   <hr/>
   <h1><a name="VirtualCards">VirtualCards</a></h1>
-  <div class="method"><a name="addVirtualCard"/>
-    <div class="method-path">
-    <a class="up" href="#__Methods">Up</a>
-    <pre class="post"><code class="huge"><span class="http-method">post</span> /user/cards/virtual/{businessId}</code></pre></div>
-    <div class="method-summary">Add a new virtual card (<span class="nickname">addVirtualCard</span>)</div>
-    <div class="method-notes">This endpoint is used to register a new virtual card to the account of the currently logged in user.</div>
-
-    <h3 class="field-label">Path parameters</h3>
-    <div class="field-items">
-      <div class="param">businessId (required)</div>
-
-      <div class="param-desc"><span class="param-type">Path Parameter</span> &mdash; Public ID of the business which card was requested to be added by user default: null </div>
-    </div>  <!-- field-items -->
-
-
-
-
-
-
-    <h3 class="field-label">Return type</h3>
-    <div class="return-type">
-      <a href="#DefaultResponse">DefaultResponse</a>
-      
-    </div>
-
-    <!--Todo: process Response Object and its headers, schema, examples -->
-
-    <h3 class="field-label">Example data</h3>
-    <div class="example-data-content-type">Content-Type: application/json</div>
-    <pre class="example"><code>{
-  "message" : "message"
-}</code></pre>
-
-    <h3 class="field-label">Produces</h3>
-    This API call produces the following media types according to the <span class="header">Accept</span> request header;
-    the media type will be conveyed by the <span class="header">Content-Type</span> response header.
-    <ul>
-      <li><code>application/json</code></li>
-    </ul>
-
-    <h3 class="field-label">Responses</h3>
-    <h4 class="field-label">200</h4>
-    Successful operation
-        <a href="#DefaultResponse">DefaultResponse</a>
-    <h4 class="field-label">404</h4>
-    Unknown business
-        <a href="#DefaultResponse">DefaultResponse</a>
-    <h4 class="field-label">409</h4>
-    Card already exists
-        <a href="#DefaultResponse">DefaultResponse</a>
-  </div> <!-- method -->
-  <hr/>
   <div class="method"><a name="buyItem"/>
     <div class="method-path">
     <a class="up" href="#__Methods">Up</a>
@@ -1873,6 +1821,58 @@ font-style: italic;
         <a href="#PostUserVirtualCardItemResponse">PostUserVirtualCardItemResponse</a>
     <h4 class="field-label">404</h4>
     No such item or item does not belong to this business
+        <a href="#DefaultResponse">DefaultResponse</a>
+  </div> <!-- method -->
+  <hr/>
+  <div class="method"><a name="createVirtualCard"/>
+    <div class="method-path">
+    <a class="up" href="#__Methods">Up</a>
+    <pre class="post"><code class="huge"><span class="http-method">post</span> /user/cards/virtual/{businessId}</code></pre></div>
+    <div class="method-summary">Add a new virtual card (<span class="nickname">createVirtualCard</span>)</div>
+    <div class="method-notes">This endpoint is used to register a new virtual card to the account of the currently logged in user.</div>
+
+    <h3 class="field-label">Path parameters</h3>
+    <div class="field-items">
+      <div class="param">businessId (required)</div>
+
+      <div class="param-desc"><span class="param-type">Path Parameter</span> &mdash; Public ID of the business which card was requested to be added by user default: null </div>
+    </div>  <!-- field-items -->
+
+
+
+
+
+
+    <h3 class="field-label">Return type</h3>
+    <div class="return-type">
+      <a href="#DefaultResponse">DefaultResponse</a>
+      
+    </div>
+
+    <!--Todo: process Response Object and its headers, schema, examples -->
+
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>{
+  "message" : "message"
+}</code></pre>
+
+    <h3 class="field-label">Produces</h3>
+    This API call produces the following media types according to the <span class="header">Accept</span> request header;
+    the media type will be conveyed by the <span class="header">Content-Type</span> response header.
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Responses</h3>
+    <h4 class="field-label">200</h4>
+    Successful operation
+        <a href="#DefaultResponse">DefaultResponse</a>
+    <h4 class="field-label">404</h4>
+    Unknown business
+        <a href="#DefaultResponse">DefaultResponse</a>
+    <h4 class="field-label">409</h4>
+    Card already exists
         <a href="#DefaultResponse">DefaultResponse</a>
   </div> <!-- method -->
   <hr/>

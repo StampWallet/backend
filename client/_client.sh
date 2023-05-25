@@ -308,13 +308,13 @@ case $state in
             "uploadFile[Upload file]"             "addItemDefinition[Add a new item definition]" \
             "deleteItemDefinition[Delete an exiting item definition]" \
             "getItemDefinitions[Get list of item definitions]" \
-            "updateItemDefinition[Update an exiting item definition]"             "addLocalCards[Add a new local card]" \
+            "updateItemDefinition[Update an exiting item definition]"             "createLocalCard[Add a new local card]" \
             "deleteLocalCard[Delete a local card]" \
             "getLocalCardTypes[Get list of local card types]"             "login[Login]" \
             "logout[Logout]"             "getTransactionStatus[Get info about a transaction]" \
             "startTransaction[Start a transaction]"             "finishTransaction[Finish a transaction]" \
-            "getTransactionDetails[Get info about a started transaction]"             "searchBusinesses[Search businesses]"             "addVirtualCard[Add a new virtual card]" \
-            "buyItem[Buy an item]" \
+            "getTransactionDetails[Get info about a started transaction]"             "searchBusinesses[Search businesses]"             "buyItem[Buy an item]" \
+            "createVirtualCard[Add a new virtual card]" \
             "deleteItem[Delete an item]" \
             "deleteVirtualCard[Delete a virtual card]" \
             "getVirtualCard[Get info about a virtual card]" \
@@ -433,7 +433,7 @@ case $state in
                     )
         _describe -t actions 'operations' _op_arguments -S '' && ret=0
         ;;
-      addLocalCards)
+      createLocalCard)
         local -a _op_arguments
         _op_arguments=(
                               )
@@ -502,18 +502,18 @@ case $state in
           )
         _describe -t actions 'operations' _op_arguments -S '' && ret=0
         ;;
-      addVirtualCard)
-        local -a _op_arguments
-        _op_arguments=(
-          "businessId=:[PATH] Public ID of the business which card was requested to be added by user"
-                    )
-        _describe -t actions 'operations' _op_arguments -S '' && ret=0
-        ;;
       buyItem)
         local -a _op_arguments
         _op_arguments=(
           "businessId=:[PATH] Public ID of the business which card was requested"
 "itemDefinitionId=:[PATH] Public ID of the item definition requested by the user"
+                    )
+        _describe -t actions 'operations' _op_arguments -S '' && ret=0
+        ;;
+      createVirtualCard)
+        local -a _op_arguments
+        _op_arguments=(
+          "businessId=:[PATH] Public ID of the business which card was requested to be added by user"
                     )
         _describe -t actions 'operations' _op_arguments -S '' && ret=0
         ;;

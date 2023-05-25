@@ -9,20 +9,58 @@ import (
 	"github.com/StampWallet/backend/internal/database"
 	. "github.com/StampWallet/backend/internal/database/accessors"
 	. "github.com/StampWallet/backend/internal/managers"
+	"github.com/StampWallet/backend/internal/services"
 	. "github.com/StampWallet/backend/internal/utils"
 )
 
 type UserHandlers struct {
-	virtualCardManager            VirtualCardManager
-	localCardManager              LocalCardManager
-	businessManager               BusinessManager
-	transactionManager            TransactionManager
+	businessManager       BusinessManager
+	userAuthorizedAcessor UserAuthorizedAccessor
+	virtualCardManager    VirtualCardManager
+	localCardManager      LocalCardManager
+
+	// not sure if these two are necessary here
+	transactionManager TransactionManager
+	localCardHandlers  *UserLocalCardHandlers
+
 	virtualCardHandlers           *UserVirtualCardHandlers
-	localCardHandlers             *UserLocalCardHandlers
-	userAuthorizedAcessor         UserAuthorizedAccessor
 	authorizedTransactionAccessor AuthorizedTransactionAccessor
 
 	logger *log.Logger
+}
+
+func CreateUserHandlers(
+	virtualCardManager VirtualCardManager,
+	localCardManager LocalCardManager,
+	businessManager BusinessManager,
+	transactionManager TransactionManager,
+	itemDefinitionManager ItemDefinitionManager,
+	userAuthorizedAcessor UserAuthorizedAccessor,
+	authorizedTransactionAccessor AuthorizedTransactionAccessor,
+	logger *log.Logger,
+) *UserHandlers {
+	return &UserHandlers{
+		virtualCardManager: virtualCardManager,
+		localCardManager:   localCardManager,
+		businessManager:    businessManager,
+		transactionManager: transactionManager,
+		virtualCardHandlers: &UserVirtualCardHandlers{
+			virtualCardManager:            virtualCardManager,
+			transactionManager:            transactionManager,
+			itemDefinitionManager:         itemDefinitionManager,
+			userAuthorizedAcessor:         userAuthorizedAcessor,
+			authorizedTransactionAccessor: authorizedTransactionAccessor,
+			logger:                        services.NewPrefix(logger, "VirtualCardHandlers"),
+		},
+		localCardHandlers: &UserLocalCardHandlers{
+			localCardManager:      localCardManager,
+			userAuthorizedAcessor: userAuthorizedAcessor,
+			logger:                services.NewPrefix(logger, "UserLocalCardHandlers"),
+		},
+		userAuthorizedAcessor:         userAuthorizedAcessor,
+		authorizedTransactionAccessor: authorizedTransactionAccessor,
+		logger:                        logger,
+	}
 }
 
 func (handler *UserHandlers) getUserCards(c *gin.Context) {
@@ -34,7 +72,10 @@ func (handler *UserHandlers) getSearchBusinesses(c *gin.Context) {
 }
 
 func (handler *UserHandlers) Connect(rg *gin.RouterGroup) {
-
+	cards := rg.Group("/cards")
+	{
+		handler.localCardHandlers.Connect(cards.Group("/local"))
+	}
 }
 
 type UserVirtualCardHandlers struct {

@@ -18,7 +18,7 @@ import (
 // Builds VirtualCardManagerImpl with test database
 func GetTestVirtualCardManager(ctrl *gomock.Controller) *VirtualCardManagerImpl {
 	return &VirtualCardManagerImpl{
-		&BaseServices{
+		BaseServices{
 			Logger:   log.Default(),
 			Database: GetTestDatabase(),
 		},
@@ -76,7 +76,7 @@ func setupVirtualCardManagerTest(t *testing.T) virtualCardManagerTest {
 // Tests VirtualCardManagerImpl.Create on happy path and when virtualCard for business and user already exists
 func TestVirtualCardManagerCreate(t *testing.T) {
 	s := setupVirtualCardManagerTest(t)
-	virtualCard, err := s.manager.Create(*s.user, *s.business)
+	virtualCard, err := s.manager.Create(s.user, s.business)
 	require.Nilf(t, err, "VirtualCardManager.Create should return a nil error")
 	require.NotNilf(t, virtualCard, "VirtualCardManager.Create should not return a nil virtual card")
 	if virtualCard == nil {
@@ -86,7 +86,7 @@ func TestVirtualCardManagerCreate(t *testing.T) {
 	require.Equalf(t, s.business.ID, virtualCard.BusinessId, "VirtualCardManager.Create should return a card that belongs to the passed business")
 	require.Equalf(t, uint(0), virtualCard.Points, "VirtualCardManager.Create should returned a card with 0 points")
 
-	newVirtualCard, newErr := s.manager.Create(*s.user, *s.business)
+	newVirtualCard, newErr := s.manager.Create(s.user, s.business)
 	require.Equalf(t, ErrVirtualCardAlreadyExists, newErr, "VirtualCardManager.Create should returned VirtualCardAlreadyExists if the user attempts to create the same card twice")
 	require.Nilf(t, newVirtualCard, "VirtualCardManager.Create should return a nil pointer if the user attempts to create the same card twice")
 }

@@ -15,7 +15,7 @@ var BusinessAlreadyExists = errors.New("Business already exists")
 type BusinessManager interface {
 	Create(user *User, businessDetails *BusinessDetails) (*Business, error)
 	ChangeDetails(business *Business, businessDetails *ChangeableBusinessDetails) (*Business, error)
-	Search(name *string, location *string, proximityInMeters uint, offset uint, limit uint) ([]Business, error) //? not a fan
+	Search(name *string, location *GPSCoordinates, proximityInMeters uint, offset uint, limit uint) ([]Business, error) //? not a fan
 }
 
 type BusinessDetails struct {
@@ -35,8 +35,15 @@ type ChangeableBusinessDetails struct {
 }
 
 type BusinessManagerImpl struct {
-	baseServices       *BaseServices
+	baseServices       BaseServices
 	fileStorageService FileStorageService
+}
+
+func CreateBusinessManagerImpl(baseServices BaseServices, fileStorageService FileStorageService) *BusinessManagerImpl {
+	return &BusinessManagerImpl{
+		baseServices:       baseServices,
+		fileStorageService: fileStorageService,
+	}
 }
 
 func (manager *BusinessManagerImpl) Create(user *User, businessDetails *BusinessDetails) (*Business, error) {

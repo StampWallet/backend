@@ -14,7 +14,7 @@ var ErrCardAlreadyExists = errors.New("Card already exists")
 var ErrCardDoesNotExist = errors.New("Card does not exist")
 
 type LocalCardManager interface {
-	Create(user *User, details LocalCardDetails) (LocalCard, error)
+	Create(user *User, details LocalCardDetails) (*LocalCard, error)
 	Remove(card *LocalCard) error
 }
 
@@ -25,7 +25,13 @@ type LocalCardDetails struct {
 }
 
 type LocalCardManagerImpl struct {
-	baseServices *BaseServices
+	baseServices BaseServices
+}
+
+func CreateLocalCardManagerImpl(baseServices BaseServices) *LocalCardManagerImpl {
+	return &LocalCardManagerImpl{
+		baseServices: baseServices,
+	}
 }
 
 func (manager *LocalCardManagerImpl) Create(user *User, details LocalCardDetails) (*LocalCard, error) {

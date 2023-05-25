@@ -85,7 +85,7 @@ _()
     operations["deleteItemDefinition"]=1
     operations["getItemDefinitions"]=1
     operations["updateItemDefinition"]=1
-    operations["addLocalCards"]=1
+    operations["createLocalCard"]=1
     operations["deleteLocalCard"]=1
     operations["getLocalCardTypes"]=1
     operations["login"]=1
@@ -95,8 +95,8 @@ _()
     operations["finishTransaction"]=1
     operations["getTransactionDetails"]=1
     operations["searchBusinesses"]=1
-    operations["addVirtualCard"]=1
     operations["buyItem"]=1
+    operations["createVirtualCard"]=1
     operations["deleteItem"]=1
     operations["deleteVirtualCard"]=1
     operations["getVirtualCard"]=1
@@ -121,7 +121,7 @@ _()
     operation_parameters["deleteItemDefinition"]="definitionId= "
     operation_parameters["getItemDefinitions"]=""
     operation_parameters["updateItemDefinition"]="definitionId= "
-    operation_parameters["addLocalCards"]=""
+    operation_parameters["createLocalCard"]=""
     operation_parameters["deleteLocalCard"]="cardId= "
     operation_parameters["getLocalCardTypes"]=""
     operation_parameters["login"]=""
@@ -131,8 +131,8 @@ _()
     operation_parameters["finishTransaction"]="transactionCode= "
     operation_parameters["getTransactionDetails"]="transactionCode= "
     operation_parameters["searchBusinesses"]="text= location= proximity= "
-    operation_parameters["addVirtualCard"]="businessId= "
     operation_parameters["buyItem"]="businessId= itemDefinitionId= "
+    operation_parameters["createVirtualCard"]="businessId= "
     operation_parameters["deleteItem"]="businessId= itemId= "
     operation_parameters["deleteVirtualCard"]="businessId= "
     operation_parameters["getVirtualCard"]="businessId= "

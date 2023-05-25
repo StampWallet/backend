@@ -52,6 +52,12 @@ type BusinessAuthorizedAccessorImpl struct {
 	database GormDB
 }
 
+func CreateBusinessAuthorizedAccessorImpl(database GormDB) *BusinessAuthorizedAccessorImpl {
+	return &BusinessAuthorizedAccessorImpl{
+		database: database,
+	}
+}
+
 func (accessor *BusinessAuthorizedAccessorImpl) Get(business *Business, conds BusinessOwnedEntity) (BusinessOwnedEntity, error) {
 	result := reflect.New(reflect.TypeOf(conds).Elem()).Interface().(BusinessOwnedEntity)
 	tx := accessor.database.First(&result, conds)
@@ -71,6 +77,12 @@ type UserAuthorizedAccessor interface {
 
 type UserAuthorizedAccessorImpl struct {
 	database GormDB
+}
+
+func CreateUserAuthorizedAccessorImpl(database GormDB) *UserAuthorizedAccessorImpl {
+	return &UserAuthorizedAccessorImpl{
+		database: database,
+	}
 }
 
 func (accessor *UserAuthorizedAccessorImpl) Get(user *User, conds UserOwnedEntity) (UserOwnedEntity, error) {
@@ -93,6 +105,12 @@ type AuthorizedTransactionAccessor interface {
 
 type AuthorizedTransactionAccessorImpl struct {
 	database GormDB
+}
+
+func CreateAuthorizedTransactionAccessorImpl(database GormDB) *AuthorizedTransactionAccessorImpl {
+	return &AuthorizedTransactionAccessorImpl{
+		database: database,
+	}
 }
 
 func (accessor *AuthorizedTransactionAccessorImpl) GetForBusiness(business *Business, transactionCode string) (*Transaction, error) {

@@ -4,13 +4,13 @@ All URIs are relative to **
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
-[**addLocalCards**](LocalCardsApi.md#addLocalCards) | **POST** /user/cards/local | Add a new local card
+[**createLocalCard**](LocalCardsApi.md#createLocalCard) | **POST** /user/cards/local | Add a new local card
 [**deleteLocalCard**](LocalCardsApi.md#deleteLocalCard) | **DELETE** /user/cards/local/{cardId} | Delete a local card
 [**getLocalCardTypes**](LocalCardsApi.md#getLocalCardTypes) | **GET** /user/cards/local/types | Get list of local card types
 
 
 
-## addLocalCards
+## createLocalCard
 
 Add a new local card
 
@@ -19,7 +19,7 @@ This endpoint is used to add a new local card to user's account.
 ### Example
 
 ```bash
- addLocalCards
+ createLocalCard
 ```
 
 ### Parameters

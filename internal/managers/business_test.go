@@ -18,7 +18,7 @@ import (
 
 func GetBusinessManager(ctrl *gomock.Controller) *BusinessManagerImpl {
 	return &BusinessManagerImpl{
-		&BaseServices{
+		BaseServices{
 			Logger:   log.Default(),
 			Database: GetTestDatabase(),
 		},

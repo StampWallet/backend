@@ -23,31 +23,31 @@ import (
 // LocalCardsApiService LocalCardsApi service
 type LocalCardsApiService service
 
-type ApiAddLocalCardsRequest struct {
+type ApiCreateLocalCardRequest struct {
 	ctx                       context.Context
 	ApiService                *LocalCardsApiService
 	postUserLocalCardsRequest *PostUserLocalCardsRequest
 }
 
-func (r ApiAddLocalCardsRequest) PostUserLocalCardsRequest(postUserLocalCardsRequest PostUserLocalCardsRequest) ApiAddLocalCardsRequest {
+func (r ApiCreateLocalCardRequest) PostUserLocalCardsRequest(postUserLocalCardsRequest PostUserLocalCardsRequest) ApiCreateLocalCardRequest {
 	r.postUserLocalCardsRequest = &postUserLocalCardsRequest
 	return r
 }
 
-func (r ApiAddLocalCardsRequest) Execute() (*PostUserLocalCardsResponse, *http.Response, error) {
-	return r.ApiService.AddLocalCardsExecute(r)
+func (r ApiCreateLocalCardRequest) Execute() (*PostUserLocalCardsResponse, *http.Response, error) {
+	return r.ApiService.CreateLocalCardExecute(r)
 }
 
 /*
-AddLocalCards Add a new local card
+CreateLocalCard Add a new local card
 
 This endpoint is used to add a new local card to user's account.
 
 	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	@return ApiAddLocalCardsRequest
+	@return ApiCreateLocalCardRequest
 */
-func (a *LocalCardsApiService) AddLocalCards(ctx context.Context) ApiAddLocalCardsRequest {
-	return ApiAddLocalCardsRequest{
+func (a *LocalCardsApiService) CreateLocalCard(ctx context.Context) ApiCreateLocalCardRequest {
+	return ApiCreateLocalCardRequest{
 		ApiService: a,
 		ctx:        ctx,
 	}
@@ -56,7 +56,7 @@ func (a *LocalCardsApiService) AddLocalCards(ctx context.Context) ApiAddLocalCar
 // Execute executes the request
 //
 //	@return PostUserLocalCardsResponse
-func (a *LocalCardsApiService) AddLocalCardsExecute(r ApiAddLocalCardsRequest) (*PostUserLocalCardsResponse, *http.Response, error) {
+func (a *LocalCardsApiService) CreateLocalCardExecute(r ApiCreateLocalCardRequest) (*PostUserLocalCardsResponse, *http.Response, error) {
 	var (
 		localVarHTTPMethod  = http.MethodPost
 		localVarPostBody    interface{}
@@ -64,7 +64,7 @@ func (a *LocalCardsApiService) AddLocalCardsExecute(r ApiAddLocalCardsRequest) (
 		localVarReturnValue *PostUserLocalCardsResponse
 	)
 
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "LocalCardsApiService.AddLocalCards")
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "LocalCardsApiService.CreateLocalCard")
 	if err != nil {
 		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
