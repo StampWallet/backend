@@ -20,8 +20,8 @@ var _ MappedNullable = &PostAccountSessionRequest{}
 
 // PostAccountSessionRequest struct for PostAccountSessionRequest
 type PostAccountSessionRequest struct {
-	Email    *string `json:"email,omitempty"`
-	Password *string `json:"password,omitempty"`
+	Email    *string `json:"email,omitempty" binding:"required"`
+	Password *string `json:"password,omitempty" binding:"required"`
 }
 
 // NewPostAccountSessionRequest instantiates a new PostAccountSessionRequest object

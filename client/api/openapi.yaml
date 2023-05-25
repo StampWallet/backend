@@ -1220,10 +1220,12 @@ components:
           example: test@example.com
           format: email
           type: string
+          x-go-custom-tag: binding:"required"
         password:
           example: zaq1@WSX
           format: password
           type: string
+          x-go-custom-tag: binding:"required"
       type: object
     PostAccountResponse:
       example:
@@ -1240,6 +1242,7 @@ components:
         token:
           example: ZWVnaDhhZWg4bGVpbDJhaQo=:XBlaW5nZWViNWFpU2hlaGUKa
           type: string
+          x-go-custom-tag: binding:"required"
       type: object
     PostAccountEmailRequest:
       example:
@@ -1248,15 +1251,18 @@ components:
         email:
           example: test@example.com
           type: string
+          x-go-custom-tag: binding:"required"
       type: object
     PostAccountPasswordRequest:
       properties:
         password:
           example: zaq1@WSX
           type: string
+          x-go-custom-tag: binding:"required"
         oldPassword:
           example: password123
           type: string
+          x-go-custom-tag: binding:"required"
       type: object
     PostAccountSessionRequest:
       example:
@@ -1267,10 +1273,12 @@ components:
           example: test@example.com
           format: email
           type: string
+          x-go-custom-tag: binding:"required"
         password:
           example: zaq1@WSX
           format: password
           type: string
+          x-go-custom-tag: binding:"required"
       type: object
     PostAccountSessionResponse:
       example:
@@ -1292,18 +1300,25 @@ components:
       properties:
         name:
           type: string
+          x-go-custom-tag: binding:"required"
         address:
           type: string
+          x-go-custom-tag: binding:"required"
         gpsCoordinates:
           type: string
+          x-go-custom-tag: binding:"required"
         nip:
           type: string
+          x-go-custom-tag: binding:"required"
         krs:
           type: string
+          x-go-custom-tag: binding:"required"
         regon:
           type: string
+          x-go-custom-tag: binding:"required"
         ownerName:
           type: string
+          x-go-custom-tag: binding:"required"
       type: object
     PostBusinessAccountResponse:
       example:
@@ -1328,6 +1343,7 @@ components:
       properties:
         name:
           type: string
+          x-go-custom-tag: binding:"required"
       type: object
     PostBusinessAccountMenuImageResponse:
       example:
@@ -1479,12 +1495,15 @@ components:
         name:
           example: test card
           type: string
+          x-go-custom-tag: binding:"required"
         type:
           example: VmlpOW9OZ2llUGl1Cg
           type: string
+          x-go-custom-tag: binding:"required"
         code:
           example: "1234567890"
           type: string
+          x-go-custom-tag: binding:"required"
       type: object
     GetUserLocalCardTypesResponse:
       example:
@@ -1544,6 +1563,7 @@ components:
           items:
             type: string
           type: array
+          x-go-custom-tag: binding:"required"
       type: object
     PostUserVirtualCardTransactionResponse:
       example:

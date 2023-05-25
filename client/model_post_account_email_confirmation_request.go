@@ -20,7 +20,7 @@ var _ MappedNullable = &PostAccountEmailConfirmationRequest{}
 
 // PostAccountEmailConfirmationRequest struct for PostAccountEmailConfirmationRequest
 type PostAccountEmailConfirmationRequest struct {
-	Token *string `json:"token,omitempty"`
+	Token *string `json:"token,omitempty" binding:"required"`
 }
 
 // NewPostAccountEmailConfirmationRequest instantiates a new PostAccountEmailConfirmationRequest object

@@ -18,6 +18,7 @@ type BaseServices struct {
 // Opens database connection
 func GetDatabase(config Config) (GormDB, error) {
 	db, err := gorm.Open(postgres.Open(config.DatabaseUrl), &gorm.Config{})
+	db = db.Debug()
 	if db != nil && err == nil {
 		return &GormDBImpl{Db: db}, nil
 	} else {
@@ -40,5 +41,19 @@ func (b BaseServices) NewPrefix(prefix string) BaseServices {
 	return BaseServices{
 		Logger:   NewPrefix(b.Logger, prefix),
 		Database: b.Database,
+	}
+}
+
+func (b BaseServices) NewSession() BaseServices {
+	return BaseServices{
+		Logger:   b.Logger,
+		Database: b.Database.Session(&gorm.Session{SkipDefaultTransaction: true}),
+	}
+}
+
+func (b BaseServices) WithTransaction(tx GormDB) BaseServices {
+	return BaseServices{
+		Logger:   b.Logger,
+		Database: tx,
 	}
 }

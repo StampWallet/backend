@@ -35,6 +35,12 @@ type TokenService interface {
 
 	// Invalidates the token - the token cannot be used after that, Check will return ErrUnknownToken.
 	Invalidate(token *Token) (*Token, error)
+
+	// Returns TokenService that will execute queries within transaction tx.
+	// NOTE This won't work as expected if TokenService is using a different database.
+	// Maybe returning a rollback func would be a good idea. On the other hand, currently
+	// not deleting a token is not the worst thing that can happen.
+	WithTransaction(tx GormDB) (TokenService, error)
 }
 
 type TokenServiceImpl struct {
@@ -45,7 +51,7 @@ type TokenServiceImpl struct {
 // especially since it will handle
 func CreateTokenServiceImpl(baseServices BaseServices) *TokenServiceImpl {
 	return &TokenServiceImpl{
-		baseServices: baseServices,
+		baseServices: baseServices.NewSession(),
 	}
 }
 
@@ -61,17 +67,19 @@ func (service *TokenServiceImpl) Create(user *User, purpose TokenPurposeEnum, ex
 	token := Token{
 		TokenId:      shortuuid.New(),
 		TokenHash:    string(hash),
-		TokenPurpose: TokenPurposeSession,
+		TokenPurpose: purpose,
 		Expires:      expiration,
 		Used:         false,
 		Recalled:     false,
 		User:         user,
 	}
 
+	println("creating token in mail", service.baseServices.Database)
 	tx := service.baseServices.Database.Create(&token)
 	if err := tx.GetError(); err != nil {
 		return nil, "", fmt.Errorf("%s database failed to create token: %+v", CallerFilename(), err)
 	}
+	println("token created in mail")
 
 	return &token, secret, nil
 }
@@ -129,4 +137,27 @@ func (service *TokenServiceImpl) Invalidate(token *Token) (*Token, error) {
 		return nil, fmt.Errorf("%s database failed to update token: %+v", CallerFilename(), err)
 	}
 	return token, nil
+}
+
+func (service *TokenServiceImpl) WithTransaction(tx GormDB) (TokenService, error) {
+	// Get current database and tx database
+	txDb, err := tx.DB()
+	if err != nil {
+		return nil, err
+	}
+	currDb, err := service.baseServices.Database.DB()
+	if err != nil {
+		return nil, err
+	}
+
+	// If databases match, this means, that the caller wants to create tokens in a transaction.
+	// Return a new TokenServiceImpl instance.
+	if txDb == currDb {
+		return &TokenServiceImpl{
+			baseServices: service.baseServices.WithTransaction(tx),
+		}, nil
+	} else {
+		fmt.Printf("%s WARN: token service is using a different database from tx! Make sure that is expected and delete this log line\n", CallerFilename())
+		return service, nil
+	}
 }

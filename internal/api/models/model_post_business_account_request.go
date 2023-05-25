@@ -11,17 +11,17 @@
 package api
 
 type PostBusinessAccountRequest struct {
-	Name string `json:"name,omitempty"`
+	Name string `json:"name,omitempty" binding:"required"`
 
-	Address string `json:"address,omitempty"`
+	Address string `json:"address,omitempty" binding:"required"`
 
-	GpsCoordinates string `json:"gpsCoordinates,omitempty"`
+	GpsCoordinates string `json:"gpsCoordinates,omitempty" binding:"required"`
 
-	Nip string `json:"nip,omitempty"`
+	Nip string `json:"nip,omitempty" binding:"required"`
 
-	Krs string `json:"krs,omitempty"`
+	Krs string `json:"krs,omitempty" binding:"required"`
 
-	Regon string `json:"regon,omitempty"`
+	Regon string `json:"regon,omitempty" binding:"required"`
 
-	OwnerName string `json:"ownerName,omitempty"`
+	OwnerName string `json:"ownerName,omitempty" binding:"required"`
 }

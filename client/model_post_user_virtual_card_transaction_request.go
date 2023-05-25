@@ -20,7 +20,7 @@ var _ MappedNullable = &PostUserVirtualCardTransactionRequest{}
 
 // PostUserVirtualCardTransactionRequest struct for PostUserVirtualCardTransactionRequest
 type PostUserVirtualCardTransactionRequest struct {
-	ItemIds []string `json:"itemIds,omitempty"`
+	ItemIds []string `json:"itemIds,omitempty" binding:"required"`
 }
 
 // NewPostUserVirtualCardTransactionRequest instantiates a new PostUserVirtualCardTransactionRequest object

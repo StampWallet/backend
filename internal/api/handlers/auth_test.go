@@ -563,6 +563,56 @@ func TestAuthHandlersPostAccountPasswordOk(t *testing.T) {
 	// TODO: MatchEntities and gomock.Eq
 }
 
+// Test postAccountPassword when newPassword is empty
+func TestAuthHandlersPostAccountPasswordOk(t *testing.T) {
+	// data prep
+	gin.SetMode(gin.TestMode)
+	w := httptest.NewRecorder()
+
+	oldPassword := "zaq1@WSX"
+	newPassword := ""
+
+	userOldPass := GetDefaultUser()
+	hash, _ := bcrypt.GenerateFromPassword([]byte(oldPassword), 10)
+	userOldPass.PasswordHash = string(hash)
+
+	userNewPass := userOldPass
+	hash, _ = bcrypt.GenerateFromPassword([]byte(newPassword), 10)
+	userNewPass.PasswordHash = string(hash)
+
+	payload := struct {
+		OldPassword string
+	}{
+		OldPassword: oldPassword,
+	}
+	payloadJson, _ := json.Marshal(payload)
+
+	context := NewTestContextBuilder(w).
+		SetDefaultUrl().
+		SetEndpoint("/auth/account/password").
+		SetUser(userOldPass).
+		SetMethod("POST").
+		SetHeader("Accept", "application/json").
+		SetHeader("Content-Type", "application/json").
+		SetDefaultToken().
+		SetBody(payloadJson).
+		Context
+
+	respBodyExpected := api.DefaultResponse{Status: api.INVALID_REQUEST}
+
+	ctrl := gomock.NewController(t)
+	handler := GetAuthHandlers(ctrl)
+
+	handler.postAccountPassword(context)
+
+	respBody, respCode, respParseErr := ExtractResponse[api.DefaultResponse](w)
+
+	require.Nilf(t, respParseErr, "Failed to parse JSON response")
+	require.Equalf(t, int(200), respCode, "Response returned unexpected status code")
+	require.Truef(t, MatchEntities(respBodyExpected, respBody), "Response returned unexpected body contents")
+	// TODO: MatchEntities and gomock.Eq
+}
+
 // Tests postAccountPassword when the old password is invalid
 func TestAuthHandlersPostAccountPasswordNok_OldPass(t *testing.T) {
 	// data prep

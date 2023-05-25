@@ -11,5 +11,5 @@
 package api
 
 type PatchBusinessAccountRequest struct {
-	Name string `json:"name,omitempty"`
+	Name string `json:"name,omitempty" binding:"required"`
 }

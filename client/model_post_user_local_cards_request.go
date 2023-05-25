@@ -20,9 +20,9 @@ var _ MappedNullable = &PostUserLocalCardsRequest{}
 
 // PostUserLocalCardsRequest struct for PostUserLocalCardsRequest
 type PostUserLocalCardsRequest struct {
-	Name *string `json:"name,omitempty"`
-	Type *string `json:"type,omitempty"`
-	Code *string `json:"code,omitempty"`
+	Name *string `json:"name,omitempty" binding:"required"`
+	Type *string `json:"type,omitempty" binding:"required"`
+	Code *string `json:"code,omitempty" binding:"required"`
 }
 
 // NewPostUserLocalCardsRequest instantiates a new PostUserLocalCardsRequest object

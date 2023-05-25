@@ -71,7 +71,7 @@ func (service *EmailServiceImpl) Send(email string, subject string, body string)
 	if err != nil {
 		return fmt.Errorf("%s failed to add recipient: %+v", CallerFilename(), err)
 	}
-	msg.SetBodyString(mail.TypeTextHTML, subject)
+	msg.SetBodyString(mail.TypeTextHTML, body)
 
 	err = service.mailClient.DialAndSend(msg)
 	if err != nil {

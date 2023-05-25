@@ -20,8 +20,8 @@ var _ MappedNullable = &PostAccountPasswordRequest{}
 
 // PostAccountPasswordRequest struct for PostAccountPasswordRequest
 type PostAccountPasswordRequest struct {
-	Password    *string `json:"password,omitempty"`
-	OldPassword *string `json:"oldPassword,omitempty"`
+	Password    *string `json:"password,omitempty" binding:"required"`
+	OldPassword *string `json:"oldPassword,omitempty" binding:"required"`
 }
 
 // NewPostAccountPasswordRequest instantiates a new PostAccountPasswordRequest object

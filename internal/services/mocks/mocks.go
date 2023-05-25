@@ -10,6 +10,7 @@ import (
 	time "time"
 
 	database "github.com/StampWallet/backend/internal/database"
+	services "github.com/StampWallet/backend/internal/services"
 	gomock "github.com/golang/mock/gomock"
 )
 
@@ -80,6 +81,21 @@ func (m *MockTokenService) Invalidate(arg0 *database.Token) (*database.Token, er
 func (mr *MockTokenServiceMockRecorder) Invalidate(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Invalidate", reflect.TypeOf((*MockTokenService)(nil).Invalidate), arg0)
+}
+
+// WithTransaction mocks base method.
+func (m *MockTokenService) WithTransaction(arg0 database.GormDB) (services.TokenService, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "WithTransaction", arg0)
+	ret0, _ := ret[0].(services.TokenService)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// WithTransaction indicates an expected call of WithTransaction.
+func (mr *MockTokenServiceMockRecorder) WithTransaction(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WithTransaction", reflect.TypeOf((*MockTokenService)(nil).WithTransaction), arg0)
 }
 
 // MockEmailService is a mock of EmailService interface.

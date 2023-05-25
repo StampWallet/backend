@@ -61,6 +61,42 @@ func TestTokenServiceCreate(t *testing.T) {
 		"Token expiration date be should be at most 25 hours after now")
 }
 
+func TestTokenServiceCreateEmail(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	service := GetTokenService(ctrl)
+	user := GetTestUser(service.baseServices.Database)
+
+	token, secret, err := service.Create(user, TokenPurposeEmail, time.Now().Add(24*time.Hour))
+	require.Nilf(t, err, "Error should be nil")
+	require.NotNilf(t, token, "Token should not be nil")
+	bcryptErr := bcrypt.CompareHashAndPassword([]byte(token.TokenHash), []byte(secret))
+	require.Nilf(t, bcryptErr, "Bcrypt validation should pass")
+	require.Equalf(t, user.ID, token.OwnerId, "Token ownerId should match")
+	require.Equalf(t, token.TokenPurpose, TokenPurposeEmail, "Token purpose should be email")
+	require.Falsef(t, token.Used, "Token used should be false")
+	require.Falsef(t, token.Recalled, "Token recalled should be false")
+	require.Truef(t, time.Now().Before(token.Expires.Add(-23*time.Hour)),
+		"Token expiration date be at least 23 hours after now")
+	require.Truef(t, time.Now().Add(25*time.Hour).After(token.Expires),
+		"Token expiration date be should be at most 25 hours after now")
+
+	// Check if token was propoery saved into the database
+	var dbToken Token
+	tx := service.baseServices.Database.First(&dbToken, Token{TokenId: token.TokenId})
+	require.Nilf(t, tx.GetError(), "Database.First should not return an error")
+
+	bcryptErr = bcrypt.CompareHashAndPassword([]byte(dbToken.TokenHash), []byte(secret))
+	require.Nilf(t, bcryptErr, "Bcrypt validation should pass")
+	require.Equalf(t, user.ID, dbToken.OwnerId, "Token ownerId should match")
+	require.Falsef(t, dbToken.Used, "Token used should be false")
+	require.Falsef(t, dbToken.Recalled, "Token recalled should be false")
+	require.Equalf(t, dbToken.TokenPurpose, TokenPurposeEmail, "Token purpose should be email")
+	require.Truef(t, time.Now().Before(dbToken.Expires.Add(-23*time.Hour)),
+		"Token expiration date be at least 23 hours after now")
+	require.Truef(t, time.Now().Add(25*time.Hour).After(dbToken.Expires),
+		"Token expiration date be should be at most 25 hours after now")
+}
+
 // Test TokenServiceImpl.Check with TokenPurposeEmail on happy path and after the token was already used
 func TestTokenServiceCheckValid(t *testing.T) {
 	ctrl := gomock.NewController(t)

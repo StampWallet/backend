@@ -1154,10 +1154,12 @@ components:
           type: string
           format: email
           example: test@example.com
+          x-go-custom-tag: binding:"required"
         password:
           type: string
           format: password
           example: zaq1@WSX
+          x-go-custom-tag: binding:"required"
     PostAccountResponse:
       type: object
       properties:
@@ -1170,21 +1172,25 @@ components:
         token:
           type: string
           example: ZWVnaDhhZWg4bGVpbDJhaQo=:XBlaW5nZWViNWFpU2hlaGUKa
+          x-go-custom-tag: binding:"required"
     PostAccountEmailRequest:
       type: object
       properties:
         email:
           type: string
           example: test@example.com
+          x-go-custom-tag: binding:"required"
     PostAccountPasswordRequest:
       type: object
       properties:
         password:
           type: string
           example: zaq1@WSX
+          x-go-custom-tag: binding:"required"
         oldPassword:
           type: string
           example: password123
+          x-go-custom-tag: binding:"required"
     PostAccountSessionRequest:
       type: object
       properties:
@@ -1192,10 +1198,12 @@ components:
           type: string
           format: email
           example: test@example.com
+          x-go-custom-tag: binding:"required"
         password:
           type: string
           format: password
           example: zaq1@WSX
+          x-go-custom-tag: binding:"required"
     PostAccountSessionResponse:
       type: object
       properties:
@@ -1209,18 +1217,25 @@ components:
       properties: 
         name:
           type: string
+          x-go-custom-tag: binding:"required"
         address:
           type: string
+          x-go-custom-tag: binding:"required"
         gpsCoordinates:
           type: string
+          x-go-custom-tag: binding:"required"
         nip:
           type: string
+          x-go-custom-tag: binding:"required"
         krs:
           type: string
+          x-go-custom-tag: binding:"required"
         regon:
           type: string
+          x-go-custom-tag: binding:"required"
         ownerName:
           type: string
+          x-go-custom-tag: binding:"required"
       example:
         name: test business
         address: ul. Łojasiewicza 6 Kraków Polska
@@ -1261,6 +1276,7 @@ components:
       properties:
         name:
           type: string
+          x-go-custom-tag: binding:"required"
       example:
         name: test
     PostBusinessAccountMenuImageResponse:
@@ -1362,12 +1378,15 @@ components:
         name: 
           type: string
           example: "test card"
+          x-go-custom-tag: binding:"required"
         type: 
           type: string
           example: VmlpOW9OZ2llUGl1Cg
+          x-go-custom-tag: binding:"required"
         code: 
           type: string
           example: 1234567890
+          x-go-custom-tag: binding:"required"
     GetUserLocalCardTypesResponse:
       type: object
       properties:
@@ -1391,6 +1410,7 @@ components:
       properties:
         itemIds:
           type: array
+          x-go-custom-tag: binding:"required"
           items:
             type: string
       example:

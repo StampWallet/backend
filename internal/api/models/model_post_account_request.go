@@ -11,7 +11,7 @@
 package api
 
 type PostAccountRequest struct {
-	Email string `json:"email,omitempty"`
+	Email string `json:"email,omitempty" binding:"required"`
 
-	Password string `json:"password,omitempty"`
+	Password string `json:"password,omitempty" binding:"required"`
 }

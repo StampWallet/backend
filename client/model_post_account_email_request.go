@@ -20,7 +20,7 @@ var _ MappedNullable = &PostAccountEmailRequest{}
 
 // PostAccountEmailRequest struct for PostAccountEmailRequest
 type PostAccountEmailRequest struct {
-	Email *string `json:"email,omitempty"`
+	Email *string `json:"email,omitempty" binding:"required"`
 }
 
 // NewPostAccountEmailRequest instantiates a new PostAccountEmailRequest object

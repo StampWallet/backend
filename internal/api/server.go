@@ -39,7 +39,7 @@ func CreateAPIServer(
 		var uid uint
 		user, exists := c.Get("user")
 		if exists {
-			uid = user.(database.User).ID
+			uid = user.(*database.User).ID
 		}
 		logger.Printf("%s %s %d %d %d", c.Request.Method, c.Request.RequestURI,
 			c.Writer.Status(), c.Writer.Size(), uid)

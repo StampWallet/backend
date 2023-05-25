@@ -36,7 +36,7 @@ func (middleware *AuthMiddleware) Handle(c *gin.Context) {
 
 	// Make sure that Authorization scheme is Bearer and that the headers contains a single token
 	if len(header_value_split) != 2 || header_value_split[0] != "Bearer" {
-		c.JSON(401, api.DefaultResponse{
+		c.AbortWithStatusJSON(401, api.DefaultResponse{
 			Status: api.UNAUTHORIZED,
 		})
 		return
@@ -45,7 +45,7 @@ func (middleware *AuthMiddleware) Handle(c *gin.Context) {
 	// Split the token by :
 	token_split := strings.Split(header_value_split[1], ":")
 	if len(token_split) != 2 {
-		c.JSON(401, api.DefaultResponse{
+		c.AbortWithStatusJSON(401, api.DefaultResponse{
 			Status: api.UNAUTHORIZED,
 		})
 		return
@@ -53,13 +53,13 @@ func (middleware *AuthMiddleware) Handle(c *gin.Context) {
 
 	// Call TokenService to make sure that the token is valid
 	token, err := middleware.tokenService.Check(token_split[0], token_split[1])
-	if err == services.ErrUnknownToken {
-		c.JSON(401, api.DefaultResponse{
+	if err == services.ErrUnknownToken || err == services.ErrTokenExpired {
+		c.AbortWithStatusJSON(401, api.DefaultResponse{
 			Status: api.UNAUTHORIZED,
 		})
 		return
 	} else if err != nil || token.User == nil || token == nil {
-		c.JSON(500, api.DefaultResponse{
+		c.AbortWithStatusJSON(500, api.DefaultResponse{
 			Status: api.UNKNOWN_ERROR,
 		})
 		middleware.logger.Printf("Error: in AuthMiddleware.Handle, middleware.tokenService.Check: %s", err)

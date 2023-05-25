@@ -20,7 +20,7 @@ var _ MappedNullable = &PatchBusinessAccountRequest{}
 
 // PatchBusinessAccountRequest struct for PatchBusinessAccountRequest
 type PatchBusinessAccountRequest struct {
-	Name *string `json:"name,omitempty"`
+	Name *string `json:"name,omitempty" binding:"required"`
 }
 
 // NewPatchBusinessAccountRequest instantiates a new PatchBusinessAccountRequest object

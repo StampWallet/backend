@@ -65,7 +65,9 @@ func (handler *AuthHandlers) postAccount(c *gin.Context) {
 		if err == managers.ErrEmailExists {
 			c.JSON(409, api.DefaultResponse{Status: api.CONFLICT})
 		} else if err == managers.ErrInvalidEmail {
-			c.JSON(400, api.DefaultResponse{Status: api.INVALID_REQUEST})
+			c.JSON(400, api.DefaultResponse{Status: api.INVALID_REQUEST, Message: "INVALID_EMAIL"})
+		} else if err == managers.ErrPasswordTooWeak {
+			c.JSON(400, api.DefaultResponse{Status: api.INVALID_REQUEST, Message: "PASSWORD_TOO_WEAK"})
 		} else {
 			c.JSON(500, api.DefaultResponse{Status: api.UNKNOWN_ERROR})
 		}
@@ -146,7 +148,7 @@ func (handler *AuthHandlers) postAccountEmailConfirmation(c *gin.Context) {
 	// Pass data to authManager
 	_, err = handler.authManager.ConfirmEmail(tokenId, tokenSecret)
 	if err != nil {
-		handler.logger.Printf("failed to authManager.ChangePassword in postAccountEmailConfirmation %+v", err)
+		handler.logger.Printf("failed to authManager.ConfirmEmail in postAccountEmailConfirmation %+v", err)
 		if err == managers.ErrInvalidToken || err == managers.ErrInvalidTokenPurpose {
 			c.JSON(401, api.DefaultResponse{Status: api.UNAUTHORIZED})
 		} else {
@@ -161,6 +163,7 @@ func (handler *AuthHandlers) postAccountEmailConfirmation(c *gin.Context) {
 // Handles email change request
 func (handler *AuthHandlers) postAccountPassword(c *gin.Context) {
 	// Parse request body
+	println("check done")
 	req := api.PostAccountPasswordRequest{}
 	if err := c.BindJSON(&req); err != nil {
 		handler.logger.Printf("failed to parse in postAccountPasswordRequest %+v", err)
@@ -183,6 +186,8 @@ func (handler *AuthHandlers) postAccountPassword(c *gin.Context) {
 		handler.logger.Printf("failed to authManager.ChangePassword in postAccountPassword %+v", err)
 		if err == managers.ErrInvalidOldPassword {
 			c.JSON(400, api.DefaultResponse{Status: api.INVALID_REQUEST, Message: "INVALID_PASSWORD"})
+		} else if err == managers.ErrPasswordTooWeak {
+			c.JSON(400, api.DefaultResponse{Status: api.INVALID_REQUEST, Message: "PASSWORD_TOO_WEAK"})
 		} else {
 			c.JSON(500, api.DefaultResponse{Status: api.UNKNOWN_ERROR})
 		}

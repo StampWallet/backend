@@ -20,13 +20,13 @@ var _ MappedNullable = &PostBusinessAccountRequest{}
 
 // PostBusinessAccountRequest struct for PostBusinessAccountRequest
 type PostBusinessAccountRequest struct {
-	Name           *string `json:"name,omitempty"`
-	Address        *string `json:"address,omitempty"`
-	GpsCoordinates *string `json:"gpsCoordinates,omitempty"`
-	Nip            *string `json:"nip,omitempty"`
-	Krs            *string `json:"krs,omitempty"`
-	Regon          *string `json:"regon,omitempty"`
-	OwnerName      *string `json:"ownerName,omitempty"`
+	Name           *string `json:"name,omitempty" binding:"required"`
+	Address        *string `json:"address,omitempty" binding:"required"`
+	GpsCoordinates *string `json:"gpsCoordinates,omitempty" binding:"required"`
+	Nip            *string `json:"nip,omitempty" binding:"required"`
+	Krs            *string `json:"krs,omitempty" binding:"required"`
+	Regon          *string `json:"regon,omitempty" binding:"required"`
+	OwnerName      *string `json:"ownerName,omitempty" binding:"required"`
 }
 
 // NewPostBusinessAccountRequest instantiates a new PostBusinessAccountRequest object

@@ -4,8 +4,11 @@ import (
 	"errors"
 	"fmt"
 	"net/mail"
+	"regexp"
 	"time"
+	"unicode"
 
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/lithammer/shortuuid/v4"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
@@ -22,7 +25,8 @@ var (
 	ErrInvalidTokenPurpose = errors.New("Invalid token purpose") // Invalid token purpose
 	ErrEmailExists         = errors.New("Email exists")          // Another user has the same email
 	ErrInvalidToken        = errors.New("Invalid token")         // Invalid/unknown token
-	ErrUnknownError        = errors.New("Unknown error")         // Unexpected error returned by external services
+	ErrPasswordTooWeak     = errors.New("Password too weak")
+	ErrUnknownError        = errors.New("Unknown error") // Unexpected error returned by external services
 )
 
 type AuthManager interface {
@@ -71,6 +75,22 @@ func CreateAuthManagerImpl(baseServices BaseServices,
 	}
 }
 
+func checkPassword(password string) bool {
+	if !(len(password) >= 8 && regexp.MustCompile(`\d`).MatchString(password)) {
+		return false
+	}
+	upper := false
+	lower := false
+	for _, v := range password {
+		if unicode.IsUpper(v) {
+			upper = true
+		} else if unicode.IsLower(v) {
+			lower = true
+		}
+	}
+	return upper && lower
+}
+
 func (manager *AuthManagerImpl) Create(userDetails UserDetails) (*User, *Token, string, error) {
 	_, err := mail.ParseAddress(userDetails.Email)
 	if err != nil {
@@ -99,6 +119,10 @@ func (manager *AuthManagerImpl) Create(userDetails UserDetails) (*User, *Token, 
 		return nil, nil, "", fmt.Errorf("failed to to find user, database error: %+v", err)
 	}
 
+	if !checkPassword(userDetails.Password) {
+		return nil, nil, "", ErrPasswordTooWeak
+	}
+
 	// Hash the password
 	hash, bcryptErr := bcrypt.GenerateFromPassword([]byte(userDetails.Password), 10)
 	if bcryptErr != nil {
@@ -115,21 +139,42 @@ func (manager *AuthManagerImpl) Create(userDetails UserDetails) (*User, *Token, 
 		//LastName:      userDetails.LastName,
 		EmailVerified: false,
 	}
+
 	txCreate := tx.Create(&user)
 	if err := txCreate.GetError(); err != nil {
 		tx.Rollback()
 		return nil, nil, "", fmt.Errorf("%s failed to to create user, database error: %+v", CallerFilename(), err)
 	}
+	// Commit transaction
+	// i have to commit before creating a token. different transactions here and in token service because
+	// database object is not shared. another transaction is started in token service and that transaction
+	// does not see the new user. because its not created yet. so you either get a lockup or a constraint error
+	// another possible solution is to pass the database object to services.
+	// NOTE solved with TokenService.WithTransaction
+	//if err := tx.Commit().GetError(); err != nil {
+	//	return nil, nil, "", fmt.Errorf("%s failed to commit, database error: %+v", CallerFilename(), err)
+	//}
 
-	// Create token for email verification
-	emailToken, emailSecret, err := manager.tokenService.Create(&user, TokenPurposeEmail, time.Now().Add(24*time.Hour))
+	tokenTx, err := manager.tokenService.WithTransaction(tx)
 	if err != nil {
 		tx.Rollback()
+		return nil, nil, "", fmt.Errorf("%s failed to call TokenService.WithTransaction %+v",
+			CallerFilename(), err)
+	}
+
+	fmt.Printf("%+v\n", user)
+	// Create token for email verification
+	emailToken, emailSecret, err := tokenTx.Create(&user, TokenPurposeEmail, time.Now().Add(24*time.Hour))
+	if err != nil {
+		tx.Rollback()
+		// perhaps delete the user instead? the account will work, its created and shit. but user will have to
+		// change the email to get another email confirmation. not perfect.
+		// perhaps add a "resend email confirmation" button?
 		return nil, nil, "", fmt.Errorf("%s failed to to create email token, tokenservice error: %+v", CallerFilename(), err)
 	}
 
 	// Create token for session
-	sessionToken, sessionSecret, err := manager.tokenService.Create(&user, TokenPurposeSession, time.Now().Add(time.Hour))
+	sessionToken, sessionSecret, err := tokenTx.Create(&user, TokenPurposeSession, time.Now().Add(time.Hour))
 	if err != nil {
 		tx.Rollback()
 		return nil, nil, "", fmt.Errorf("%s failed to to create session token, tokenservice error: %+v", CallerFilename(), err)
@@ -146,6 +191,7 @@ func (manager *AuthManagerImpl) Create(userDetails UserDetails) (*User, *Token, 
 	if err := tx.Commit().GetError(); err != nil {
 		return nil, nil, "", fmt.Errorf("%s failed to commit, database error: %+v", CallerFilename(), err)
 	}
+
 	return &user, sessionToken, sessionSecret, nil
 }
 
@@ -203,7 +249,7 @@ func (manager *AuthManagerImpl) ConfirmEmail(tokenId string, tokenSecret string)
 
 	// Find email token
 	token, err := manager.tokenService.Check(tokenId, tokenSecret)
-	if err == ErrUnknownToken {
+	if err == ErrUnknownToken || err == ErrTokenUsed {
 		tx.Rollback()
 		return nil, ErrInvalidToken
 	} else if err != nil {
@@ -216,7 +262,7 @@ func (manager *AuthManagerImpl) ConfirmEmail(tokenId string, tokenSecret string)
 		tx.Rollback()
 		return nil, ErrInvalidTokenPurpose
 	}
-	if token.Recalled || token.Used {
+	if token.Recalled {
 		tx.Rollback()
 		return nil, ErrInvalidToken
 	}
@@ -229,12 +275,12 @@ func (manager *AuthManagerImpl) ConfirmEmail(tokenId string, tokenSecret string)
 		return nil, err
 	}
 
-	// Invalidate token
-	token, err = manager.tokenService.Invalidate(token)
-	if err != nil {
-		tx.Rollback()
-		return nil, err
-	}
+	//// Invalidate token (not necessary)
+	//token, err = manager.tokenService.Invalidate(token)
+	//if err != nil {
+	//	tx.Rollback()
+	//	return nil, err
+	//}
 
 	// Commit transaction
 	if err := tx.Commit().GetError(); err != nil {
@@ -251,6 +297,10 @@ func (manager *AuthManagerImpl) ChangePassword(user *User, oldPassword string, n
 		return nil, ErrInvalidOldPassword
 	} else if err != nil {
 		return nil, err
+	}
+
+	if !checkPassword(newPassword) {
+		return nil, ErrPasswordTooWeak
 	}
 
 	// Generate new password
@@ -284,17 +334,25 @@ func (manager *AuthManagerImpl) ChangeEmail(user *User, newEmail string) (*User,
 	txSave := tx.Save(&user)
 	dbErr := txSave.GetError()
 	// Another user has the same email
-	if dbErr == gorm.ErrDuplicatedKey {
+	var pgErr *pgconn.PgError
+	if errors.As(dbErr, &pgErr) && pgErr.Code == "23505" {
 		tx.Rollback()
 		manager.baseServices.Logger.Printf("gorm error when changing email %s\n", dbErr)
 		return nil, ErrEmailExists
 	} else if dbErr != nil {
+		tx.Rollback()
 		return nil, dbErr
 	}
 
+	// Get TokenService that executes queries within a transaction
+	tokenTx, err := manager.tokenService.WithTransaction(tx)
+	if err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
 	// Create email verification token
-	emailToken, emailSecret, err := manager.tokenService.Create(user,
-		TokenPurposeEmail, time.Now().Add(24*time.Hour))
+	emailToken, emailSecret, err := tokenTx.Create(user, TokenPurposeEmail, time.Now().Add(24*time.Hour))
 	if err != nil {
 		tx.Rollback()
 		return nil, err
@@ -308,7 +366,7 @@ func (manager *AuthManagerImpl) ChangeEmail(user *User, newEmail string) (*User,
 	}
 
 	// Commit transaction
-	if err := tx.Commit().GetError(); err != nil {
+	if err = tx.Commit().GetError(); err != nil {
 		return nil, err
 	}
 
