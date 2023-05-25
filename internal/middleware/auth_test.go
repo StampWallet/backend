@@ -137,7 +137,7 @@ func TestHandleNok_EmailToken(t *testing.T) {
 }
 
 // Test AuthMiddleware when the token is invalid
-func TestHandleNok_UnknownToken(t *testing.T) {
+func testHandleTokenError(t *testing.T, err error) {
 	// data prep
 	gin.SetMode(gin.TestMode)
 	w := httptest.NewRecorder()

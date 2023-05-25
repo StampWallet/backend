@@ -26,7 +26,7 @@ func GetFileStorageService(ctrl *gomock.Controller) *FileStorageServiceImpl {
 		basePath: temp,
 		baseServices: BaseServices{
 			Logger:   log.Default(),
-			Database: GetDatabase(),
+			Database: GetTestDatabase(),
 		},
 	}
 }

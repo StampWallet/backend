@@ -58,7 +58,7 @@ func TestBusinessAuthorizedAccessorInvalidAccess(t *testing.T) {
 
 	result, err := accessor.Get(anotherBusiness, &ItemDefinition{PublicId: itemDefinition.PublicId})
 	require.Nil(t, result, "accessor did not return nil")
-	require.Equalf(t, NoAccess, err, "accessor returned error other than NoAccess")
+	require.Equalf(t, ErrNoAccess, err, "accessor returned error other than NoAccess")
 }
 
 func TestBusinessAuthorizedAccessorNoEntity(t *testing.T) {
@@ -66,7 +66,7 @@ func TestBusinessAuthorizedAccessorNoEntity(t *testing.T) {
 
 	result, err := accessor.Get(business, &ItemDefinition{PublicId: "test"})
 	require.Nil(t, result, "accessor did not return nil")
-	require.Equal(t, NotFound, err, "accessor returned error other than NoAccess")
+	require.Equal(t, ErrNotFound, err, "accessor returned error other than NoAccess")
 }
 
 // UserAuthorizedAccessor
@@ -96,7 +96,7 @@ func TestUserAuthorizedAccessorInvalidAccess(t *testing.T) {
 
 	result, err := accessor.Get(user, &LocalCard{PublicId: localCard2.PublicId})
 	require.Nilf(t, result, "accessor did not return nil")
-	require.Equalf(t, NoAccess, err, "accessor returned error other than NoAccess")
+	require.Equalf(t, ErrNoAccess, err, "accessor returned error other than NoAccess")
 }
 
 func TestUserAuthorizedAccessorNoEntity(t *testing.T) {
@@ -104,7 +104,7 @@ func TestUserAuthorizedAccessorNoEntity(t *testing.T) {
 
 	result, err := accessor.Get(user, &LocalCard{PublicId: "test"})
 	require.Nilf(t, result, "accessor did not return nil")
-	require.Equalf(t, NotFound, err, "accessor returned error other than NotFound")
+	require.Equalf(t, ErrNotFound, err, "accessor returned error other than NotFound")
 }
 
 // TransactionAuthorizedAccessor
@@ -147,7 +147,7 @@ func TestTransactionAuthorizedAccessorInvalidFromUser(t *testing.T) {
 
 	result, err := accessor.GetForUser(user2, transaction.Code)
 	require.Nilf(t, result, "accessor did not return nil")
-	require.Equalf(t, NoAccess, err, "accessor returned error other than NotFound")
+	require.Equalf(t, ErrNoAccess, err, "accessor returned error other than NotFound")
 }
 
 func TestTransactionAuthorizedAccessorNoEntityFromUser(t *testing.T) {
@@ -155,7 +155,7 @@ func TestTransactionAuthorizedAccessorNoEntityFromUser(t *testing.T) {
 
 	result, err := accessor.GetForUser(user, "asdasd")
 	require.Nilf(t, result, "accessor did not return nil")
-	require.Equalf(t, NotFound, err, "accessor returned error other than NotFound")
+	require.Equalf(t, ErrNotFound, err, "accessor returned error other than NotFound")
 }
 
 func TestTransactionAuthorizedAccessorValidFromBusiness(t *testing.T) {
@@ -177,7 +177,7 @@ func TestTransactionAuthorizedAccessorInvalidFromBusiness(t *testing.T) {
 
 	result, err := accessor.GetForBusiness(business2, transaction.Code)
 	require.Nilf(t, result, "accessor returned something other than nil")
-	require.Equalf(t, NoAccess, err, "accessor returned a different error than NoAccess")
+	require.Equalf(t, ErrNoAccess, err, "accessor returned a different error than NoAccess")
 }
 
 func TestTransactionAuthorizedAccessorNoEntityFromBuiness(t *testing.T) {
@@ -185,5 +185,5 @@ func TestTransactionAuthorizedAccessorNoEntityFromBuiness(t *testing.T) {
 
 	result, err := accessor.GetForBusiness(business, "123213")
 	require.Nilf(t, result, "accessor returned something other than nil")
-	require.Equalf(t, NotFound, err, "accessor returned a different error than NotFound")
+	require.Equalf(t, ErrNotFound, err, "accessor returned a different error than NotFound")
 }

@@ -265,6 +265,13 @@ func TestAuthManagerCreate(t *testing.T) {
 
 	manager.tokenService.(*MockTokenService).
 		EXPECT().
+		WithTransaction(
+			db,
+		).
+		Return(manager.tokenService, nil)
+
+	manager.tokenService.(*MockTokenService).
+		EXPECT().
 		Create(
 			mainUserMatcher,
 			gomock.Eq(TokenPurposeEmail),
@@ -549,11 +556,6 @@ func TestAuthManagerConfirmEmail(t *testing.T) {
 		Check("test_email", "test_hash").
 		Return(&token, nil)
 
-	//db.(*MockGormDB).
-	//	EXPECT().
-	//	Invalidate(StructMatcher{&tokenMatcher{TokenId: Ptr("test_email")}}).
-	//	Return(&token, nil)
-
 	manager.baseServices.Database.(*MockGormDB).
 		EXPECT().
 		Save(&StructMatcher{userMatcher{
@@ -562,10 +564,10 @@ func TestAuthManagerConfirmEmail(t *testing.T) {
 		}}).
 		DoAndReturn(returnError1(db, nil))
 
-	manager.tokenService.(*MockTokenService).
-		EXPECT().
-		Invalidate(&StructMatcher{tokenMatcher{TokenId: Ptr("test_email")}}).
-		Return(&token, nil)
+	//manager.tokenService.(*MockTokenService).
+	//	EXPECT().
+	//	Invalidate(&StructMatcher{tokenMatcher{TokenId: Ptr("test_email")}}).
+	//	Return(&token, nil)
 
 	mockCommit(db)
 
@@ -677,6 +679,13 @@ func TestAuthManagerChangeEmail(t *testing.T) {
 			EmailVerified: Ptr(false),
 		}}).
 		DoAndReturn(returnError1(db, nil))
+
+	manager.tokenService.(*MockTokenService).
+		EXPECT().
+		WithTransaction(
+			db,
+		).
+		Return(manager.tokenService, nil)
 
 	manager.tokenService.(*MockTokenService).
 		EXPECT().

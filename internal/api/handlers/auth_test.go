@@ -564,7 +564,7 @@ func TestAuthHandlersPostAccountPasswordOk(t *testing.T) {
 }
 
 // Test postAccountPassword when newPassword is empty
-func TestAuthHandlersPostAccountPasswordOk(t *testing.T) {
+func TestAuthHandlersPostAccountEmptyPassword(t *testing.T) {
 	// data prep
 	gin.SetMode(gin.TestMode)
 	w := httptest.NewRecorder()
@@ -608,7 +608,7 @@ func TestAuthHandlersPostAccountPasswordOk(t *testing.T) {
 	respBody, respCode, respParseErr := ExtractResponse[api.DefaultResponse](w)
 
 	require.Nilf(t, respParseErr, "Failed to parse JSON response")
-	require.Equalf(t, int(200), respCode, "Response returned unexpected status code")
+	require.Equalf(t, int(400), respCode, "Response returned unexpected status code")
 	require.Truef(t, MatchEntities(respBodyExpected, respBody), "Response returned unexpected body contents")
 	// TODO: MatchEntities and gomock.Eq
 }

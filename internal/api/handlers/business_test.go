@@ -415,7 +415,7 @@ func TestBusinessHandlersGetAccountInfoNok_NoBiz(t *testing.T) {
 		).
 		Return(
 			nil,
-			acc.NotFound,
+			acc.ErrNotFound,
 		)
 
 	respBodyExpected := api.DefaultResponse{Status: api.NOT_FOUND}
@@ -546,7 +546,7 @@ func TestBusinessHandlersPatchAccountInfoNok_InvBiz(t *testing.T) {
 		).
 		Return(
 			nil,
-			acc.NotFound,
+			acc.ErrNotFound,
 		)
 
 	handler.patchAccountInfo(context)
