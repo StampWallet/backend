@@ -33,22 +33,9 @@ func TestItemDefinitionHandlersGetItemDefinitionOk(t *testing.T) {
 	// testBusiness := GetDefaultBusiness(testBusinessUser)
 	// testItemDef := GetDefaultItem(testBusiness)
 
-	// payload := api.GetBusinessItemDefinitionsReq
-
 	// // test env prep
 	// ctrl := gomock.NewController(t)
 	// handler := getItemHandlers(ctrl)
-
-	// handler.userAuthorizedAcessor.(*MockUserAuthorizedAccessor).
-	// 	EXPECT().
-	// 	Get(
-	// 		gomock.Eq(testBusinessUser),
-	// 		gomock.Eq(&database.Business{PublicId: testBusiness.PublicId}),
-	// 	).
-	// 	Return(
-	// 		testBusiness,
-	// 		nil,
-	// 	)
 
 	// handler.businessManager.(*MockBusinessManager).
 	// 	EXPECT().
@@ -72,12 +59,18 @@ func TestItemDefinitionHandlersGetItemDefinitionOk(t *testing.T) {
 	// TODO: This endpoint needs a corrected openapi spec definition
 }
 
-func TestItemDefinitionHandlersPostItemDefinitionOk(t *testing.T) {
+func setupItemDefinitionHandlersPostItemDefinition() (
+	w *httptest.ResponseRecorder,
+	context *gin.Context,
+	testBusiness *database.Business,
+	testItemDetails *managers.ItemDetails,
+	testItemDef *database.ItemDefinition,
+) {
 	testBusinessUser := GetDefaultUser()
-	testBusiness := GetDefaultBusiness(testBusinessUser)
-	testItemDef := GetDefaultItem(testBusiness)
+	testBusiness = GetDefaultBusiness(testBusinessUser)
+	testItemDef = GetDefaultItem(testBusiness)
 
-	testItemDetails := managers.ItemDetails{
+	testItemDetails = &managers.ItemDetails{
 		Name:        testItemDef.Name,
 		Price:       &testItemDef.Price,
 		Description: testItemDef.Description,
@@ -101,8 +94,8 @@ func TestItemDefinitionHandlersPostItemDefinitionOk(t *testing.T) {
 	payloadJson, _ := json.Marshal(payload)
 
 	gin.SetMode(gin.TestMode)
-	w := httptest.NewRecorder()
-	context := NewTestContextBuilder(w).
+	w = httptest.NewRecorder()
+	context = NewTestContextBuilder(w).
 		SetDefaultUrl().
 		SetEndpoint("/business/itemDefinitions").
 		SetUser(testBusinessUser).
@@ -113,20 +106,15 @@ func TestItemDefinitionHandlersPostItemDefinitionOk(t *testing.T) {
 		SetBody(payloadJson).
 		Context
 
+	return w, context, testBusiness, testItemDetails, testItemDef
+}
+
+func TestItemDefinitionHandlersPostItemDefinitionOk(t *testing.T) {
+	w, context, testBusiness, testItemDetails, testItemDef := setupItemDefinitionHandlersPostItemDefinition()
+
 	// test env prep
 	ctrl := gomock.NewController(t)
 	handler := getItemHandlers(ctrl)
-
-	handler.userAuthorizedAcessor.(*MockUserAuthorizedAccessor).
-		EXPECT().
-		Get(
-			gomock.Eq(testBusinessUser),
-			gomock.Eq(&database.Business{PublicId: testBusiness.PublicId}),
-		).
-		Return(
-			testBusiness,
-			nil,
-		)
 
 	handler.itemDefinitionManager.(*MockItemDefinitionManager).
 		EXPECT().
@@ -149,12 +137,47 @@ func TestItemDefinitionHandlersPostItemDefinitionOk(t *testing.T) {
 	require.Truef(t, MatchEntities(respBodyExpected, respBody), "Response returned unexpected body contents")
 }
 
-func TestItemDefinitionHandlersPatchItemDefinitionOk(t *testing.T) {
-	testBusinessUser := GetDefaultUser()
-	testBusiness := GetDefaultBusiness(testBusinessUser)
-	testItemDef := GetDefaultItem(testBusiness)
+func TestItemDefinitionHandlersPostItemDefinitionNok_BadDef(t *testing.T) {
+	w, context, testBusiness, testItemDetails, _ := setupItemDefinitionHandlersPostItemDefinition()
 
-	newItemDetails := managers.ItemDetails{
+	// test env prep
+	ctrl := gomock.NewController(t)
+	handler := getItemHandlers(ctrl)
+
+	handler.itemDefinitionManager.(*MockItemDefinitionManager).
+		EXPECT().
+		AddItem(
+			gomock.Eq(testBusiness),
+			gomock.Eq(testItemDetails),
+		).
+		Return(
+			nil,
+			managers.ErrInvalidItemDetails,
+		)
+
+	handler.postItemDefinition(context)
+
+	respBodyExpected := api.DefaultResponse{Status: api.INVALID_REQUEST}
+	respBody, respCode, respParseErr := ExtractResponse[api.DefaultResponse](w)
+
+	require.Nilf(t, respParseErr, "Failed to parse JSON response")
+	require.Equalf(t, respCode, int(400), "Response returned unexpected status code")
+	require.Truef(t, MatchEntities(respBodyExpected, respBody), "Response returned unexpected body contents")
+}
+
+func setupItemDefinitionHandlersPatchItemDefinition() (
+	w *httptest.ResponseRecorder,
+	context *gin.Context,
+	testBusiness *database.Business,
+	testItemDef *database.ItemDefinition,
+	newItemDef *database.ItemDefinition,
+	newItemDetails *managers.ItemDetails,
+) {
+	testBusinessUser := GetDefaultUser()
+	testBusiness = GetDefaultBusiness(testBusinessUser)
+	testItemDef = GetDefaultItem(testBusiness)
+
+	newItemDetails = &managers.ItemDetails{
 		Name:        "new item name",
 		Price:       Ptr(uint(2137)), // sorry
 		Description: "new item description",
@@ -164,7 +187,7 @@ func TestItemDefinitionHandlersPatchItemDefinitionOk(t *testing.T) {
 		Available:   Ptr(true),
 	}
 
-	newItemDef := &database.ItemDefinition{
+	newItemDef = &database.ItemDefinition{
 		PublicId:    testItemDef.PublicId,
 		BusinessId:  testBusiness.ID,
 		Name:        newItemDetails.Name,
@@ -192,8 +215,8 @@ func TestItemDefinitionHandlersPatchItemDefinitionOk(t *testing.T) {
 	payloadJson, _ := json.Marshal(payload)
 
 	gin.SetMode(gin.TestMode)
-	w := httptest.NewRecorder()
-	context := NewTestContextBuilder(w).
+	w = httptest.NewRecorder()
+	context = NewTestContextBuilder(w).
 		SetDefaultUrl().
 		SetEndpoint("/business/itemDefinitions"+testItemDef.PublicId).
 		SetUser(testBusinessUser).
@@ -204,26 +227,21 @@ func TestItemDefinitionHandlersPatchItemDefinitionOk(t *testing.T) {
 		SetBody(payloadJson).
 		Context
 
+	return w, context, testBusiness, testItemDef, newItemDef, newItemDetails
+}
+
+func TestItemDefinitionHandlersPatchItemDefinitionOk(t *testing.T) {
+	w, context, testBusiness, testItemDef, newItemDef, newItemDetails := setupItemDefinitionHandlersPatchItemDefinition()
+
 	// test env prep
 	ctrl := gomock.NewController(t)
 	handler := getItemHandlers(ctrl)
-
-	handler.userAuthorizedAcessor.(*MockUserAuthorizedAccessor).
-		EXPECT().
-		Get(
-			gomock.Eq(testBusinessUser),
-			gomock.Eq(&database.Business{PublicId: testBusiness.PublicId}),
-		).
-		Return(
-			testBusiness,
-			nil,
-		)
 
 	handler.businessAuthorizedAccessor.(*MockBusinessAuthorizedAccessor).
 		EXPECT().
 		Get(
 			gomock.Eq(testBusiness),
-			gomock.Eq(&database.ItemDefinition{PublicId: payload.PublicId}),
+			gomock.Eq(&database.ItemDefinition{PublicId: testItemDef.PublicId}),
 		).
 		Return(
 			testItemDef,
@@ -251,6 +269,73 @@ func TestItemDefinitionHandlersPatchItemDefinitionOk(t *testing.T) {
 	require.Truef(t, MatchEntities(respBodyExpected, respBody), "Response returned unexpected body contents")
 }
 
+func TestItemDefinitionHandlersPatchItemDefinitionNok_InvDef(t *testing.T) {
+	w, context, testBusiness, testItemDef, _, _ := setupItemDefinitionHandlersPatchItemDefinition()
+
+	// test env prep
+	ctrl := gomock.NewController(t)
+	handler := getItemHandlers(ctrl)
+
+	handler.businessAuthorizedAccessor.(*MockBusinessAuthorizedAccessor).
+		EXPECT().
+		Get(
+			gomock.Eq(testBusiness),
+			gomock.Eq(&database.ItemDefinition{PublicId: testItemDef.PublicId}),
+		).
+		Return(
+			nil,
+			managers.ErrInvalidItemDetails,
+		)
+
+	handler.patchItemDefinition(context)
+
+	respBodyExpected := api.DefaultResponse{Status: api.NOT_FOUND}
+	respBody, respCode, respParseErr := ExtractResponse[api.DefaultResponse](w)
+
+	require.Nilf(t, respParseErr, "Failed to parse JSON response")
+	require.Equalf(t, respCode, int(404), "Response returned unexpected status code")
+	require.Truef(t, MatchEntities(respBodyExpected, respBody), "Response returned unexpected body contents")
+}
+
+func TestItemDefinitionHandlersPatchItemDefinitionNok_BadDef(t *testing.T) {
+	w, context, testBusiness, testItemDef, _, newItemDetails := setupItemDefinitionHandlersPatchItemDefinition()
+
+	// test env prep
+	ctrl := gomock.NewController(t)
+	handler := getItemHandlers(ctrl)
+
+	handler.businessAuthorizedAccessor.(*MockBusinessAuthorizedAccessor).
+		EXPECT().
+		Get(
+			gomock.Eq(testBusiness),
+			gomock.Eq(&database.ItemDefinition{PublicId: testItemDef.PublicId}),
+		).
+		Return(
+			testItemDef,
+			nil,
+		)
+
+	handler.itemDefinitionManager.(*MockItemDefinitionManager).
+		EXPECT().
+		ChangeItemDetails(
+			gomock.Eq(testItemDef),
+			gomock.Eq(newItemDetails),
+		).
+		Return(
+			nil,
+			managers.ErrInvalidItemDetails,
+		)
+
+	handler.patchItemDefinition(context)
+
+	respBodyExpected := api.DefaultResponse{Status: api.INVALID_REQUEST}
+	respBody, respCode, respParseErr := ExtractResponse[api.DefaultResponse](w)
+
+	require.Nilf(t, respParseErr, "Failed to parse JSON response")
+	require.Equalf(t, respCode, int(400), "Response returned unexpected status code")
+	require.Truef(t, MatchEntities(respBodyExpected, respBody), "Response returned unexpected body contents")
+}
+
 func TestItemDefinitionHandlersDeleteItemDefinitionOk(t *testing.T) {
 	testBusinessUser := GetDefaultUser()
 	testBusiness := GetDefaultBusiness(testBusinessUser)
@@ -270,17 +355,6 @@ func TestItemDefinitionHandlersDeleteItemDefinitionOk(t *testing.T) {
 	// test env prep
 	ctrl := gomock.NewController(t)
 	handler := getItemHandlers(ctrl)
-
-	handler.userAuthorizedAcessor.(*MockUserAuthorizedAccessor).
-		EXPECT().
-		Get(
-			gomock.Eq(testBusinessUser),
-			gomock.Eq(&database.Business{PublicId: testBusiness.PublicId}),
-		).
-		Return(
-			testBusiness,
-			nil,
-		)
 
 	handler.businessAuthorizedAccessor.(*MockBusinessAuthorizedAccessor).
 		EXPECT().
@@ -310,4 +384,47 @@ func TestItemDefinitionHandlersDeleteItemDefinitionOk(t *testing.T) {
 	require.Truef(t, MatchEntities(respBodyExpected, respBody), "Response returned unexpected body contents")
 }
 
-// FUTURE: Rainy day scenarios tests (sequence diagrams)
+func TestItemDefinitionHandlersDeleteItemDefinitionNok_InvDef(t *testing.T) {
+	testBusinessUser1 := GetDefaultUser()
+	testBusinessUser2 := GetDefaultUser()
+	testBusiness1 := GetDefaultBusiness(testBusinessUser1)
+	testBusiness2 := GetDefaultBusiness(testBusinessUser2)
+	testItemDef := GetDefaultItem(testBusiness2)
+
+	gin.SetMode(gin.TestMode)
+	w := httptest.NewRecorder()
+	context := NewTestContextBuilder(w).
+		SetDefaultUrl().
+		SetEndpoint("/business/itemDefinitions"+testItemDef.PublicId).
+		SetUser(testBusinessUser1).
+		SetMethod("DELETE").
+		SetHeader("Content-Type", "application/json").
+		SetDefaultToken().
+		Context
+
+	// test env prep
+	ctrl := gomock.NewController(t)
+	handler := getItemHandlers(ctrl)
+
+	handler.businessAuthorizedAccessor.(*MockBusinessAuthorizedAccessor).
+		EXPECT().
+		Get(
+			gomock.Eq(testBusiness1),
+			gomock.Eq(&database.ItemDefinition{
+				PublicId: testItemDef.PublicId,
+			}),
+		).
+		Return(
+			nil,
+			managers.ErrUnknownItem,
+		)
+
+	handler.deleteItemDefinition(context)
+
+	respBodyExpected := api.DefaultResponse{Status: api.NOT_FOUND}
+	respBody, respCode, respParseErr := ExtractResponse[api.DefaultResponse](w)
+
+	require.Nilf(t, respParseErr, "Failed to parse JSON response")
+	require.Equalf(t, respCode, int(404), "Response returned unexpected status code")
+	require.Truef(t, MatchEntities(respBodyExpected, respBody), "Response returned unexpected body contents")
+}

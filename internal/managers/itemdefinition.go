@@ -1,6 +1,10 @@
 package managers
 
 import (
+<<<<<<< Updated upstream
+=======
+	"errors"
+>>>>>>> Stashed changes
 	"time"
 
 	. "github.com/StampWallet/backend/internal/database"
@@ -23,6 +27,9 @@ type ItemDetails struct {
 	MaxAmount   *uint
 	Available   *bool
 }
+
+var ErrInvalidItemDetails = errors.New("Invalid item details received")
+var ErrUnknownItem = errors.New("Item id is not recognized")
 
 type ItemDefinitionManagerImpl struct {
 	baseServices       BaseServices
