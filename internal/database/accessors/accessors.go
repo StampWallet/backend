@@ -74,30 +74,31 @@ func (accessor *BusinessAuthorizedAccessorImpl) Get(business *Business, conds Bu
 }
 
 // NOTE shouldnt be used for huge amounts of data
-func (accessor *BusinessAuthorizedAccessorImpl) GetAll(business *Business, conds BusinessOwnedEntity) ([]BusinessOwnedEntity, error) {
+func (accessor *BusinessAuthorizedAccessorImpl) GetAll(business *Business, conds BusinessOwnedEntity, preloads []string) ([]BusinessOwnedEntity, error) {
 	condsValue := reflect.ValueOf(conds)
-	field := condsValue.FieldByName("BusinessId")
+	field := condsValue.Elem().FieldByName("BusinessId")
 	if field.IsValid() {
 		if field.CanSet() && field.Kind() == reflect.Uint {
 			field.SetUint(uint64(business.ID))
 		}
 	}
 
-	to_filter := reflect.New(reflect.SliceOf(reflect.TypeOf(conds).Elem())).Interface().([]BusinessOwnedEntity)
-	tx := accessor.database.Find(&to_filter, conds)
-	if err := checkErr(tx); err != nil {
+	dbResult := reflect.New(reflect.SliceOf(reflect.TypeOf(conds).Elem()))
+	tx := accessor.database
+	for _, v := range preloads {
+		tx = tx.Preload(v)
+	}
+	tx = tx.Find(dbResult.Interface(), condsValue.Interface())
+	if err := tx.GetError(); err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return []BusinessOwnedEntity{}, nil
+		}
 		return nil, err
 	}
 
 	var result []BusinessOwnedEntity
-	for _, v := range result {
-		bid, err := v.GetBusinessId(accessor.database)
-		if err != nil {
-			return nil, fmt.Errorf("%w: %w", ErrDatabaseError, err)
-		}
-		if bid == business.ID {
-			result = append(result, v)
-		}
+	for i := 0; i != dbResult.Elem().Len(); i += 1 {
+		result = append(result, dbResult.Elem().Index(i).Addr().Interface().(BusinessOwnedEntity))
 	}
 
 	return result, nil
@@ -134,33 +135,29 @@ func (accessor *UserAuthorizedAccessorImpl) Get(user *User, conds UserOwnedEntit
 // NOTE shouldnt be used for huge amounts of data
 func (accessor *UserAuthorizedAccessorImpl) GetAll(user *User, conds UserOwnedEntity, preloads []string) ([]UserOwnedEntity, error) {
 	condsValue := reflect.ValueOf(conds)
-	field := condsValue.FieldByName("OwnerId")
+	field := condsValue.Elem().FieldByName("OwnerId")
 	if field.IsValid() {
 		if field.CanSet() && field.Kind() == reflect.Uint {
-			println("set")
 			field.SetUint(uint64(user.ID))
 		}
 	}
 
-	to_filter := reflect.New(reflect.SliceOf(reflect.TypeOf(conds).Elem())).Interface().([]UserOwnedEntity)
+	dbResult := reflect.New(reflect.SliceOf(reflect.TypeOf(conds).Elem()))
 	tx := accessor.database
 	for _, v := range preloads {
 		tx = tx.Preload(v)
 	}
-	tx = tx.Find(&to_filter, conds)
-	if err := checkErr(tx); err != nil {
+	tx = tx.Find(dbResult.Interface(), condsValue.Interface())
+	if err := tx.GetError(); err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return []UserOwnedEntity{}, nil
+		}
 		return nil, err
 	}
 
 	var result []UserOwnedEntity
-	for _, v := range result {
-		bid, err := v.GetUserId(accessor.database)
-		if err != nil {
-			return nil, fmt.Errorf("%w: %w", ErrDatabaseError, err)
-		}
-		if bid == user.ID {
-			result = append(result, v)
-		}
+	for i := 0; i != dbResult.Elem().Len(); i += 1 {
+		result = append(result, dbResult.Elem().Index(i).Addr().Interface().(UserOwnedEntity))
 	}
 
 	return result, nil

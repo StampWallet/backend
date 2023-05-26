@@ -69,6 +69,31 @@ func TestBusinessAuthorizedAccessorNoEntity(t *testing.T) {
 	require.Equal(t, ErrNotFound, err, "accessor returned error other than NoAccess")
 }
 
+func TestBusinessAuthorizedAccessorValidAccessAll(t *testing.T) {
+	_, accessor, user, business, itemDefinition := setupBusinessAccessorTest(t)
+	itemDefinition2 := GetTestItemDefinition(accessor.database, business,
+		*GetTestFileMetadata(accessor.database, user))
+
+	//second business
+	user2 := GetTestUser(accessor.database)
+	business2 := GetTestBusiness(accessor.database, user)
+	_ = GetTestItemDefinition(accessor.database, business2,
+		*GetTestFileMetadata(accessor.database, user2))
+	_ = GetTestItemDefinition(accessor.database, business2,
+		*GetTestFileMetadata(accessor.database, user2))
+
+	result, err := accessor.GetAll(business, &ItemDefinition{}, []string{})
+	require.Nilf(t, err, "accessor returned non nil error")
+	require.NotNilf(t, result, "accessor returned nil")
+	var obtainedItemDefinitions []ItemDefinition
+	for _, v := range result {
+		obtainedItemDefinitions = append(obtainedItemDefinitions, *v.(*ItemDefinition))
+	}
+	require.Equal(t, 2, len(obtainedItemDefinitions), "accessor did not return two itemDefinition")
+	require.Equal(t, itemDefinition.PublicId, obtainedItemDefinitions[0].PublicId, "accessor returned a different first itemDefinition")
+	require.Equal(t, itemDefinition2.PublicId, obtainedItemDefinitions[1].PublicId, "accessor returned a different second itemDefinition")
+}
+
 // UserAuthorizedAccessor
 
 func setupUserAccessorTest(t *testing.T) (*gomock.Controller, *UserAuthorizedAccessorImpl, *User, *LocalCard) {
@@ -105,6 +130,25 @@ func TestUserAuthorizedAccessorNoEntity(t *testing.T) {
 	result, err := accessor.Get(user, &LocalCard{PublicId: "test"})
 	require.Nilf(t, result, "accessor did not return nil")
 	require.Equalf(t, ErrNotFound, err, "accessor returned error other than NotFound")
+}
+
+func TestUserAuthorizedAccessorValidAccessAll(t *testing.T) {
+	_, accessor, user, localCard := setupUserAccessorTest(t)
+	localCard2 := GetTestLocalCard(accessor.database, user)
+
+	user2 := GetTestUser(accessor.database)
+	_ = GetTestLocalCard(accessor.database, user2)
+
+	result, err := accessor.GetAll(user, &LocalCard{}, []string{})
+	require.Nilf(t, err, "accessor returned non nil error")
+	require.NotNilf(t, result, "accessor returned nil")
+	var obtainedLocalCards []LocalCard
+	for _, v := range result {
+		obtainedLocalCards = append(obtainedLocalCards, *v.(*LocalCard))
+	}
+	require.Equal(t, 2, len(obtainedLocalCards), "accessor did not return two cards")
+	require.Equal(t, localCard.PublicId, obtainedLocalCards[0].PublicId, "accessor returned a different first card")
+	require.Equal(t, localCard2.PublicId, obtainedLocalCards[1].PublicId, "accessor returned a different second card")
 }
 
 // TransactionAuthorizedAccessor

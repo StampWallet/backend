@@ -14,6 +14,14 @@ import (
 	. "github.com/StampWallet/backend/internal/utils"
 )
 
+// UserHandlers stores UserLocalCardHandlers and UserVirtualCardHandlers. It also implements
+// few requests related to functionalities for users that did not fit other handlers.
+// (currently retrieving a list of local and virtual cards, searching for businesses)
+// Retrieval of local and virtual cards is coupled in a single request to limit number
+// of requests made by the application.
+// All requests require middleware that will insert user object into the context under "user".
+// Such middleware has to be set up by owner of the external router group
+// (whoever calls UserHandlers.Connect).
 type UserHandlers struct {
 	businessManager       BusinessManager
 	userAuthorizedAcessor UserAuthorizedAccessor
@@ -30,6 +38,8 @@ type UserHandlers struct {
 	logger *log.Logger
 }
 
+// Creates UserHandlers. UserHandlers "owns" UserVirtualCardHandlers and UserLocalCardHandlers,
+// hence these two structs are created in this function, not passed as arguments.
 func CreateUserHandlers(
 	virtualCardManager VirtualCardManager,
 	localCardManager LocalCardManager,
@@ -64,6 +74,9 @@ func CreateUserHandlers(
 	}
 }
 
+// Converts database.Business to api.ShortBusinessDetailsApiModel
+// Most data is lost in conversion - api.ShortBusinessDetailsApiModel does not contain all
+// data from model
 func convertBusinessToShortApiModel(business *database.Business) api.ShortBusinessDetailsApiModel {
 	return api.ShortBusinessDetailsApiModel{
 		PublicId:       business.PublicId,
@@ -75,7 +88,9 @@ func convertBusinessToShortApiModel(business *database.Business) api.ShortBusine
 	}
 }
 
+// Handles local and virtual cards retrieval request
 func (handler *UserHandlers) getUserCards(c *gin.Context) {
+	// Get user object from middleware
 	userAny, exists := c.Get("user")
 	if !exists {
 		handler.logger.Printf("user not available context")
@@ -124,6 +139,8 @@ func (handler *UserHandlers) getUserCards(c *gin.Context) {
 	c.JSON(200, result)
 }
 
+// Handles business search request
+// Requires middleware that will insert user object into the context under "user".
 func (handler *UserHandlers) getSearchBusinesses(c *gin.Context) {
 	textQuery := c.Query("text")
 	locationQuery := c.Query("location")
@@ -197,9 +214,11 @@ func (handler *UserHandlers) getSearchBusinesses(c *gin.Context) {
 	return
 }
 
+// Connects handler to gin router
 func (handler *UserHandlers) Connect(rg *gin.RouterGroup) {
 	cards := rg.Group("/cards")
 	{
+		cards.GET("", handler.getUserCards)
 		handler.localCardHandlers.Connect(cards.Group("/local"))
 	}
 	rg.GET("/businesses", handler.getSearchBusinesses)
@@ -242,6 +261,9 @@ func (handler *UserVirtualCardHandlers) Connect(rg *gin.RouterGroup) {
 
 }
 
+// UserLocalCardHandlers implements API handlers for requests related to
+// managing local cards (creating, deleting, retrieving types of cards).
+// All requests require middleware that will insert user object into the context under "user".
 type UserLocalCardHandlers struct {
 	localCardManager      LocalCardManager
 	userAuthorizedAcessor UserAuthorizedAccessor
@@ -345,6 +367,7 @@ func (handler *UserLocalCardHandlers) deleteCard(c *gin.Context) {
 	return
 }
 
+// Connects UserLocalCardHandlers to gin router
 func (handler *UserLocalCardHandlers) Connect(rg *gin.RouterGroup) {
 	rg.POST("", handler.postCard)
 	rg.GET("/types", handler.getCardTypes)
