@@ -612,7 +612,7 @@ func TestUserLocalCardHandlersPostCardOk(t *testing.T) {
 		SetBody(payloadJson).
 		Context
 
-	respBodyExpected := &api.DefaultResponse{Status: api.OK}
+	respBodyExpected := &api.PostUserLocalCardsResponse{PublicId: testCard.PublicId}
 
 	// test env prep
 	ctrl := gomock.NewController(t)
@@ -625,17 +625,17 @@ func TestUserLocalCardHandlersPostCardOk(t *testing.T) {
 			gomock.Eq(testCardDetails),
 		).
 		Return(
-			*testCard,
+			testCard,
 			nil,
 		)
 
 	handler.postCard(context)
 
-	respBody, respCode, respParseErr := ExtractResponse[api.DefaultResponse](w)
+	respBody, respCode, respParseErr := ExtractResponse[api.PostUserLocalCardsResponse](w)
 
 	require.Nilf(t, respParseErr, "Failed to parse JSON response")
 	require.Equalf(t, respCode, int(201), "Response returned unexpected status code")
-	require.Truef(t, MatchEntities(respBodyExpected, respBody), "Response returned unexpected body contents")
+	require.Truef(t, reflect.DeepEqual(respBodyExpected, respBody), "Response returned unexpected body contents")
 	// TODO: test MatchEntities and gomock.Eq
 }
 
@@ -684,6 +684,6 @@ func TestUserLocalCardHandlersDeleteCardOk(t *testing.T) {
 
 	require.Nilf(t, respParseErr, "Failed to parse JSON response")
 	require.Equalf(t, respCode, int(200), "Response returned unexpected status code")
-	require.Truef(t, MatchEntities(respBodyExpected, respBody), "Response returned unexpected body contents")
+	require.Truef(t, reflect.DeepEqual(respBodyExpected, respBody), "Response returned unexpected body contents")
 	// TODO: test MatchEntities and gomock.Eq
 }
