@@ -1,10 +1,7 @@
 package managers
 
 import (
-<<<<<<< Updated upstream
-=======
 	"errors"
->>>>>>> Stashed changes
 	"time"
 
 	. "github.com/StampWallet/backend/internal/database"

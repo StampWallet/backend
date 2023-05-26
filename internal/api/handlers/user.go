@@ -2,6 +2,7 @@ package api
 
 import (
 	"log"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 
@@ -63,12 +64,137 @@ func CreateUserHandlers(
 	}
 }
 
-func (handler *UserHandlers) getUserCards(c *gin.Context) {
+func convertBusinessToShortApiModel(business *database.Business) api.ShortBusinessDetailsApiModel {
+	return api.ShortBusinessDetailsApiModel{
+		PublicId:       business.PublicId,
+		Name:           business.Name,
+		Description:    business.Description,
+		GpsCoordinates: business.GPSCoordinates.ToString(),
+		BannerImageId:  business.BannerImageId,
+		IconImageId:    business.IconImageId,
+	}
+}
 
+func (handler *UserHandlers) getUserCards(c *gin.Context) {
+	userAny, exists := c.Get("user")
+	if !exists {
+		handler.logger.Printf("user not available context")
+		c.JSON(500, api.DefaultResponse{Status: api.UNKNOWN_ERROR})
+		return
+	}
+	user := userAny.(*database.User)
+
+	result := api.GetUserCardsResponse{}
+
+	localCards, err := handler.userAuthorizedAcessor.GetAll(user, &database.LocalCard{}, []string{})
+	if err != nil {
+		handler.logger.Printf("%s unknown error after userAuthorizedAcessor.GetAll for localCard: %+v",
+			CallerFilename(), err)
+		c.JSON(500, api.DefaultResponse{Status: api.UNKNOWN_ERROR})
+		return
+	}
+
+	for _, v := range localCards {
+		card := v.(*database.LocalCard)
+		result.LocalCards = append(result.LocalCards, api.LocalCardApiModel{
+			PublicId: card.PublicId,
+			Name:     card.Name,
+			Type:     card.Type,
+			Code:     card.Code,
+		})
+	}
+
+	virtualCards, err := handler.userAuthorizedAcessor.GetAll(user, &database.VirtualCard{},
+		[]string{"Business"})
+	if err != nil {
+		handler.logger.Printf("%s unknown error after userAuthorizedAcessor.GetAll for virtualCard: %+v",
+			CallerFilename(), err)
+		c.JSON(500, api.DefaultResponse{Status: api.UNKNOWN_ERROR})
+		return
+	}
+
+	for _, v := range virtualCards {
+		card := v.(*database.VirtualCard)
+		result.VirtualCards = append(result.VirtualCards, api.ShortVirtualCardApiModel{
+			BusinessDetails: convertBusinessToShortApiModel(card.Business),
+			Points:          int32(card.Points),
+		})
+	}
+
+	c.JSON(200, result)
 }
 
 func (handler *UserHandlers) getSearchBusinesses(c *gin.Context) {
+	textQuery := c.Query("text")
+	locationQuery := c.Query("location")
+	proximityQuery, proximityExists := c.GetQuery("proximity")
+	offsetQuery := c.Query("offset")
+	limitQuery := c.Query("limit")
 
+	var text *string
+	if textQuery != "" {
+		text = &textQuery
+	}
+
+	var location *database.GPSCoordinates
+	if locationQuery != "" {
+		coords, err := database.GPSCoordinatesFromString(locationQuery)
+		if err != nil {
+			c.JSON(400, api.DefaultResponse{Status: api.INVALID_REQUEST, Message: "INVALID_LOCATION"})
+			return
+		}
+		location = &coords
+	}
+
+	var proximity uint = 50
+	if location != nil && !proximityExists {
+		c.JSON(400, api.DefaultResponse{Status: api.INVALID_REQUEST, Message: "LOCATION_BUT_NO_PROXIMITY"})
+		return
+	} else if location != nil {
+		localProximity, err := strconv.ParseUint(proximityQuery, 10, 32)
+		if err != nil {
+			c.JSON(400, api.DefaultResponse{Status: api.INVALID_REQUEST, Message: "INVALID_PROXIMITY"})
+			return
+		}
+		proximity = uint(localProximity)
+	}
+
+	var offset uint = 0
+	var limit uint = 50
+
+	if offsetQuery != "" {
+		localOffset, err := strconv.ParseUint(offsetQuery, 10, 32)
+		if err != nil {
+			c.JSON(400, api.DefaultResponse{Status: api.INVALID_REQUEST, Message: "INVALID_OFFSET"})
+			return
+		}
+		offset = uint(localOffset)
+	}
+
+	if limitQuery != "" {
+		localLimit, err := strconv.ParseUint(limitQuery, 10, 32)
+		if err != nil {
+			c.JSON(400, api.DefaultResponse{Status: api.INVALID_REQUEST, Message: "INVALID_OFFSET"})
+			return
+		}
+		offset = uint(localLimit)
+	}
+
+	businesses, err := handler.businessManager.Search(text, location, proximity, offset, limit)
+	if err != nil {
+		handler.logger.Printf("%s unknown error after businessManager.Search %+v", CallerFilename(), err)
+		c.JSON(500, api.DefaultResponse{Status: api.UNKNOWN_ERROR})
+		return
+	}
+
+	result := api.GetUserBusinessesSearchResponse{}
+
+	for _, v := range businesses {
+		result.Businesses = append(result.Businesses, convertBusinessToShortApiModel(&v))
+	}
+
+	c.JSON(200, result)
+	return
 }
 
 func (handler *UserHandlers) Connect(rg *gin.RouterGroup) {
@@ -76,6 +202,7 @@ func (handler *UserHandlers) Connect(rg *gin.RouterGroup) {
 	{
 		handler.localCardHandlers.Connect(cards.Group("/local"))
 	}
+	rg.GET("/businesses", handler.getSearchBusinesses)
 }
 
 type UserVirtualCardHandlers struct {

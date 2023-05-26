@@ -1,5 +1,8 @@
 package database
 
+// TODO change to accessors
+// package database in package database...
+
 import (
 	"errors"
 	"fmt"
@@ -70,15 +73,41 @@ func (accessor *BusinessAuthorizedAccessorImpl) Get(business *Business, conds Bu
 	return checkEq(result, business.ID, id, err)
 }
 
+// NOTE shouldnt be used for huge amounts of data
 func (accessor *BusinessAuthorizedAccessorImpl) GetAll(business *Business, conds BusinessOwnedEntity) ([]BusinessOwnedEntity, error) {
-	return nil, nil // __jm__
+	condsValue := reflect.ValueOf(conds)
+	field := condsValue.FieldByName("BusinessId")
+	if field.IsValid() {
+		if field.CanSet() && field.Kind() == reflect.Uint {
+			field.SetUint(uint64(business.ID))
+		}
+	}
+
+	to_filter := reflect.New(reflect.SliceOf(reflect.TypeOf(conds).Elem())).Interface().([]BusinessOwnedEntity)
+	tx := accessor.database.Find(&to_filter, conds)
+	if err := checkErr(tx); err != nil {
+		return nil, err
+	}
+
+	var result []BusinessOwnedEntity
+	for _, v := range result {
+		bid, err := v.GetBusinessId(accessor.database)
+		if err != nil {
+			return nil, fmt.Errorf("%w: %w", ErrDatabaseError, err)
+		}
+		if bid == business.ID {
+			result = append(result, v)
+		}
+	}
+
+	return result, nil
 }
 
 // UserAuthorizedAccessor
 
 type UserAuthorizedAccessor interface {
 	Get(user *User, cond UserOwnedEntity) (UserOwnedEntity, error)
-	GetAll(user *User, cond UserOwnedEntity) ([]UserOwnedEntity, error)
+	GetAll(user *User, cond UserOwnedEntity, preloads []string) ([]UserOwnedEntity, error)
 }
 
 type UserAuthorizedAccessorImpl struct {
@@ -102,8 +131,39 @@ func (accessor *UserAuthorizedAccessorImpl) Get(user *User, conds UserOwnedEntit
 	return checkEq(result, user.ID, id, err)
 }
 
-func (accessor *UserAuthorizedAccessorImpl) GetAll(user *User, conds UserOwnedEntity) ([]UserOwnedEntity, error) {
-	return nil, nil // __jm__
+// NOTE shouldnt be used for huge amounts of data
+func (accessor *UserAuthorizedAccessorImpl) GetAll(user *User, conds UserOwnedEntity, preloads []string) ([]UserOwnedEntity, error) {
+	condsValue := reflect.ValueOf(conds)
+	field := condsValue.FieldByName("OwnerId")
+	if field.IsValid() {
+		if field.CanSet() && field.Kind() == reflect.Uint {
+			println("set")
+			field.SetUint(uint64(user.ID))
+		}
+	}
+
+	to_filter := reflect.New(reflect.SliceOf(reflect.TypeOf(conds).Elem())).Interface().([]UserOwnedEntity)
+	tx := accessor.database
+	for _, v := range preloads {
+		tx = tx.Preload(v)
+	}
+	tx = tx.Find(&to_filter, conds)
+	if err := checkErr(tx); err != nil {
+		return nil, err
+	}
+
+	var result []UserOwnedEntity
+	for _, v := range result {
+		bid, err := v.GetUserId(accessor.database)
+		if err != nil {
+			return nil, fmt.Errorf("%w: %w", ErrDatabaseError, err)
+		}
+		if bid == user.ID {
+			result = append(result, v)
+		}
+	}
+
+	return result, nil
 }
 
 // AuthorizedTransactionAccessor

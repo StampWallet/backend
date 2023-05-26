@@ -9,7 +9,6 @@ import (
 
 	api "github.com/StampWallet/backend/internal/api/models"
 	. "github.com/StampWallet/backend/internal/database/accessors/mocks"
-	. "github.com/StampWallet/backend/internal/managers/mocks"
 	. "github.com/StampWallet/backend/internal/services/mocks"
 	. "github.com/StampWallet/backend/internal/testutils"
 	"github.com/gin-gonic/gin"
@@ -63,7 +62,7 @@ func TestFileHandlerGetFileOk(t *testing.T) {
 
 	expectedContents, _ := io.ReadAll(TestFileReader("resources/test.png"))
 	require.Equalf(t, w.Result().StatusCode, int(201), "Response returned unexpected status code")
-	require.Equalf(w.Body.Bytes(), expectedContents, "Response returned unexpected file data")
+	require.Equalf(t, w.Body.Bytes(), expectedContents, "Response returned unexpected file data")
 	// TODO: test MatchEntities and gomock.Eq
 }
 

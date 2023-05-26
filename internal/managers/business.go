@@ -111,6 +111,8 @@ func (manager *BusinessManagerImpl) ChangeDetails(business *Business, businessDe
 	return business, nil
 }
 
+// NOTE limit offset is not a very good pagination method
+// https://www.citusdata.com/blog/2016/03/30/five-ways-to-paginate/
 func (manager *BusinessManagerImpl) Search(name *string, location *GPSCoordinates, proximityInMeters uint, offset uint, limit uint) ([]Business, error) {
 	var args []interface{}
 	//not a fan of constructing sql queries, but it should be safe this time. query is constructed only
