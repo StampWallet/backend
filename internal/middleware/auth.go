@@ -53,7 +53,7 @@ func (middleware *AuthMiddleware) Handle(c *gin.Context) {
 
 	// Call TokenService to make sure that the token is valid
 	token, err := middleware.tokenService.Check(token_split[0], token_split[1])
-	if err == services.ErrUnknownToken || err == services.ErrTokenExpired {
+	if err == services.ErrUnknownToken || err == services.ErrTokenExpired || err == services.ErrTokenUsed {
 		c.AbortWithStatusJSON(401, api.DefaultResponse{
 			Status: api.UNAUTHORIZED,
 		})
