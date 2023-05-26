@@ -5,9 +5,11 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"io"
+	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os"
 	"path"
 	"reflect"
 	"time"
@@ -102,6 +104,19 @@ func ReturnArg(arg interface{}) interface{} {
 
 type TestContextBuilder struct{ Context *gin.Context }
 
+func TestFileReader(filename string) io.Reader {
+	buf := new(bytes.Buffer)
+	mw := multipart.NewWriter(buf)
+	w, _ := mw.CreateFormFile("file", "test")
+
+	file, _ := os.Open(filename)
+	io.Copy(w, file)
+
+	file.Close()
+	mw.Close()
+	return buf
+}
+
 func NewTestContextBuilder(w *httptest.ResponseRecorder) *TestContextBuilder {
 	ctx, _ := gin.CreateTestContext(w)
 	ctx.Request, _ = http.NewRequest("", "", nil)
@@ -137,6 +152,13 @@ func (tc *TestContextBuilder) SetEndpoint(endpointPath string) *TestContextBuild
 	return tc
 }
 
+func (tc *TestContextBuilder) AddQueryParam(paramName string, paramValue string) *TestContextBuilder {
+	query := tc.Context.Request.URL.Query()
+	query.Add(paramName, paramValue)
+	tc.Context.Request.URL.RawQuery = query.Encode()
+	return tc
+}
+
 func (tc *TestContextBuilder) SetMethod(method string) *TestContextBuilder {
 	tc.Context.Request.Method = method
 	return tc
@@ -145,6 +167,22 @@ func (tc *TestContextBuilder) SetMethod(method string) *TestContextBuilder {
 func (tc *TestContextBuilder) SetHeader(headerKey string, headerValue string) *TestContextBuilder {
 	tc.Context.Request.Header.Set(headerKey, headerValue)
 	return tc
+}
+
+// Overwrites request body
+// Lifted from https://github.com/gin-gonic/gin/blob/master/context_test.go > TestContextFormFile
+func (tc *TestContextBuilder) SetTestFile(filename string) *TestContextBuilder {
+	r := TestFileReader(filename)
+	tc.Context.Request.Body = io.NopCloser(r)
+	return tc.SetHeader("Content-Type", "multipart/form-data")
+}
+
+func (tc *TestContextBuilder) AttachTestPng() *TestContextBuilder {
+	return tc.SetTestFile("resources/test.png")
+}
+
+func (tc *TestContextBuilder) AttachTestJpeg() *TestContextBuilder {
+	return tc.SetTestFile("resources/test.jpeg")
 }
 
 func (tc *TestContextBuilder) SetToken(token string) *TestContextBuilder {

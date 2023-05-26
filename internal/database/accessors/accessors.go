@@ -46,6 +46,7 @@ func checkEq[T authModel](el T, expectedId uint, id uint, err error) (T, error) 
 
 type BusinessAuthorizedAccessor interface {
 	Get(business *Business, cond BusinessOwnedEntity) (BusinessOwnedEntity, error)
+	GetAll(business *Business, cond BusinessOwnedEntity) ([]BusinessOwnedEntity, error)
 }
 
 type BusinessAuthorizedAccessorImpl struct {
@@ -69,10 +70,15 @@ func (accessor *BusinessAuthorizedAccessorImpl) Get(business *Business, conds Bu
 	return checkEq(result, business.ID, id, err)
 }
 
+func (accessor *BusinessAuthorizedAccessorImpl) GetAll(business *Business, conds BusinessOwnedEntity) ([]BusinessOwnedEntity, error) {
+	return nil, nil // __jm__
+}
+
 // UserAuthorizedAccessor
 
 type UserAuthorizedAccessor interface {
 	Get(user *User, cond UserOwnedEntity) (UserOwnedEntity, error)
+	GetAll(user *User, cond UserOwnedEntity) ([]UserOwnedEntity, error)
 }
 
 type UserAuthorizedAccessorImpl struct {
@@ -94,6 +100,10 @@ func (accessor *UserAuthorizedAccessorImpl) Get(user *User, conds UserOwnedEntit
 
 	id, err := result.GetUserId(accessor.database)
 	return checkEq(result, user.ID, id, err)
+}
+
+func (accessor *UserAuthorizedAccessorImpl) GetAll(user *User, conds UserOwnedEntity) ([]UserOwnedEntity, error) {
+	return nil, nil // __jm__
 }
 
 // AuthorizedTransactionAccessor

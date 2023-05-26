@@ -63,7 +63,133 @@ func getLocalCardHandlers(ctrl *gomock.Controller) *UserLocalCardHandlers {
 	}
 }
 
-func TestUserVirtualCardHandlersPostCard(t *testing.T) {
+// TODO
+func TestUserHandlersGetUserCardsOk(t *testing.T) {
+	testUser := GetDefaultUser()
+	testBusinessUser := GetDefaultUser()
+	testBusiness := GetDefaultBusiness(testBusinessUser)
+	testLocalCard := GetTestLocalCard(nil, testUser)
+	testVirtualCard := GetTestVirtualCard(nil, testUser, testBusiness)
+
+	gin.SetMode(gin.TestMode)
+	w := httptest.NewRecorder()
+
+	context := NewTestContextBuilder(w).
+		SetDefaultUrl().
+		SetEndpoint("/user/cards").
+		SetUser(testUser).
+		SetMethod("GET").
+		SetHeader("Content-Type", "application/json").
+		SetDefaultToken().
+		Context
+
+	respBodyExpected := &api.GetUserCardsResponse{
+		LocalCards: []api.LocalCardApiModel{
+			{
+				PublicId: testLocalCard.PublicId,
+				Name:     testLocalCard.Name,
+				Type:     testLocalCard.Type,
+				Code:     testLocalCard.Code,
+			},
+		},
+		VirtualCards: []api.ShortVirtualCardApiModel{
+			{
+				BusinessDetails: api.ShortBusinessDetailsApiModel{
+					PublicId:    testBusiness.PublicId,
+					Name:        testBusiness.Name,
+					Description: testBusiness.Description,
+					// GpsCoordinates: testBusiness.GPSCoordinates, TODO GPSCoordinates to string
+					BannerImageId: testBusiness.BannerImageId,
+					IconImageId:   testBusiness.IconImageId,
+				},
+				Points: int32(testVirtualCard.Points),
+			},
+		},
+	}
+
+	// test env prep
+	ctrl := gomock.NewController(t)
+	handler := getUserHandlers(ctrl)
+
+	handler.userAuthorizedAcessor.(*MockUserAuthorizedAccessor).
+		EXPECT().
+		GetAll(gomock.Eq(testUser), &database.LocalCard{}).
+		Return([]database.LocalCard{*testLocalCard})
+
+	handler.userAuthorizedAcessor.(*MockUserAuthorizedAccessor).
+		EXPECT().
+		GetAll(gomock.Eq(testUser), &database.VirtualCard{}).
+		Return([]database.VirtualCard{*testVirtualCard})
+
+	handler.getUserCards(context)
+
+	respBody, respCode, respParseErr := ExtractResponse[api.DefaultResponse](w)
+
+	require.Nilf(t, respParseErr, "Failed to parse JSON response")
+	require.Equalf(t, respCode, int(201), "Response returned unexpected status code")
+	require.Truef(t, MatchEntities(respBodyExpected, respBody), "Response returned unexpected body contents")
+	// TODO: test MatchEntities and gomock.Eq
+}
+
+func TestUserHandlersGetSearchBusinessesOk(t *testing.T) {
+	// TODO caly test case do napisania
+	testUser := GetDefaultUser()
+	testBusinessUser := GetDefaultUser()
+	testBusiness := GetDefaultBusiness(testBusinessUser)
+
+	gin.SetMode(gin.TestMode)
+	w := httptest.NewRecorder()
+
+	context := NewTestContextBuilder(w).
+		SetDefaultUrl().
+		SetEndpoint("/user/businesses").
+		AddQueryParam("text", "example business search").
+		SetUser(testUser).
+		SetMethod("GET").
+		SetHeader("Content-Type", "application/json").
+		SetDefaultToken().
+		Context
+
+	respBodyExpected := api.GetUserBusinessesSearchResponse{
+		Businesses: []api.ShortBusinessDetailsApiModel{
+			{
+				PublicId:    testBusiness.PublicId,
+				Name:        testBusiness.Name,
+				Description: testBusiness.Description,
+				// GpsCoordinates: testBusiness.GPSCoordinates, TODO GpsCoordinates to string
+				BannerImageId: testBusiness.BannerImageId,
+				IconImageId:   testBusiness.IconImageId,
+			},
+		},
+	}
+
+	// test env prep
+	ctrl := gomock.NewController(t)
+	handler := getUserHandlers(ctrl)
+
+	// setup mocks
+	handler.businessManager.(*MockBusinessManager).
+		EXPECT().
+		Search(
+			gomock.Eq("example business search"),
+			gomock.Any(),
+			gomock.Any(),
+			gomock.Any(),
+			gomock.Any(),
+		).
+		Return([]database.Business{*testBusiness})
+
+	handler.getSearchBusinesses(context)
+
+	respBody, respCode, respParseErr := ExtractResponse[api.GetUserBusinessesSearchResponse](w)
+
+	require.Nilf(t, respParseErr, "Failed to parse JSON response")
+	require.Equalf(t, respCode, int(200), "Response returned unexpected status code")
+	require.Truef(t, MatchEntities(respBodyExpected, respBody), "Response returned unexpected body contents")
+	// TODO: test MatchEntities and gomock.Eq
+}
+
+func TestUserVirtualCardHandlersPostCardOk(t *testing.T) {
 	testUser := GetDefaultUser()
 	testBusinessUser := GetDefaultUser()
 	testBusiness := GetDefaultBusiness(testBusinessUser)
@@ -108,7 +234,7 @@ func TestUserVirtualCardHandlersPostCard(t *testing.T) {
 	// TODO: test MatchEntities and gomock.Eq
 }
 
-func TestUserVirtualCardHandlersDeleteCard(t *testing.T) {
+func TestUserVirtualCardHandlersDeleteCardOk(t *testing.T) {
 	testUser := GetDefaultUser()
 	testBusinessUser := GetDefaultUser()
 	testBusiness := GetDefaultBusiness(testBusinessUser)
@@ -158,7 +284,7 @@ func TestUserVirtualCardHandlersDeleteCard(t *testing.T) {
 	// TODO: test MatchEntities and gomock.Eq
 }
 
-func TestUserVirtualCardHandlersGetCard(t *testing.T) {
+func TestUserVirtualCardHandlersGetCardOk(t *testing.T) {
 	testUser := GetDefaultUser()
 	testBusinessUser := GetDefaultUser()
 	testBusiness := GetDefaultBusiness(testBusinessUser)
