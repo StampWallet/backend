@@ -8,7 +8,6 @@ import (
 	"github.com/gin-gonic/gin"
 
 	api "github.com/StampWallet/backend/internal/api/models"
-	"github.com/StampWallet/backend/internal/database"
 	"github.com/StampWallet/backend/internal/managers"
 	"github.com/StampWallet/backend/internal/middleware"
 )
@@ -172,13 +171,10 @@ func (handler *AuthHandlers) postAccountPassword(c *gin.Context) {
 	}
 
 	// Get user from context (should be inserted by authMiddleware)
-	userAny, exists := c.Get("user")
-	if !exists {
-		handler.logger.Printf("user not available context")
-		c.JSON(500, api.DefaultResponse{Status: api.UNKNOWN_ERROR})
+	user := getUserFromContext(handler.logger, c)
+	if user == nil {
 		return
 	}
-	user := userAny.(*database.User)
 
 	// Pass data to authManager, handle errors
 	_, err := handler.authManager.ChangePassword(user, req.OldPassword, req.Password)
@@ -208,13 +204,10 @@ func (handler *AuthHandlers) postAccountEmail(c *gin.Context) {
 	}
 
 	// Get user from context
-	userAny, exists := c.Get("user")
-	if !exists {
-		handler.logger.Printf("user not available context")
-		c.JSON(500, api.DefaultResponse{Status: api.UNKNOWN_ERROR})
+	user := getUserFromContext(handler.logger, c)
+	if user == nil {
 		return
 	}
-	user := userAny.(*database.User)
 
 	// Pass data to authManager, handle errors
 	_, err := handler.authManager.ChangeEmail(user, req.Email)
