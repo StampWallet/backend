@@ -23,14 +23,14 @@ jobs:
       - name: Vet
         continue-on-error: true
         run: go vet ./...
+      - name: Build
+        run: go build -v ./...
       - name: Test
-        continue-on-error: true
+        #continue-on-error: true
         run: go test -v ./...
         env: 
           TEST_DATABASE_URL: "postgres://postgres@localhost/stampwallet"
           TEST_DATABASE_NAME: "stampwallet"
-      - name: Build
-        run: go build -v ./...
 
   docker:
     runs-on: ubuntu-latest
