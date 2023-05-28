@@ -25,7 +25,7 @@ jobs:
         run: go vet ./...
       - name: Build
         run: |
-          go build -v ./...
+          go build -v -o stampWalletServer ./cmd/stampWalletServer.go
           GOOS=linux GOARCH=arm go build -o stampWalletServer_arm ./cmd/stampWalletServer.go
       - name: Archive artifacts
         uses: actions/upload-artifact@v3
