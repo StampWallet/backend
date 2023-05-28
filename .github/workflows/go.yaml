@@ -24,7 +24,16 @@ jobs:
         continue-on-error: true
         run: go vet ./...
       - name: Build
-        run: go build -v ./...
+        run: |
+          go build -v ./...
+          GOOS=linux GOARCH=arm go build -o stampWalletServer_arm ./cmd/stampWalletServer.go
+      - name: Archive artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: binaries
+          path: |
+            stampWalletServer
+            stampWalletServer_arm
       - name: Test
         #continue-on-error: true
         run: go test -v ./...
