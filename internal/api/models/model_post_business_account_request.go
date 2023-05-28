@@ -17,6 +17,8 @@ type PostBusinessAccountRequest struct {
 
 	GpsCoordinates string `json:"gpsCoordinates,omitempty" binding:"required"`
 
+	Description string `json:"description,omitempty" binding:"required"`
+
 	Nip string `json:"nip,omitempty" binding:"required"`
 
 	Krs string `json:"krs,omitempty" binding:"required"`

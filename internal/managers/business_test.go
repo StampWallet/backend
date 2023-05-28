@@ -115,12 +115,64 @@ func TestBusinessManagerChangeDetails(t *testing.T) {
 		return
 	}
 	require.Equalf(t, *details.Name, business.Name, "business name does not match")
-	require.Equalf(t, *details.Description, business.Description, "business name does not match")
+	require.Equalf(t, *details.Description, business.Description, "business description does not match")
 
 	var dbBusiness Business
 	manager.baseServices.Database.Find(&dbBusiness, &Business{Model: gorm.Model{ID: business.ID}})
 	require.Equalf(t, *details.Name, dbBusiness.Name, "business name does not match")
-	require.Equalf(t, *details.Description, dbBusiness.Description, "business name does not match")
+	require.Equalf(t, *details.Description, dbBusiness.Description, "business description does not match")
+}
+
+func TestBusinessManagerChangeDetailsEmptyName(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	manager := GetBusinessManager(ctrl)
+	user := GetTestUser(manager.baseServices.Database)
+	business := GetTestBusiness(manager.baseServices.Database, user)
+	oldName := business.Name
+	details := ChangeableBusinessDetails{
+		Description: Ptr("new test description"),
+	}
+	business, err := manager.ChangeDetails(business, &details)
+
+	require.Nilf(t, err, "BusinessManager.ChangeDetails returned an error")
+	if business == nil {
+		t.Errorf("business is nil")
+		return
+	}
+	require.Equalf(t, oldName, business.Name, "business name does not match")
+	require.Equalf(t, *details.Description, business.Description, "business description does not match")
+
+	var dbBusiness Business
+	manager.baseServices.Database.Find(&dbBusiness, &Business{Model: gorm.Model{ID: business.ID}})
+	require.Equalf(t, oldName, dbBusiness.Name, "business name does not match")
+	require.Equalf(t, *details.Description, dbBusiness.Description, "business description does not match")
+}
+
+func TestBusinessManagerChangeDetailsEmptyDescription(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	manager := GetBusinessManager(ctrl)
+	user := GetTestUser(manager.baseServices.Database)
+	business := GetTestBusiness(manager.baseServices.Database, user)
+	oldDescription := business.Description
+	details := ChangeableBusinessDetails{
+		Name: Ptr("new test name"),
+	}
+	business, err := manager.ChangeDetails(business, &details)
+
+	require.Nilf(t, err, "BusinessManager.ChangeDetails returned an error")
+	if business == nil {
+		t.Errorf("business is nil")
+		return
+	}
+	require.Equalf(t, *details.Name, business.Name, "business name does not match")
+	require.Equalf(t, oldDescription, business.Description, "business description does not match")
+
+	var dbBusiness Business
+	manager.baseServices.Database.Find(&dbBusiness, &Business{Model: gorm.Model{ID: business.ID}})
+	require.Equalf(t, *details.Name, dbBusiness.Name, "business name does not match")
+	require.Equalf(t, *details.Description, oldDescription, "business description does not match")
 }
 
 func TestBusinessManagerSearchExistingByName(t *testing.T) {

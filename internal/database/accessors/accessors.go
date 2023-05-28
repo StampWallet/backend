@@ -74,7 +74,7 @@ func (accessor *BusinessAuthorizedAccessorImpl) Get(business *Business, conds Bu
 }
 
 // NOTE shouldnt be used for huge amounts of data
-func (accessor *BusinessAuthorizedAccessorImpl) GetAll(business *Business, conds BusinessOwnedEntity, preloads []string) ([]BusinessOwnedEntity, error) {
+func (accessor *BusinessAuthorizedAccessorImpl) GetAll(business *Business, conds BusinessOwnedEntity) ([]BusinessOwnedEntity, error) {
 	condsValue := reflect.ValueOf(conds)
 	field := condsValue.Elem().FieldByName("BusinessId")
 	if field.IsValid() {
@@ -84,11 +84,8 @@ func (accessor *BusinessAuthorizedAccessorImpl) GetAll(business *Business, conds
 	}
 
 	dbResult := reflect.New(reflect.SliceOf(reflect.TypeOf(conds).Elem()))
-	tx := accessor.database
-	for _, v := range preloads {
-		tx = tx.Preload(v)
-	}
-	tx = tx.Find(dbResult.Interface(), condsValue.Interface())
+
+	tx := accessor.database.Find(dbResult.Interface(), condsValue.Interface())
 	if err := tx.GetError(); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return []BusinessOwnedEntity{}, nil
@@ -182,10 +179,20 @@ func CreateAuthorizedTransactionAccessorImpl(database GormDB) *AuthorizedTransac
 
 func (accessor *AuthorizedTransactionAccessorImpl) GetForBusiness(business *Business, transactionCode string) (*Transaction, error) {
 	var transaction Transaction
-	tx := accessor.database.Preload("TransactionDetails").First(&transaction, Transaction{
-		Code:        transactionCode,
-		VirtualCard: &VirtualCard{Business: business},
-	})
+	tx := accessor.database.
+		//NOTE I'm not very confident about the efficiency of these preloads
+		// On the other hand, this accessor is currently used in few specific situations
+		// where these preloads are actually useful (at least some fields...
+		// So maybe it's not a good idea to optimize now.
+		// The dataset is never very big and rows by themselves aren't very big either.
+		// Still, double join
+		Preload("TransactionDetails").
+		Preload("TransactionDetails.OwnedItem").
+		Preload("TransactionDetails.ItemDefinition").
+		First(&transaction, Transaction{
+			Code:        transactionCode,
+			VirtualCard: &VirtualCard{Business: business},
+		})
 	if err := checkErr(tx); err != nil {
 		return nil, err
 	}

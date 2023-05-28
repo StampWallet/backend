@@ -248,6 +248,14 @@ paths:
                 $ref: '#/components/schemas/DefaultResponse'
               example:
                 status: INVALID_REQUEST
+        '409':
+          description: Business already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+              example:
+                status: ALREADY_EXISTS
         '401':
           description: Invalid credentials
           content:
@@ -1224,6 +1232,9 @@ components:
         gpsCoordinates:
           type: string
           x-go-custom-tag: binding:"required"
+        description:
+          type: string
+          x-go-custom-tag: binding:"required"
         nip:
           type: string
           x-go-custom-tag: binding:"required"
@@ -1276,7 +1287,8 @@ components:
       properties:
         name:
           type: string
-          x-go-custom-tag: binding:"required"
+        description:
+          type: string
       example:
         name: test
     PostBusinessAccountMenuImageResponse:
@@ -1359,6 +1371,7 @@ components:
         - PROCESSING
         - FINISHED
         - EXPIRED
+        - FAILED
 
 
     GetUserCardsResponse:

@@ -865,6 +865,8 @@ print_createBusinessAccount_help() {
     echo -e "${result_color_table[${code:0:1}]}  201;Successful operation${OFF}" | paste -sd' ' | column -t -s ';' | fold -sw 80 | sed '2,$s/^/       /'
     code=400
     echo -e "${result_color_table[${code:0:1}]}  400;Invalid request format${OFF}" | paste -sd' ' | column -t -s ';' | fold -sw 80 | sed '2,$s/^/       /'
+    code=409
+    echo -e "${result_color_table[${code:0:1}]}  409;Business already exists${OFF}" | paste -sd' ' | column -t -s ';' | fold -sw 80 | sed '2,$s/^/       /'
     code=401
     echo -e "${result_color_table[${code:0:1}]}  401;Invalid credentials${OFF}" | paste -sd' ' | column -t -s ';' | fold -sw 80 | sed '2,$s/^/       /'
 }
