@@ -40,6 +40,17 @@ jobs:
         env: 
           TEST_DATABASE_URL: "postgres://postgres@localhost/stampwallet"
           TEST_DATABASE_NAME: "stampwallet"
+      - name: Update coverage report
+        if: github.ref == 'refs/heads/main' && always()
+        env: 
+          TEST_DATABASE_URL: "postgres://postgres@localhost/stampwallet"
+          TEST_DATABASE_NAME: "stampwallet"
+        with:
+          report: 'true'
+          chart: 'true'
+          amend: 'false'
+        uses: ncruces/go-coverage-report@v0
+        continue-on-error: true
 
   docker:
     runs-on: ubuntu-latest

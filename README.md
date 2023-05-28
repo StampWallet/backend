@@ -1,5 +1,7 @@
 # StampWallet
 
+[![Go Coverage](https://github.com/StampWallet/backend/wiki/coverage.svg)](https://raw.githack.com/wiki/StampWallet/backend/coverage.html)
+
 Backend serivce for StampWallet app.
 Requires [Go 1.20](https://go.dev/doc/install)
 
