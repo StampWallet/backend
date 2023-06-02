@@ -1,7 +1,8 @@
 #!/bin/sh
 
 # https://openapi-generator.tech/docs/installation
-# download from https://repo1.maven.org/maven2/org/openapitools/openapi-generator-cli/6.3.0/openapi-generator-cli-6.3.0.jar
+# download the jar from https://repo1.maven.org/maven2/org/openapitools/openapi-generator-cli/6.3.0/openapi-generator-cli-6.3.0.jar
+# script has to be run in the same directory as the jar
 
 SCRIPTPATH=`realpath "$0"`
 SCRIPTDIR=`dirname $SCRIPTPATH`

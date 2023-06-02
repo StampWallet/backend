@@ -1,10 +1,15 @@
 # StampWallet
 
+[![Go Coverage](https://github.com/StampWallet/backend/wiki/coverage.svg)](https://raw.githack.com/wiki/StampWallet/backend/coverage.html)
+
 Backend serivce for StampWallet app.
 Requires [Go 1.20](https://go.dev/doc/install)
 
 ## Regenerate API models
 
+Make sure that api git submodule is initialised: `git submodule init && git submodule update`. 
+Or clone with `--recurse-submodules`
+ 
 1. Install [openapi-generator](https://openapi-generator.tech/docs/installation)
 2. Run scripts/generateApi.sh from the directory where openapi-generator jar is stored
 

@@ -1,4 +1,0 @@
-onlyInterfaces: true
-outputAsLibrary: true
-packageName: api
-apiPath: internal/api/models
