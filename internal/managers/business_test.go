@@ -46,12 +46,12 @@ func TestBusinessManagerCreate(t *testing.T) {
 	manager.fileStorageService.(*MockFileStorageService).
 		EXPECT().
 		CreateStub(user).
-		Return(*bannerImage, nil)
+		Return(bannerImage, nil)
 	iconImage := GetTestFileMetadata(manager.baseServices.Database, user)
 	manager.fileStorageService.(*MockFileStorageService).
 		EXPECT().
 		CreateStub(user).
-		Return(*iconImage, nil)
+		Return(iconImage, nil)
 	details := BusinessDetails{
 		Name:           "test business",
 		Description:    "Description",

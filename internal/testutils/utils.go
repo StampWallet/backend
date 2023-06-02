@@ -28,7 +28,7 @@ func MatchEntities(matcher interface{}, Obj interface{}) bool {
 			return MatchEntities(matcher, o.Elem().Interface())
 		}
 	} else if m.Kind() == reflect.Pointer {
-		return MatchEntities(m.Elem().Interface(), o)
+		return MatchEntities(m.Elem().Interface(), Obj)
 	} else {
 		mt := reflect.TypeOf(matcher)
 		for i := 0; i < mt.NumField(); i++ {

@@ -1,6 +1,7 @@
 package managers
 
 import (
+	"database/sql"
 	"log"
 	"testing"
 	"time"
@@ -15,6 +16,16 @@ import (
 	. "github.com/StampWallet/backend/internal/services/mocks"
 	. "github.com/StampWallet/backend/internal/testutils"
 )
+
+type ItemDetailsMatcher struct {
+	Name        string
+	Price       *uint
+	Description string
+	StartDate   sql.NullTime
+	EndDate     sql.NullTime
+	MaxAmount   *uint
+	Available   *bool
+}
 
 func GetItemDefinitionManager(ctrl *gomock.Controller) *ItemDefinitionManagerImpl {
 	return &ItemDefinitionManagerImpl{
@@ -35,8 +46,8 @@ func TestItemDefinitionAddItem(t *testing.T) {
 	imageFile := GetTestFileMetadata(manager.baseServices.Database, user)
 	manager.fileStorageService.(*MockFileStorageService).
 		EXPECT().
-		CreateStub(&user).
-		Return(*imageFile, nil)
+		CreateStub(user).
+		Return(imageFile, nil)
 
 	details := &ItemDetails{
 		Name:        "test item",
@@ -47,8 +58,17 @@ func TestItemDefinitionAddItem(t *testing.T) {
 		MaxAmount:   Ptr(uint(10)),
 		Available:   Ptr(true),
 	}
-	definition, err := manager.AddItem(business, details)
-	require.Truef(t, MatchEntities(details, definition), "entities do not match")
+	detailsMatcher := &ItemDetailsMatcher{
+		Name:        details.Name,
+		Price:       details.Price,
+		Description: details.Description,
+		StartDate:   sql.NullTime{*details.StartDate, true},
+		EndDate:     sql.NullTime{*details.EndDate, true},
+		MaxAmount:   details.MaxAmount,
+		Available:   details.Available,
+	}
+	definition, err := manager.AddItem(user, business, details)
+	require.Truef(t, MatchEntities(detailsMatcher, definition), "entities do not match")
 	require.Nilf(t, err, "additem returned an error")
 	require.Equalf(t, imageFile.PublicId, definition.ImageId, "additem returned an error")
 	var dbDetails ItemDefinition
@@ -68,7 +88,7 @@ func TestItemDefinitionChangeItemDetails(t *testing.T) {
 	manager.fileStorageService.(*MockFileStorageService).
 		EXPECT().
 		CreateStub(&user).
-		Return(*imageFile, nil)
+		Return(*imageFile, nil) // __jm__ why?
 
 	newDetails := ItemDetails{
 		Name:        "new item details",
@@ -79,9 +99,18 @@ func TestItemDefinitionChangeItemDetails(t *testing.T) {
 		MaxAmount:   Ptr(uint(20)),
 		Available:   Ptr(false),
 	}
+	detailsMatcher := &ItemDetailsMatcher{
+		Name:        newDetails.Name,
+		Price:       newDetails.Price,
+		Description: newDetails.Description,
+		StartDate:   sql.NullTime{*newDetails.StartDate, true},
+		EndDate:     sql.NullTime{*newDetails.EndDate, true},
+		MaxAmount:   newDetails.MaxAmount,
+		Available:   newDetails.Available,
+	}
 	newDefinition, err := manager.ChangeItemDetails(definition, &newDetails)
 
-	require.Truef(t, MatchEntities(newDetails, newDefinition), "entities do not match")
+	require.Truef(t, MatchEntities(detailsMatcher, newDefinition), "entities do not match")
 	require.Nilf(t, err, "ChangeItemDetails returned an error")
 
 	var dbDetails ItemDefinition
@@ -99,10 +128,10 @@ func TestItemDefinitionWithdrawItem(t *testing.T) {
 	imageFile := GetTestFileMetadata(manager.baseServices.Database, user)
 	definition := GetTestItemDefinition(manager.baseServices.Database, business, *imageFile)
 
-	manager.fileStorageService.(*MockFileStorageService).
-		EXPECT().
-		CreateStub(&user).
-		Return(*imageFile, nil)
+	// manager.fileStorageService.(*MockFileStorageService).
+	// 	EXPECT().
+	// 	CreateStub(&user).
+	// 	Return(imageFile, nil) // __jm__ why?
 	virtualCard := GetTestVirtualCard(manager.baseServices.Database, user, business)
 	ownedItem := GetTestOwnedItem(manager.baseServices.Database, definition, virtualCard)
 
@@ -138,7 +167,7 @@ func TestItemDefinitionGetForBusiness(t *testing.T) {
 	manager.fileStorageService.(*MockFileStorageService).
 		EXPECT().
 		CreateStub(&user).
-		Return(*iconImage, nil)
+		Return(*iconImage, nil) // __jm__ why?
 
 	returnedDefinitions, err := manager.GetForBusiness(business)
 	require.Nilf(t, err, "GetForBusiness returned an error")
