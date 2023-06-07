@@ -56,7 +56,7 @@ func (manager *ItemDefinitionManagerImpl) AddItem(user *User, business *Business
 	err := manager.baseServices.Database.Transaction(func(db GormDB) error {
 		imageFile, err := manager.fileStorageService.CreateStub(user)
 		if err != nil {
-			return fmt.Errorf("fileStorageService.CreateStub returned an error: %+v", err)
+			return fmt.Errorf("fileStorageService.CreateStub returned an error: %w", err)
 		}
 
 		itemDefinition = ItemDefinition{
@@ -66,8 +66,8 @@ func (manager *ItemDefinitionManagerImpl) AddItem(user *User, business *Business
 			Price:       *details.Price,
 			Description: details.Description,
 			ImageId:     imageFile.PublicId, // TODO: expect PublicId here?
-			StartDate:   sql.NullTime{*details.StartDate, true},
-			EndDate:     sql.NullTime{*details.EndDate, true},
+			StartDate:   sql.NullTime{Time: *details.StartDate, Valid: true},
+			EndDate:     sql.NullTime{Time: *details.EndDate, Valid: true},
 			MaxAmount:   *details.MaxAmount,
 			Available:   *details.Available,
 			Withdrawn:   false,
@@ -75,7 +75,7 @@ func (manager *ItemDefinitionManagerImpl) AddItem(user *User, business *Business
 
 		result := db.Create(&itemDefinition)
 		if err := result.GetError(); err != nil {
-			return fmt.Errorf("db.Create returned an error: %+v", err)
+			return fmt.Errorf("db.Create returned an error: %w", err)
 		}
 
 		return nil
@@ -98,10 +98,10 @@ func (manager *ItemDefinitionManagerImpl) ChangeItemDetails(item *ItemDefinition
 		item.Description = details.Description
 	}
 	if details.StartDate != nil {
-		item.StartDate = sql.NullTime{*details.StartDate, true}
+		item.StartDate = sql.NullTime{Time: *details.StartDate, Valid: true}
 	}
 	if details.EndDate != nil {
-		item.EndDate = sql.NullTime{*details.EndDate, true}
+		item.EndDate = sql.NullTime{Time: *details.EndDate, Valid: true}
 	}
 	if details.MaxAmount != nil {
 		item.MaxAmount = *details.MaxAmount
@@ -129,7 +129,7 @@ func (manager *ItemDefinitionManagerImpl) WithdrawItem(item *ItemDefinition) (*I
 			Preload("OwnedItems.VirtualCard").
 			Find(item, "id = ?", item.ID)
 		if err := result.GetError(); err != nil {
-			return fmt.Errorf("db.Find(ItemDefinition) returned an error %+v", err)
+			return fmt.Errorf("db.Find(ItemDefinition) returned an error %w", err)
 		}
 
 		item.Withdrawn = true
@@ -144,12 +144,12 @@ func (manager *ItemDefinitionManagerImpl) WithdrawItem(item *ItemDefinition) (*I
 
 			result = db.Save(&ownedItem)
 			if err := result.GetError(); err != nil {
-				return fmt.Errorf("db.Save(ownedItem) returned an error %+v", err)
+				return fmt.Errorf("db.Save(ownedItem) returned an error %w", err)
 			}
 
 			result = db.Save(&ownedItem.VirtualCard)
 			if err := result.GetError(); err != nil {
-				return fmt.Errorf("db.Save(ownedItem.VirtualCard) returned an error %+v", err)
+				return fmt.Errorf("db.Save(ownedItem.VirtualCard) returned an error %w", err)
 			}
 		}
 		db.Save(item)
