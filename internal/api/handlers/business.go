@@ -11,6 +11,7 @@ import (
 	. "github.com/StampWallet/backend/internal/database"
 	. "github.com/StampWallet/backend/internal/database/accessors"
 	. "github.com/StampWallet/backend/internal/managers"
+	"github.com/StampWallet/backend/internal/services"
 )
 
 type BusinessHandlers struct {
@@ -25,6 +26,33 @@ type BusinessHandlers struct {
 	itemDefinitionHandlers *ItemDefinitionHandlers
 
 	logger *log.Logger
+}
+
+func CreateBusinessHandlers(
+	businessManager BusinessManager, transactionManager TransactionManager,
+	itemDefinitionManager ItemDefinitionManager,
+	userAuthorizedAcessor UserAuthorizedAccessor, businessAuthorizedAccessor BusinessAuthorizedAccessor,
+	authorizedTransactionAccessor AuthorizedTransactionAccessor,
+	logger *log.Logger) *BusinessHandlers {
+
+	return &BusinessHandlers{
+		businessManager:       businessManager,
+		transactionManager:    transactionManager,
+		itemDefinitionManager: itemDefinitionManager,
+
+		userAuthorizedAcessor:         userAuthorizedAcessor,
+		businessAuthorizedAccessor:    businessAuthorizedAccessor,
+		authorizedTransactionAccessor: authorizedTransactionAccessor,
+
+		itemDefinitionHandlers: &ItemDefinitionHandlers{
+			itemDefinitionManager:      itemDefinitionManager,
+			userAuthorizedAcessor:      userAuthorizedAcessor,
+			businessAuthorizedAccessor: businessAuthorizedAccessor,
+			logger:                     services.NewPrefix(logger, "ItemDefinitionHandlers"),
+		},
+
+		logger: logger,
+	}
 }
 
 // Converts ItemDefinition from database model to api model
@@ -360,11 +388,11 @@ func (handler *BusinessHandlers) postTransaction(c *gin.Context) {
 }
 
 func (handler *BusinessHandlers) postMenuImage(c *gin.Context) {
-
+	//TODO
 }
 
 func (handler *BusinessHandlers) deleteMenuImage(c *gin.Context) {
-
+	//TODO
 }
 
 func (handler *BusinessHandlers) Connect(rg *gin.RouterGroup) {

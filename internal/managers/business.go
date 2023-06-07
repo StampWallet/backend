@@ -50,7 +50,9 @@ func (manager *BusinessManagerImpl) Create(user *User, businessDetails *Business
 	db := manager.baseServices.Database
 	var business Business
 	err := db.Transaction(func(tx GormDB) error {
-		r := tx.First(&business, Business{User: user})
+		// somehow returns the first business found. does not have to belong to the user. how
+		//r := tx.First(&business, &Business{User: user})
+		r := tx.First(&business, &Business{OwnerId: user.ID})
 		err := r.GetError()
 		if err == nil {
 			return BusinessAlreadyExists

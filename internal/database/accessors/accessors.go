@@ -119,8 +119,16 @@ func CreateUserAuthorizedAccessorImpl(database GormDB) *UserAuthorizedAccessorIm
 }
 
 func (accessor *UserAuthorizedAccessorImpl) Get(user *User, conds UserOwnedEntity) (UserOwnedEntity, error) {
+	condsValue := reflect.ValueOf(conds)
+	field := condsValue.Elem().FieldByName("OwnerId")
+	if field.IsValid() {
+		if field.CanSet() && field.Kind() == reflect.Uint {
+			field.SetUint(uint64(user.ID))
+		}
+	}
+
 	result := reflect.New(reflect.TypeOf(conds).Elem()).Interface().(UserOwnedEntity)
-	tx := accessor.database.First(&result, conds)
+	tx := accessor.database.First(&result, condsValue.Interface())
 	if err := checkErr(tx); err != nil {
 		return nil, err
 	}
