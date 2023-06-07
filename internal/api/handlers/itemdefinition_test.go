@@ -62,11 +62,12 @@ func TestItemDefinitionHandlersGetItemDefinitionOk(t *testing.T) {
 func setupItemDefinitionHandlersPostItemDefinition() (
 	w *httptest.ResponseRecorder,
 	context *gin.Context,
+	testBusinessUser *database.User,
 	testBusiness *database.Business,
 	testItemDetails *managers.ItemDetails,
 	testItemDef *database.ItemDefinition,
 ) {
-	testBusinessUser := GetDefaultUser()
+	testBusinessUser = GetDefaultUser()
 	testBusiness = GetDefaultBusiness(testBusinessUser)
 	testItemDef = GetDefaultItem(testBusiness)
 
@@ -106,11 +107,11 @@ func setupItemDefinitionHandlersPostItemDefinition() (
 		SetBody(payloadJson).
 		Context
 
-	return w, context, testBusiness, testItemDetails, testItemDef
+	return w, context, testBusinessUser, testBusiness, testItemDetails, testItemDef
 }
 
 func TestItemDefinitionHandlersPostItemDefinitionOk(t *testing.T) {
-	w, context, testBusiness, testItemDetails, testItemDef := setupItemDefinitionHandlersPostItemDefinition()
+	w, context, _, testBusiness, testItemDetails, testItemDef := setupItemDefinitionHandlersPostItemDefinition()
 
 	// test env prep
 	ctrl := gomock.NewController(t)
@@ -119,6 +120,7 @@ func TestItemDefinitionHandlersPostItemDefinitionOk(t *testing.T) {
 	handler.itemDefinitionManager.(*MockItemDefinitionManager).
 		EXPECT().
 		AddItem(
+			gomock.Eq(testBusiness),
 			gomock.Eq(testBusiness),
 			gomock.Eq(testItemDetails),
 		).
@@ -138,7 +140,7 @@ func TestItemDefinitionHandlersPostItemDefinitionOk(t *testing.T) {
 }
 
 func TestItemDefinitionHandlersPostItemDefinitionNok_BadDef(t *testing.T) {
-	w, context, testBusiness, testItemDetails, _ := setupItemDefinitionHandlersPostItemDefinition()
+	w, context, testBusinessUser, testBusiness, testItemDetails, _ := setupItemDefinitionHandlersPostItemDefinition()
 
 	// test env prep
 	ctrl := gomock.NewController(t)
@@ -147,6 +149,7 @@ func TestItemDefinitionHandlersPostItemDefinitionNok_BadDef(t *testing.T) {
 	handler.itemDefinitionManager.(*MockItemDefinitionManager).
 		EXPECT().
 		AddItem(
+			gomock.Eq(testBusinessUser),
 			gomock.Eq(testBusiness),
 			gomock.Eq(testItemDetails),
 		).
