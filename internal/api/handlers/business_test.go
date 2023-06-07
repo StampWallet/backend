@@ -302,7 +302,7 @@ func TestBusinessHandlersPostAccountNok_UniqBiz(t *testing.T) {
 		).
 		Return(
 			nil,
-			managers.BusinessAlreadyExists,
+			managers.ErrBusinessAlreadyExists,
 		)
 
 	respBodyExpected := api.DefaultResponse{Status: api.ALREADY_EXISTS}
@@ -326,7 +326,7 @@ func setupBusinessHandlersGetAccountInfo() (
 ) {
 	testBusinessUser = GetDefaultUser()
 	testBusiness = GetDefaultBusiness(testBusinessUser)
-	testBusiness.MenuItems = []database.MenuItem{
+	testBusiness.MenuImages = []database.MenuImage{
 		{
 			BusinessId: testBusiness.ID,
 			FileId:     shortuuid.New(),
@@ -364,7 +364,7 @@ func setupBusinessHandlersGetAccountInfo() (
 		Krs:            testBusiness.KRS,
 		OwnerName:      testBusiness.OwnerName,
 		MenuImageIds: []string{
-			testBusiness.MenuItems[0].FileId,
+			testBusiness.MenuImages[0].FileId,
 		},
 		ItemDefinitions: []api.ItemDefinitionApiModel{
 			{
@@ -417,10 +417,10 @@ func TestBusinessHandlersGetAccountInfoOk(t *testing.T) {
 		EXPECT().
 		GetAll(
 			gomock.Eq(testBusiness),
-			gomock.Eq(&database.MenuItem{}),
+			gomock.Eq(&database.MenuImage{}),
 		).
 		Return(
-			[]acc.BusinessOwnedEntity{&testBusiness.MenuItems[0]},
+			[]acc.BusinessOwnedEntity{&testBusiness.MenuImages[0]},
 			nil,
 		)
 
@@ -592,6 +592,294 @@ func TestBusinessHandlersPatchAccountInfoNok_InvBiz(t *testing.T) {
 	require.Truef(t, reflect.DeepEqual(respBodyExpected, respBody), "Response returned unexpected body contents")
 	// TODO: test MatchEntities and gomock.Eq
 }
+
+// menuImages
+
+func TestBusinessHandlersPostMenuImage(t *testing.T) {
+	testBusinessUser := GetDefaultUser()
+	testBusiness := GetDefaultBusiness(testBusinessUser)
+	testMenuImage := GetTestMenuImage(nil, testBusiness)
+
+	gin.SetMode(gin.TestMode)
+	w := httptest.NewRecorder()
+
+	context := NewTestContextBuilder(w).
+		SetDefaultUrl().
+		SetEndpoint("/business/menuImages").
+		SetUser(testBusinessUser).
+		SetMethod("POST").
+		SetHeader("Accept", "application/json").
+		SetHeader("Content-Type", "application/json").
+		SetDefaultToken().
+		Context
+
+	respBodyExpected := &api.PostBusinessAccountMenuImageResponse{ImageId: testMenuImage.FileId}
+
+	// test env prep
+	ctrl := gomock.NewController(t)
+	handler := getBusinessHandlers(ctrl)
+
+	handler.userAuthorizedAcessor.(*MockUserAuthorizedAccessor).
+		EXPECT().
+		Get(
+			gomock.Eq(testBusinessUser),
+			gomock.Eq(&database.Business{}),
+		).
+		Return(
+			testBusiness,
+			nil,
+		)
+
+	handler.businessManager.(*MockBusinessManager).
+		EXPECT().
+		AddMenuImage(
+			gomock.Eq(testBusiness),
+		).
+		Return(
+			testMenuImage,
+			nil,
+		)
+
+	handler.postMenuImage(context)
+
+	respBody, respCode, respParseErr := ExtractResponse[api.PostBusinessAccountMenuImageResponse](w)
+
+	require.Nilf(t, respParseErr, "Failed to parse JSON response")
+	require.Equalf(t, int(200), respCode, "Response returned unexpected status code")
+	require.Truef(t, reflect.DeepEqual(respBodyExpected, respBody), "Response returned unexpected body contents")
+}
+
+func TestBusinessHandlersPostMenuImageTooManyImages(t *testing.T) {
+	testBusinessUser := GetDefaultUser()
+	testBusiness := GetDefaultBusiness(testBusinessUser)
+
+	gin.SetMode(gin.TestMode)
+	w := httptest.NewRecorder()
+
+	context := NewTestContextBuilder(w).
+		SetDefaultUrl().
+		SetEndpoint("/business/menuImages").
+		SetUser(testBusinessUser).
+		SetMethod("POST").
+		SetHeader("Accept", "application/json").
+		SetHeader("Content-Type", "application/json").
+		SetDefaultToken().
+		Context
+
+	respBodyExpected := &api.DefaultResponse{Status: api.INVALID_REQUEST, Message: "TOO_MANY_IMAGES"}
+
+	// test env prep
+	ctrl := gomock.NewController(t)
+	handler := getBusinessHandlers(ctrl)
+
+	handler.userAuthorizedAcessor.(*MockUserAuthorizedAccessor).
+		EXPECT().
+		Get(
+			gomock.Eq(testBusinessUser),
+			gomock.Eq(&database.Business{}),
+		).
+		Return(
+			testBusiness,
+			nil,
+		)
+
+	handler.businessManager.(*MockBusinessManager).
+		EXPECT().
+		AddMenuImage(
+			gomock.Eq(testBusiness),
+		).
+		Return(
+			nil,
+			managers.ErrTooManyMenuImages,
+		)
+
+	handler.postMenuImage(context)
+
+	respBody, respCode, respParseErr := ExtractResponse[api.DefaultResponse](w)
+
+	require.Nilf(t, respParseErr, "Failed to parse JSON response")
+	require.Equalf(t, int(400), respCode, "Response returned unexpected status code")
+	require.Truef(t, reflect.DeepEqual(respBodyExpected, respBody), "Response returned unexpected body contents")
+}
+
+func TestBusinessHandlersDeleteMenuImage(t *testing.T) {
+	testBusinessUser := GetDefaultUser()
+	testBusiness := GetDefaultBusiness(testBusinessUser)
+	testMenuImage := GetTestMenuImage(nil, testBusiness)
+
+	gin.SetMode(gin.TestMode)
+	w := httptest.NewRecorder()
+
+	context := NewTestContextBuilder(w).
+		SetDefaultUrl().
+		SetEndpoint("/business/menuImages").
+		SetUser(testBusinessUser).
+		SetMethod("DELETE").
+		SetHeader("Accept", "application/json").
+		SetHeader("Content-Type", "application/json").
+		SetDefaultToken().
+		SetParam("menuImageId", testMenuImage.FileId).
+		Context
+
+	respBodyExpected := &api.DefaultResponse{Status: api.OK}
+
+	// test env prep
+	ctrl := gomock.NewController(t)
+	handler := getBusinessHandlers(ctrl)
+
+	handler.userAuthorizedAcessor.(*MockUserAuthorizedAccessor).
+		EXPECT().
+		Get(
+			gomock.Eq(testBusinessUser),
+			gomock.Eq(&database.Business{}),
+		).
+		Return(
+			testBusiness,
+			nil,
+		)
+
+	handler.businessAuthorizedAccessor.(*MockBusinessAuthorizedAccessor).
+		EXPECT().
+		Get(
+			gomock.Eq(testBusiness),
+			gomock.Eq(&database.MenuImage{FileId: testMenuImage.FileId}),
+		).
+		Return(
+			testMenuImage,
+			nil,
+		)
+
+	handler.businessManager.(*MockBusinessManager).
+		EXPECT().
+		RemoveMenuImage(
+			gomock.Eq(testMenuImage),
+		).
+		Return(
+			nil,
+		)
+
+	handler.deleteMenuImage(context)
+
+	respBody, respCode, respParseErr := ExtractResponse[api.DefaultResponse](w)
+
+	require.Nilf(t, respParseErr, "Failed to parse JSON response")
+	require.Equalf(t, int(200), respCode, "Response returned unexpected status code")
+	require.Truef(t, reflect.DeepEqual(respBodyExpected, respBody), "Response returned unexpected body contents")
+}
+
+func TestBusinessHandlersDeleteMenuImageUnknownImage(t *testing.T) {
+	testBusinessUser := GetDefaultUser()
+	testBusiness := GetDefaultBusiness(testBusinessUser)
+	testMenuImage := GetTestMenuImage(nil, testBusiness)
+
+	gin.SetMode(gin.TestMode)
+	w := httptest.NewRecorder()
+
+	context := NewTestContextBuilder(w).
+		SetDefaultUrl().
+		SetEndpoint("/business/menuImages").
+		SetUser(testBusinessUser).
+		SetMethod("DELETE").
+		SetHeader("Accept", "application/json").
+		SetHeader("Content-Type", "application/json").
+		SetDefaultToken().
+		SetParam("menuImageId", testMenuImage.FileId).
+		Context
+
+	respBodyExpected := &api.DefaultResponse{Status: api.NOT_FOUND}
+
+	// test env prep
+	ctrl := gomock.NewController(t)
+	handler := getBusinessHandlers(ctrl)
+
+	handler.userAuthorizedAcessor.(*MockUserAuthorizedAccessor).
+		EXPECT().
+		Get(
+			gomock.Eq(testBusinessUser),
+			gomock.Eq(&database.Business{}),
+		).
+		Return(
+			testBusiness,
+			nil,
+		)
+
+	handler.businessAuthorizedAccessor.(*MockBusinessAuthorizedAccessor).
+		EXPECT().
+		Get(
+			gomock.Eq(testBusiness),
+			gomock.Eq(&database.MenuImage{FileId: testMenuImage.FileId}),
+		).
+		Return(
+			nil,
+			acc.ErrNotFound,
+		)
+
+	handler.deleteMenuImage(context)
+
+	respBody, respCode, respParseErr := ExtractResponse[api.DefaultResponse](w)
+
+	require.Nilf(t, respParseErr, "Failed to parse JSON response")
+	require.Equalf(t, int(404), respCode, "Response returned unexpected status code")
+	require.Truef(t, reflect.DeepEqual(respBodyExpected, respBody), "Response returned unexpected body contents")
+}
+
+func TestBusinessHandlersDeleteMenuImageNoAccess(t *testing.T) {
+	testBusinessUser := GetDefaultUser()
+	testBusiness := GetDefaultBusiness(testBusinessUser)
+	testMenuImage := GetTestMenuImage(nil, testBusiness)
+
+	gin.SetMode(gin.TestMode)
+	w := httptest.NewRecorder()
+
+	context := NewTestContextBuilder(w).
+		SetDefaultUrl().
+		SetEndpoint("/business/menuImages").
+		SetUser(testBusinessUser).
+		SetMethod("DELETE").
+		SetHeader("Accept", "application/json").
+		SetHeader("Content-Type", "application/json").
+		SetDefaultToken().
+		SetParam("menuImageId", testMenuImage.FileId).
+		Context
+
+	respBodyExpected := &api.DefaultResponse{Status: api.FORBIDDEN}
+
+	// test env prep
+	ctrl := gomock.NewController(t)
+	handler := getBusinessHandlers(ctrl)
+
+	handler.userAuthorizedAcessor.(*MockUserAuthorizedAccessor).
+		EXPECT().
+		Get(
+			gomock.Eq(testBusinessUser),
+			gomock.Eq(&database.Business{}),
+		).
+		Return(
+			testBusiness,
+			nil,
+		)
+
+	handler.businessAuthorizedAccessor.(*MockBusinessAuthorizedAccessor).
+		EXPECT().
+		Get(
+			gomock.Eq(testBusiness),
+			gomock.Eq(&database.MenuImage{FileId: testMenuImage.FileId}),
+		).
+		Return(
+			nil,
+			acc.ErrNoAccess,
+		)
+
+	handler.deleteMenuImage(context)
+
+	respBody, respCode, respParseErr := ExtractResponse[api.DefaultResponse](w)
+
+	require.Nilf(t, respParseErr, "Failed to parse JSON response")
+	require.Equalf(t, int(403), respCode, "Response returned unexpected status code")
+	require.Truef(t, reflect.DeepEqual(respBodyExpected, respBody), "Response returned unexpected body contents")
+}
+
+// transactions
 
 // FUTURE: TestBusinessHandlersPatchAccountInfoNok_ChkBiz for code coverage,
 // For now TestBusinessHandlersGetAccountInfoNok_ChkBiz is enough.

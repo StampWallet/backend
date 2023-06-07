@@ -154,7 +154,7 @@ func (handler *BusinessHandlers) postAccount(c *gin.Context) {
 	// Handle errors, send response
 	if err != nil {
 		handler.logger.Printf("failed to businessManager.Create in postAccount %+v", err)
-		if err == BusinessAlreadyExists {
+		if err == ErrBusinessAlreadyExists {
 			c.JSON(409, api.DefaultResponse{Status: api.ALREADY_EXISTS})
 			return
 		} else {
@@ -180,7 +180,7 @@ func (handler *BusinessHandlers) getAccountInfo(c *gin.Context) {
 	}
 
 	// Get MenuItems of business
-	menuItems, err := handler.businessAuthorizedAccessor.GetAll(business, &MenuItem{})
+	menuItems, err := handler.businessAuthorizedAccessor.GetAll(business, &MenuImage{})
 	if err != nil {
 		handler.logger.Printf("failed to handler.businessAuthorizedAccessor.Get MenuItem in getAccountInfo %+v", err)
 		c.JSON(500, api.DefaultResponse{Status: api.UNKNOWN_ERROR})
@@ -198,7 +198,7 @@ func (handler *BusinessHandlers) getAccountInfo(c *gin.Context) {
 	// Convert MenuItems
 	var menuImageIds []string
 	for _, v := range menuItems {
-		menuImageIds = append(menuImageIds, v.(*MenuItem).FileId)
+		menuImageIds = append(menuImageIds, v.(*MenuImage).FileId)
 	}
 
 	// Convert ItemDefinitions
@@ -387,12 +387,68 @@ func (handler *BusinessHandlers) postTransaction(c *gin.Context) {
 	c.JSON(200, api.DefaultResponse{Status: api.OK})
 }
 
+// Handles menu image add request
 func (handler *BusinessHandlers) postMenuImage(c *gin.Context) {
-	//TODO
+	// Get user and business of user. getUserAndBusiness sends HTTP errors, so we can just quit
+	// if business or user is not available
+	user, business := handler.getUserAndBusiness(c)
+	if user == nil || business == nil {
+		return
+	}
+
+	menuImage, err := handler.businessManager.AddMenuImage(business)
+	if err == ErrTooManyMenuImages {
+		c.JSON(400, api.DefaultResponse{
+			Status:  api.INVALID_REQUEST,
+			Message: "TOO_MANY_IMAGES",
+		})
+		return
+	} else if err != nil {
+		handler.logger.Printf("failed to handler.businessManager.AddMenuImage in postMenuImage %+v", err)
+		c.JSON(500, api.DefaultResponse{Status: api.UNKNOWN_ERROR})
+		return
+	}
+
+	c.JSON(200, api.PostBusinessAccountMenuImageResponse{
+		ImageId: menuImage.FileId,
+	})
 }
 
+// Handles menu image remove request
+// Requires {menuImageId} URL path parameter
 func (handler *BusinessHandlers) deleteMenuImage(c *gin.Context) {
-	//TODO
+	menuImageId := c.Param("menuImageId")
+
+	// Get user and business of user. getUserAndBusiness sends HTTP errors, so we can just quit
+	// if business or user is not available
+	user, business := handler.getUserAndBusiness(c)
+	if user == nil || business == nil {
+		return
+	}
+
+	menuImageTmp, err := handler.businessAuthorizedAccessor.Get(business, &MenuImage{FileId: menuImageId})
+	if err == ErrNoAccess {
+		c.JSON(403, api.DefaultResponse{Status: api.FORBIDDEN})
+		return
+	} else if err == ErrNotFound {
+		c.JSON(404, api.DefaultResponse{Status: api.NOT_FOUND})
+		return
+	} else if err != nil {
+		handler.logger.Printf("failed to handler.businessAuthorizedAccessor.Get in deleteMenuImage %+v", err)
+		c.JSON(500, api.DefaultResponse{Status: api.UNKNOWN_ERROR})
+		return
+	}
+
+	menuImage := menuImageTmp.(*MenuImage)
+
+	err = handler.businessManager.RemoveMenuImage(menuImage)
+	if err != nil {
+		handler.logger.Printf("failed to handler.businessManager.RemoveMenuImage in deleteMenuImage %+v", err)
+		c.JSON(500, api.DefaultResponse{Status: api.UNKNOWN_ERROR})
+		return
+	}
+
+	c.JSON(200, api.DefaultResponse{Status: api.OK})
 }
 
 func (handler *BusinessHandlers) Connect(rg *gin.RouterGroup) {

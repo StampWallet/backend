@@ -256,3 +256,14 @@ func GetTestSessionToken(db GormDB, user *User, expires time.Time) (*Token, stri
 	Save(db, &token)
 	return &token, secret
 }
+
+func GetTestMenuImage(db GormDB, business *Business) *MenuImage {
+	fileId := GetTestFileMetadata(db, business.User).PublicId
+	menuImage := MenuImage{
+		FileId:     fileId,
+		BusinessId: business.ID,
+		Business:   business,
+	}
+	Save(db, &business)
+	return &menuImage
+}
