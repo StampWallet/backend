@@ -444,8 +444,8 @@ func TestBusinessHandlersGetAccountInfoNok_NoBiz(t *testing.T) {
 	handler.userAuthorizedAcessor.(*MockUserAuthorizedAccessor).
 		EXPECT().
 		Get(
-			gomock.Eq(*testBusinessUser),
-			gomock.Eq(database.Business{}),
+			gomock.Eq(testBusinessUser),
+			gomock.Eq(&database.Business{}),
 		).
 		Return(
 			nil,
@@ -456,11 +456,11 @@ func TestBusinessHandlersGetAccountInfoNok_NoBiz(t *testing.T) {
 
 	handler.getAccountInfo(context)
 
-	respBody, respCode, respParseErr := ExtractResponse[api.GetBusinessAccountResponse](w)
+	respBody, respCode, respParseErr := ExtractResponse[api.DefaultResponse](w)
 
 	require.Nilf(t, respParseErr, "Failed to parse JSON response")
 	require.Equalf(t, int(404), respCode, "Response returned unexpected status code")
-	require.Truef(t, reflect.DeepEqual(respBodyExpected, respBody), "Response returned unexpected body contents")
+	require.Truef(t, reflect.DeepEqual(respBodyExpected, *respBody), "Response returned unexpected body contents")
 	// TODO: test MatchEntities and gomock.Eq
 }
 
@@ -473,14 +473,14 @@ func TestBusinessHandlersPatchAccountInfoOk(t *testing.T) {
 	}
 	payloadJson, _ := json.Marshal(payload)
 
-	newBusinessDetails := &managers.BusinessDetails{
-		Name: payload.Name,
+	newBusinessDetails := &managers.ChangeableBusinessDetails{
+		Name: &payload.Name,
 	}
 
 	// copying from ptr
 	testBusinessVal := *testBusiness
 	newBusiness := &testBusinessVal
-	newBusiness.Name = newBusinessDetails.Name
+	newBusiness.Name = *newBusinessDetails.Name
 
 	gin.SetMode(gin.TestMode)
 	w := httptest.NewRecorder()
@@ -506,7 +506,7 @@ func TestBusinessHandlersPatchAccountInfoOk(t *testing.T) {
 		EXPECT().
 		Get(
 			gomock.Eq(testBusinessUser),
-			gomock.Eq(&database.Business{PublicId: testBusiness.PublicId}),
+			gomock.Eq(&database.Business{}),
 		).
 		Return(
 			testBusiness,
@@ -576,7 +576,7 @@ func TestBusinessHandlersPatchAccountInfoNok_InvBiz(t *testing.T) {
 		EXPECT().
 		Get(
 			gomock.Eq(testBusinessUser),
-			gomock.Eq(&database.Business{PublicId: testBusiness.PublicId}),
+			gomock.Eq(&database.Business{}),
 		).
 		Return(
 			nil,
@@ -603,11 +603,12 @@ func TestBusinessHandlersGetTransactionOk(t *testing.T) {
 	testVcard := GetTestVirtualCard(nil, testBusinessUser, testBusiness)
 	testItemDef := GetDefaultItem(testBusiness)
 	testOwnedItem := GetDefaultOwnedItem(testItemDef, testVcard)
-	testTransaction, testTransactionDetails := GetTestTransaction(
+	testTransaction, details := GetTestTransaction(
 		nil,
 		testVcard,
 		[]database.OwnedItem{*testOwnedItem},
 	)
+	testTransaction.TransactionDetails = details
 
 	gin.SetMode(gin.TestMode)
 	w := httptest.NewRecorder()
@@ -619,6 +620,7 @@ func TestBusinessHandlersGetTransactionOk(t *testing.T) {
 		SetMethod("GET").
 		SetHeader("Content-Type", "application/json").
 		SetDefaultToken().
+		SetParam("transactionCode", testTransactionCode).
 		Context
 
 	respBodyExpected := &api.GetBusinessTransactionResponse{
@@ -642,7 +644,7 @@ func TestBusinessHandlersGetTransactionOk(t *testing.T) {
 		EXPECT().
 		Get(
 			gomock.Eq(testBusinessUser),
-			gomock.Eq(&database.Business{PublicId: testBusiness.PublicId}),
+			gomock.Eq(&database.Business{}),
 		).
 		Return(
 			testBusiness,
@@ -654,12 +656,11 @@ func TestBusinessHandlersGetTransactionOk(t *testing.T) {
 	handler.authorizedTransactionAccessor.(*MockAuthorizedTransactionAccessor).
 		EXPECT().
 		GetForBusiness(
-			gomock.Eq(testBusinessUser),
+			gomock.Eq(testBusiness),
 			gomock.Eq(testTransactionCode),
 		).
 		Return(
 			testTransaction,
-			testTransactionDetails,
 			nil,
 		)
 
@@ -681,7 +682,7 @@ func TestBusinessHandlersPostTransactionOk(t *testing.T) {
 	testVcard := GetTestVirtualCard(nil, testBusinessUser, testBusiness)
 	testItemDef := GetDefaultItem(testBusiness)
 	testOwnedItem := GetDefaultOwnedItem(testItemDef, testVcard)
-	testTransaction, testTransactionDetails := GetTestTransaction(
+	testTransaction, _ := GetTestTransaction(
 		nil,
 		testVcard,
 		[]database.OwnedItem{*testOwnedItem},
@@ -716,6 +717,7 @@ func TestBusinessHandlersPostTransactionOk(t *testing.T) {
 		SetHeader("Content-Type", "application/json").
 		SetDefaultToken().
 		SetBody(payloadJson).
+		SetParam("transactionCode", testTransaction.Code).
 		Context
 
 	transactionFinalized := &database.Transaction{
@@ -730,15 +732,25 @@ func TestBusinessHandlersPostTransactionOk(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	handler := getBusinessHandlers(ctrl)
 
+	handler.userAuthorizedAcessor.(*MockUserAuthorizedAccessor).
+		EXPECT().
+		Get(
+			gomock.Eq(testBusinessUser),
+			gomock.Eq(&database.Business{}),
+		).
+		Return(
+			testBusiness,
+			nil,
+		)
+
 	handler.authorizedTransactionAccessor.(*MockAuthorizedTransactionAccessor).
 		EXPECT().
 		GetForBusiness(
-			gomock.Eq(testBusinessUser),
+			gomock.Eq(testBusiness),
 			gomock.Eq(testTransaction.Code),
 		).
 		Return(
 			testTransaction,
-			testTransactionDetails,
 			nil,
 		)
 
@@ -749,21 +761,92 @@ func TestBusinessHandlersPostTransactionOk(t *testing.T) {
 		Finalize(
 			gomock.Eq(testTransaction),
 			gomock.Eq(testItemsWithAction),
-			gomock.Eq(payload.AddedPoints),
+			gomock.Eq(uint64(payload.AddedPoints)),
 		).
 		Return(
 			transactionFinalized,
 			nil,
 		)
 
-	handler.getTransaction(context)
+	handler.postTransaction(context)
 
 	respBodyExpected := api.DefaultResponse{Status: api.OK}
-	respBody, respCode, respParseErr := ExtractResponse[api.GetBusinessTransactionResponse](w)
+	respBody, respCode, respParseErr := ExtractResponse[api.DefaultResponse](w)
 
 	require.Nilf(t, respParseErr, "Failed to parse JSON response")
 	require.Equalf(t, int(200), respCode, "Response returned unexpected status code")
-	require.Truef(t, reflect.DeepEqual(respBodyExpected, respBody), "Response returned unexpected body contents")
-	// TODO: test MatchEntities and gomock.Eq
+	require.Truef(t, reflect.DeepEqual(respBodyExpected, *respBody), "Response returned unexpected body contents")
+}
 
+func TestBusinessHandlersPostTransactionInvalidItem(t *testing.T) {
+	testBusinessUser := GetDefaultUser()
+	testBusiness := GetDefaultBusiness(testBusinessUser)
+	testVcard := GetTestVirtualCard(nil, testBusinessUser, testBusiness)
+	testItemDef := GetDefaultItem(testBusiness)
+	testOwnedItem := GetDefaultOwnedItem(testItemDef, testVcard)
+	testTransaction, _ := GetTestTransaction(
+		nil,
+		testVcard,
+		[]database.OwnedItem{*testOwnedItem},
+	)
+
+	payload := api.PostBusinessTransactionRequest{
+		AddedPoints: 10,
+		ItemActions: []api.ItemActionApiModel{
+			{
+				ItemId: "test item id",
+				Action: api.REDEEMED,
+			},
+		},
+	}
+	payloadJson, _ := json.Marshal(payload)
+
+	gin.SetMode(gin.TestMode)
+	w := httptest.NewRecorder()
+
+	context := NewTestContextBuilder(w).
+		SetDefaultUrl().
+		SetEndpoint("/business/transaction/"+testTransaction.Code).
+		SetUser(testBusinessUser).
+		SetMethod("POST").
+		SetHeader("Content-Type", "application/json").
+		SetDefaultToken().
+		SetBody(payloadJson).
+		SetParam("transactionCode", testTransaction.Code).
+		Context
+
+	// test env prep
+	ctrl := gomock.NewController(t)
+	handler := getBusinessHandlers(ctrl)
+
+	handler.userAuthorizedAcessor.(*MockUserAuthorizedAccessor).
+		EXPECT().
+		Get(
+			gomock.Eq(testBusinessUser),
+			gomock.Eq(&database.Business{}),
+		).
+		Return(
+			testBusiness,
+			nil,
+		)
+
+	handler.authorizedTransactionAccessor.(*MockAuthorizedTransactionAccessor).
+		EXPECT().
+		GetForBusiness(
+			gomock.Eq(testBusiness),
+			gomock.Eq(testTransaction.Code),
+		).
+		Return(
+			testTransaction,
+			nil,
+		)
+
+	handler.postTransaction(context)
+
+	respBodyExpected := api.DefaultResponse{Status: api.INVALID_REQUEST, Message: "UNKNOWN_ITEM"}
+	respBody, respCode, respParseErr := ExtractResponse[api.DefaultResponse](w)
+
+	require.Nilf(t, respParseErr, "Failed to parse JSON response")
+	require.Equalf(t, int(400), respCode, "Response returned unexpected status code")
+	require.Truef(t, reflect.DeepEqual(respBodyExpected, *respBody), "Response returned unexpected body contents")
 }

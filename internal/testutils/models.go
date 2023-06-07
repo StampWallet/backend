@@ -110,11 +110,12 @@ func GetTestVirtualCard(db GormDB, user *User, business *Business) *VirtualCard 
 
 func GetTestOwnedItem(db GormDB, itemDefinition *ItemDefinition, card *VirtualCard) *OwnedItem {
 	ownedItem := OwnedItem{
-		PublicId:      shortuuid.New(),
-		DefinitionId:  itemDefinition.ID,
-		VirtualCardId: card.ID,
-		Used:          sql.NullTime{Valid: false},
-		Status:        OwnedItemStatusOwned,
+		PublicId:       shortuuid.New(),
+		DefinitionId:   itemDefinition.ID,
+		VirtualCardId:  card.ID,
+		Used:           sql.NullTime{Valid: false},
+		Status:         OwnedItemStatusOwned,
+		ItemDefinition: itemDefinition,
 	}
 	Save(db, &ownedItem)
 	return &ownedItem
@@ -151,10 +152,12 @@ func GetTestTransaction(db GormDB, virtualCard *VirtualCard, items []OwnedItem) 
 			TransactionId: transaction.ID,
 			ItemId:        item.ID,
 			Action:        NoActionType,
+			OwnedItem:     &item,
 		}
 		details = append(details, transactionDetail)
 		Save(db, &transactionDetail)
 	}
+	transaction.TransactionDetails = details
 	return &transaction, details
 }
 

@@ -57,11 +57,11 @@ func (handler *BusinessHandlers) getBusinessOfUser(user *User, c *gin.Context) *
 	// Get user's business
 	businessTmp, err := handler.userAuthorizedAcessor.Get(user, &Business{})
 
-	if err != nil {
+	if err != nil && err != ErrNotFound {
 		handler.logger.Printf("failed to handler.userAuthorizedAcessor.Get in getAccountInfo %+v", err)
 		c.JSON(500, api.DefaultResponse{Status: api.UNKNOWN_ERROR})
 		return nil
-	} else if businessTmp == nil {
+	} else if businessTmp == nil || err == ErrNotFound {
 		c.JSON(404, api.DefaultResponse{Status: api.NOT_FOUND})
 		return nil
 	}
@@ -324,7 +324,7 @@ func (handler *BusinessHandlers) postTransaction(c *gin.Context) {
 	}
 
 	// Convert request
-	var itemMap map[string]*OwnedItem
+	var itemMap map[string]*OwnedItem = map[string]*OwnedItem{}
 	for _, v := range transaction.TransactionDetails {
 		itemMap[v.OwnedItem.PublicId] = v.OwnedItem
 	}
