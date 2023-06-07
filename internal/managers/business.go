@@ -84,7 +84,11 @@ func (manager *BusinessManagerImpl) Create(user *User, businessDetails *Business
 
 		r = tx.Create(&business)
 		if err := r.GetError(); err != nil {
-			return fmt.Errorf("tx.Create(business) returned an error: %+v", err)
+			if err == gorm.ErrDuplicatedKey {
+				return BusinessAlreadyExists
+			} else {
+				return fmt.Errorf("tx.Create(business) returned an error: %+v", err)
+			}
 		}
 
 		return nil

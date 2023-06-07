@@ -46,12 +46,12 @@ func TestBusinessManagerCreate(t *testing.T) {
 	manager.fileStorageService.(*MockFileStorageService).
 		EXPECT().
 		CreateStub(user).
-		Return(*bannerImage, nil)
+		Return(bannerImage, nil)
 	iconImage := GetTestFileMetadata(manager.baseServices.Database, user)
 	manager.fileStorageService.(*MockFileStorageService).
 		EXPECT().
 		CreateStub(user).
-		Return(*iconImage, nil)
+		Return(iconImage, nil)
 	details := BusinessDetails{
 		Name:           "test business",
 		Description:    "Description",
@@ -172,7 +172,7 @@ func TestBusinessManagerChangeDetailsEmptyDescription(t *testing.T) {
 	var dbBusiness Business
 	manager.baseServices.Database.Find(&dbBusiness, &Business{Model: gorm.Model{ID: business.ID}})
 	require.Equalf(t, *details.Name, dbBusiness.Name, "business name does not match")
-	require.Equalf(t, *details.Description, oldDescription, "business description does not match")
+	require.Equalf(t, oldDescription, dbBusiness.Description, "business description does not match")
 }
 
 func TestBusinessManagerSearchExistingByName(t *testing.T) {

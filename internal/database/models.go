@@ -213,8 +213,8 @@ type Business struct {
 	Address        string         `gorm:"not null"`
 	GPSCoordinates GPSCoordinates `gorm:"type:geography(POINT,4326);index:,type:gist"`
 	NIP            string         `gorm:"unique;not null"`
-	KRS            string         `gorm:"unique;not null"`
-	REGON          string         `gorm:"unique;not null"`
+	KRS            string         `gorm:"unique"`
+	REGON          string         `gorm:"unique"`
 	OwnerName      string         `gorm:"not null"`
 	BannerImageId  string         `gorm:"unique;not null"`
 	IconImageId    string         `gorm:"unique;not null"`

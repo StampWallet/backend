@@ -179,7 +179,7 @@ func (handler *BusinessHandlers) getAccountInfo(c *gin.Context) {
 		itemDefinitions = append(itemDefinitions, convertItemDefinitionToApiModel(v.(*ItemDefinition)))
 	}
 
-	c.JSON(201, api.GetBusinessAccountResponse{
+	c.JSON(200, api.GetBusinessAccountResponse{
 		PublicId:        business.PublicId,
 		Name:            business.Name,
 		Address:         business.Address,
