@@ -222,18 +222,18 @@ func (m *MockItemDefinitionManager) EXPECT() *MockItemDefinitionManagerMockRecor
 }
 
 // AddItem mocks base method.
-func (m *MockItemDefinitionManager) AddItem(arg0 *database.Business, arg1 *managers.ItemDetails) (*database.ItemDefinition, error) {
+func (m *MockItemDefinitionManager) AddItem(arg0 *database.User, arg1 *database.Business, arg2 *managers.ItemDetails) (*database.ItemDefinition, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AddItem", arg0, arg1)
+	ret := m.ctrl.Call(m, "AddItem", arg0, arg1, arg2)
 	ret0, _ := ret[0].(*database.ItemDefinition)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // AddItem indicates an expected call of AddItem.
-func (mr *MockItemDefinitionManagerMockRecorder) AddItem(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockItemDefinitionManagerMockRecorder) AddItem(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddItem", reflect.TypeOf((*MockItemDefinitionManager)(nil).AddItem), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddItem", reflect.TypeOf((*MockItemDefinitionManager)(nil).AddItem), arg0, arg1, arg2)
 }
 
 // ChangeItemDetails mocks base method.

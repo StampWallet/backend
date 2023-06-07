@@ -10,11 +10,15 @@ import (
 	"gorm.io/gorm"
 )
 
-var BusinessAlreadyExists = errors.New("Business already exists")
+var ErrBusinessAlreadyExists = errors.New("Business already exists")
+var ErrTooManyMenuImages = errors.New("Too many menu images")
 
 type BusinessManager interface {
 	Create(user *User, businessDetails *BusinessDetails) (*Business, error)
 	ChangeDetails(business *Business, businessDetails *ChangeableBusinessDetails) (*Business, error)
+	AddMenuImage(business *Business) (*MenuImage, error)
+	RemoveMenuImage(menuImage *MenuImage) error
+
 	Search(name *string, location *GPSCoordinates, proximityInMeters uint, offset uint, limit uint) ([]Business, error) //? not a fan
 }
 
@@ -55,7 +59,7 @@ func (manager *BusinessManagerImpl) Create(user *User, businessDetails *Business
 		r := tx.First(&business, &Business{OwnerId: user.ID})
 		err := r.GetError()
 		if err == nil {
-			return BusinessAlreadyExists
+			return ErrBusinessAlreadyExists
 		} else if err != gorm.ErrRecordNotFound {
 			return fmt.Errorf("tx.First returned an error: %+v", err)
 		}
@@ -87,7 +91,7 @@ func (manager *BusinessManagerImpl) Create(user *User, businessDetails *Business
 		r = tx.Create(&business)
 		if err := r.GetError(); err != nil {
 			if err == gorm.ErrDuplicatedKey {
-				return BusinessAlreadyExists
+				return ErrBusinessAlreadyExists
 			} else {
 				return fmt.Errorf("tx.Create(business) returned an error: %+v", err)
 			}
@@ -115,6 +119,47 @@ func (manager *BusinessManagerImpl) ChangeDetails(business *Business, businessDe
 	}
 
 	return business, nil
+}
+
+func (manager *BusinessManagerImpl) AddMenuImage(business *Business) (*MenuImage, error) {
+	var menuImage *MenuImage
+	err := manager.baseServices.Database.Transaction(func(db GormDB) error {
+		var images []MenuImage
+		tx := db.Find(&images, MenuImage{BusinessId: business.ID})
+		if err := tx.GetError(); err != nil {
+			return fmt.Errorf("database error when searching menuImages: %w", err)
+		}
+		if len(images) > 10 {
+			return ErrTooManyMenuImages
+		}
+
+		metadata, err := manager.fileStorageService.CreateStub(business.User)
+		if err != nil {
+			return fmt.Errorf("failed to create image stub: %w", err)
+		}
+
+		menuImage = &MenuImage{
+			BusinessId: business.ID,
+			FileId:     metadata.PublicId,
+		}
+		tx = db.Save(menuImage)
+		if err := tx.GetError(); err != nil {
+			return fmt.Errorf("database error when saving menuImage: %w", err)
+		}
+
+		return nil
+	})
+
+	return menuImage, err
+}
+
+func (manager *BusinessManagerImpl) RemoveMenuImage(menuImage *MenuImage) error {
+	tx := manager.baseServices.Database.Delete(menuImage)
+	if err := tx.GetError(); err != nil {
+		return fmt.Errorf("database error when removing menuImage: %w", err)
+	}
+
+	return nil
 }
 
 // NOTE limit offset is not a very good pagination method

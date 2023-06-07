@@ -220,7 +220,7 @@ type Business struct {
 	IconImageId    string         `gorm:"unique;not null"`
 
 	ItemDefinitions []ItemDefinition `gorm:"foreignkey:BusinessId"`
-	MenuItems       []MenuItem       `gorm:"foreignkey:BusinessId"`
+	MenuImages      []MenuImage      `gorm:"foreignkey:BusinessId"`
 	VirtualCards    []VirtualCard    `gorm:"foreignkey:BusinessId"`
 
 	User *User `gorm:"foreignkey:OwnerId"`
@@ -255,9 +255,9 @@ func (entity *ItemDefinition) GetBusinessId(_ GormDB) (uint, error) {
 	return entity.BusinessId, nil
 }
 
-// MenuItem
+// MenuImage
 
-type MenuItem struct {
+type MenuImage struct {
 	gorm.Model
 	BusinessId uint   `gorm:"uniqueIndex:menu_item_idx;not null"`
 	FileId     string `gorm:"uniqueIndex:menu_item_idx;not null"`
@@ -265,7 +265,7 @@ type MenuItem struct {
 	Business *Business `gorm:"foreignkey:BusinessId"`
 }
 
-func (entity *MenuItem) GetBusinessId(_ GormDB) (uint, error) {
+func (entity *MenuImage) GetBusinessId(_ GormDB) (uint, error) {
 	return entity.BusinessId, nil
 }
 

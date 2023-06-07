@@ -94,7 +94,7 @@ func TestBusinessManagerCreateAccountAlreadyExists(t *testing.T) {
 	business, err := manager.Create(user, &details)
 
 	require.Nilf(t, business, "business is not nil")
-	require.Equalf(t, BusinessAlreadyExists, err, "create err does not equal business already exists")
+	require.Equalf(t, ErrBusinessAlreadyExists, err, "create err does not equal business already exists")
 }
 
 func TestBusinessManagerChangeDetails(t *testing.T) {
@@ -173,6 +173,89 @@ func TestBusinessManagerChangeDetailsEmptyDescription(t *testing.T) {
 	manager.baseServices.Database.Find(&dbBusiness, &Business{Model: gorm.Model{ID: business.ID}})
 	require.Equalf(t, *details.Name, dbBusiness.Name, "business name does not match")
 	require.Equalf(t, oldDescription, dbBusiness.Description, "business description does not match")
+}
+
+func TestBusinessManagerAddMenuImage(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	manager := GetBusinessManager(ctrl)
+	user := GetTestUser(manager.baseServices.Database)
+	business := GetTestBusiness(manager.baseServices.Database, user)
+
+	menuImageMetadata := GetTestFileMetadata(manager.baseServices.Database, user)
+	manager.fileStorageService.(*MockFileStorageService).
+		EXPECT().
+		CreateStub(user).
+		Return(menuImageMetadata, nil)
+
+	menuImage, err := manager.AddMenuImage(business)
+	require.Nilf(t, err, "BusinessManager.AddMenuImage returned an error")
+	require.NotNilf(t, menuImage, "BusinessManager.AddMenuImage returned a nil menuImage")
+	require.Equalf(t, business.ID, menuImage.BusinessId,
+		"BusinessManager.AddMenuImage returned a menuImage with invalid businessId")
+
+	var dbMenuImage MenuImage
+	tx := manager.baseServices.Database.First(&dbMenuImage, MenuImage{Model: gorm.Model{ID: menuImage.ID}})
+	require.Nilf(t, tx.GetError(), "Database.First returned an error on MenuImage serach")
+	require.Equalf(t, business.ID, dbMenuImage.BusinessId,
+		"BusinessManager.AddMenuImage created a menuImage with invalid businessId")
+}
+
+func TestBusinessManagerAddMenuImageTooManyImages(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	manager := GetBusinessManager(ctrl)
+	user := GetTestUser(manager.baseServices.Database)
+	business := GetTestBusiness(manager.baseServices.Database, user)
+
+	for i := 0; i != 11; i++ {
+		if i != 11 {
+			menuImageMetadata := GetTestFileMetadata(manager.baseServices.Database, user)
+			manager.fileStorageService.(*MockFileStorageService).
+				EXPECT().
+				CreateStub(user).
+				Return(menuImageMetadata, nil)
+		}
+
+		menuImage, err := manager.AddMenuImage(business)
+		if i == 11 {
+			require.ErrorAsf(t, ErrTooManyMenuImages, err,
+				"BusinessManager.AddMenuImage did not return TooManyMenuImages")
+		} else {
+			require.Nilf(t, err, "BusinessManager.AddMenuImage returned an error")
+			require.NotNilf(t, menuImage, "BusinessManager.AddMenuImage returned a nil menuImage")
+			require.Equalf(t, business.ID, menuImage.BusinessId,
+				"BusinessManager.AddMenuImage returned a menuImage with invalid businessId")
+		}
+	}
+}
+
+func TestBusinessManagerRemoveMenuImage(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	manager := GetBusinessManager(ctrl)
+	user := GetTestUser(manager.baseServices.Database)
+	business := GetTestBusiness(manager.baseServices.Database, user)
+
+	menuImageMetadata := GetTestFileMetadata(manager.baseServices.Database, user)
+	manager.fileStorageService.(*MockFileStorageService).
+		EXPECT().
+		CreateStub(user).
+		Return(menuImageMetadata, nil)
+
+	menuImage, err := manager.AddMenuImage(business)
+	require.Nilf(t, err, "BusinessManager.AddMenuImage returned an error")
+	require.NotNilf(t, menuImage, "BusinessManager.AddMenuImage returned a nil menuImage")
+	require.Equalf(t, business.ID, menuImage.BusinessId,
+		"BusinessManager.AddMenuImage returned a menuImage with invalid businessId")
+
+	err = manager.RemoveMenuImage(menuImage)
+	require.Nilf(t, err, "BusinessManager.RemoveMenuImage returned an error")
+
+	var dbMenuImage MenuImage
+	tx := manager.baseServices.Database.First(&dbMenuImage, MenuImage{Model: gorm.Model{ID: menuImage.ID}})
+	require.ErrorIsf(t, tx.GetError(), gorm.ErrRecordNotFound,
+		"Database.First did not return ErrRecordNotFound on MenuImage serach")
 }
 
 func TestBusinessManagerSearchExistingByName(t *testing.T) {

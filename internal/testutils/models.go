@@ -58,9 +58,10 @@ func GetTestBusiness(db GormDB, user *User) *Business {
 		OwnerName:      "test owner",
 		BannerImageId:  GetTestFileMetadata(db, user).PublicId,
 		IconImageId:    GetTestFileMetadata(db, user).PublicId,
+		User:           user,
 	}
-	user.Business = &business
 	Save(db, &business)
+	user.Business = &business
 	return &business
 }
 
