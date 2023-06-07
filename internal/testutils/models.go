@@ -97,12 +97,40 @@ func GetTestItemDefinition(db GormDB, business *Business, metadata FileMetadata)
 	return &definition
 }
 
+func GetTestItemDefinitionWithPrice(db GormDB, business *Business, metadata FileMetadata, price uint) *ItemDefinition {
+	definition := ItemDefinition{
+		PublicId:    shortuuid.New(),
+		BusinessId:  business.ID,
+		Name:        "test item definition name",
+		Price:       price,
+		Description: "test item definition description",
+		ImageId:     metadata.PublicId,
+		StartDate:   sql.NullTime{Time: time.Now(), Valid: true},
+		EndDate:     sql.NullTime{Time: time.Now().Add(time.Hour * 24), Valid: true},
+		MaxAmount:   10,
+		Available:   true,
+	}
+	Save(db, &definition)
+	return &definition
+}
+
 func GetTestVirtualCard(db GormDB, user *User, business *Business) *VirtualCard {
 	virtualCard := VirtualCard{
 		PublicId:   shortuuid.New(),
 		OwnerId:    user.ID,
 		BusinessId: business.ID,
 		Points:     40,
+	}
+	Save(db, &virtualCard)
+	return &virtualCard
+}
+
+func GetTestVirtualCardWithPoints(db GormDB, user *User, business *Business, points uint) *VirtualCard {
+	virtualCard := VirtualCard{
+		PublicId:   shortuuid.New(),
+		OwnerId:    user.ID,
+		BusinessId: business.ID,
+		Points:     points,
 	}
 	Save(db, &virtualCard)
 	return &virtualCard
@@ -115,6 +143,18 @@ func GetTestOwnedItem(db GormDB, itemDefinition *ItemDefinition, card *VirtualCa
 		VirtualCardId: card.ID,
 		Used:          sql.NullTime{Valid: false},
 		Status:        OwnedItemStatusOwned,
+	}
+	Save(db, &ownedItem)
+	return &ownedItem
+}
+
+func GetTestOwnedItemUsed(db GormDB, itemDefinition *ItemDefinition, card *VirtualCard) *OwnedItem {
+	ownedItem := OwnedItem{
+		PublicId:      shortuuid.New(),
+		DefinitionId:  itemDefinition.ID,
+		VirtualCardId: card.ID,
+		Used:          sql.NullTime{Valid: true, Time: time.Now()},
+		Status:        OwnedItemStatusUsed,
 	}
 	Save(db, &ownedItem)
 	return &ownedItem

@@ -134,24 +134,29 @@ func (manager *ItemDefinitionManagerImpl) WithdrawItem(item *ItemDefinition) (*I
 
 		item.Withdrawn = true
 		item.Available = false
-		// TODO: not scalable
-		for _, ownedItem := range item.OwnedItems {
-			if ownedItem.Status != OwnedItemStatusOwned || ownedItem.Used.Valid {
-				continue
-			}
-			ownedItem.Status = OwnedItemStatusWithdrawn
-			ownedItem.VirtualCard.Points += item.Price
 
-			result = db.Save(&ownedItem)
-			if err := result.GetError(); err != nil {
-				return fmt.Errorf("db.Save(ownedItem) returned an error %w", err)
-			}
+		execDb := db.Exec(`UPDATE virtual_cards AS vc
+				SET points = vc.points + t.points
+			FROM		
+				(SELECT oi.virtual_card_id as vid, sum(itd.price) as points
+				FROM owned_items oi 
+					JOIN item_definitions AS itd ON itd.id = oi.definition_id 
+				WHERE oi.definition_id=? AND oi.used is NULL AND oi.status='OWNED'
+				GROUP BY oi.virtual_card_id) AS t
+			WHERE
+				vc.id = t.vid`, item.ID)
 
-			result = db.Save(&ownedItem.VirtualCard)
-			if err := result.GetError(); err != nil {
-				return fmt.Errorf("db.Save(ownedItem.VirtualCard) returned an error %w", err)
-			}
+		if err := execDb.GetError(); err != nil {
+			return fmt.Errorf("failed to update virtual cards in WithdrawItem: %w", err)
 		}
+
+		execDb = db.Exec(`UPDATE owned_items SET status=? WHERE definition_id=? AND status=?`,
+			OwnedItemStatusWithdrawn, item.ID, OwnedItemStatusOwned)
+
+		if err := execDb.GetError(); err != nil {
+			return fmt.Errorf("failed to disable owned items in WithdrawItem: %w", err)
+		}
+
 		db.Save(item)
 		return nil
 	})
