@@ -214,7 +214,7 @@ func (accessor *AuthorizedTransactionAccessorImpl) GetForBusiness(business *Busi
 		// Still, double join
 		Preload("TransactionDetails").
 		Preload("TransactionDetails.OwnedItem").
-		Preload("TransactionDetails.ItemDefinition").
+		Preload("TransactionDetails.OwnedItem.ItemDefinition").
 		First(&transaction, Transaction{
 			Code:        transactionCode,
 			VirtualCard: &VirtualCard{Business: business},

@@ -114,6 +114,7 @@ func TestUserAuthorizedAccessorValidAccess(t *testing.T) {
 	require.Equal(t, localCard.PublicId, obtainedLocalCard.PublicId, "accessor returned non nil error")
 }
 
+// NOTE accessors now insert OwnerId/BusinessId into conds. this is unfixable probably
 func TestUserAuthorizedAccessorInvalidAccess(t *testing.T) {
 	_, accessor, user, _ := setupUserAccessorTest(t)
 	user2 := GetTestUser(accessor.database)
