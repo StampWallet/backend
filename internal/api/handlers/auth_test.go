@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http/httptest"
+	"reflect"
 	"testing"
 	"time"
 
@@ -640,7 +641,7 @@ func TestAuthHandlersPostAccountPasswordNok_OldPass(t *testing.T) {
 		SetBody(payloadJson).
 		Context
 
-	respBodyExpected := api.DefaultResponse{Status: api.INVALID_REQUEST}
+	respBodyExpected := api.DefaultResponse{Status: api.INVALID_REQUEST, Message: "INVALID_PASSWORD"}
 
 	ctrl := gomock.NewController(t)
 	handler := GetAuthHandlers(ctrl)
@@ -663,7 +664,7 @@ func TestAuthHandlersPostAccountPasswordNok_OldPass(t *testing.T) {
 
 	require.Nilf(t, respParseErr, "Failed to parse JSON response")
 	require.Equalf(t, int(400), respCode, "Response returned unexpected status code")
-	require.Truef(t, MatchEntities(*respBody, respBodyExpected), "Response returned unexpected body contents")
+	require.Truef(t, reflect.DeepEqual(*respBody, respBodyExpected), "Response returned unexpected body contents")
 	// TODO: MatchEntities
 }
 

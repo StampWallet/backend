@@ -91,13 +91,10 @@ func convertBusinessToShortApiModel(business *database.Business) api.ShortBusine
 // Handles local and virtual cards retrieval request
 func (handler *UserHandlers) getUserCards(c *gin.Context) {
 	// Get user object from middleware
-	userAny, exists := c.Get("user")
-	if !exists {
-		handler.logger.Printf("user not available context")
-		c.JSON(500, api.DefaultResponse{Status: api.UNKNOWN_ERROR})
+	user := getUserFromContext(handler.logger, c)
+	if user == nil {
 		return
 	}
-	user := userAny.(*database.User)
 
 	result := api.GetUserCardsResponse{}
 
@@ -295,13 +292,10 @@ func (handler *UserLocalCardHandlers) postCard(c *gin.Context) {
 	}
 
 	// Get user from context (should be inserted by authMiddleware)
-	userAny, exists := c.Get("user")
-	if !exists {
-		handler.logger.Printf("user not available context")
-		c.JSON(500, api.DefaultResponse{Status: api.UNKNOWN_ERROR})
+	user := getUserFromContext(handler.logger, c)
+	if user == nil {
 		return
 	}
-	user := userAny.(*database.User)
 
 	// Create local card, handle errors
 	localCard, err := handler.localCardManager.Create(user, LocalCardDetails{
@@ -348,13 +342,10 @@ func (handler *UserLocalCardHandlers) deleteCard(c *gin.Context) {
 	cardId := c.Param("cardId")
 
 	// Get user from context (should be inserted by authMiddleware)
-	userAny, exists := c.Get("user")
-	if !exists {
-		handler.logger.Printf("user not available context")
-		c.JSON(500, api.DefaultResponse{Status: api.UNKNOWN_ERROR})
+	user := getUserFromContext(handler.logger, c)
+	if user == nil {
 		return
 	}
-	user := userAny.(*database.User)
 
 	// Get local card form publicId, handle errors
 	localCard, err := handler.userAuthorizedAcessor.Get(user, &database.LocalCard{PublicId: cardId})
