@@ -73,8 +73,15 @@ func (accessor *BusinessAuthorizedAccessorImpl) Get(business *Business, conds Bu
 	return checkEq(result, business.ID, id, err)
 }
 
-// NOTE shouldnt be used for huge amounts of data
+// NOTE not optimized for huge amounts of data
+// NOTE preloads will most likely get deprecated. Be careful with relation properties in objects returned by accessors.
+// Loaded relation object does not mean that the object is owned and can be modified by business/user.
+// This is a problem with both managers and accessors. Without preloads, there is no guarantee that relation properties will be loaded in the object.
+// Perhaps forbidding use of relation properties in the whole codebase, except for code that directly interacts with the database
+// would be a good idea.
 func (accessor *BusinessAuthorizedAccessorImpl) GetAll(business *Business, conds BusinessOwnedEntity, preloads []string) ([]BusinessOwnedEntity, error) {
+	// Find BusinessId in conds object and set it to id of business
+	// All objects "owned" by a business are required to store the business id in a field named "BusinessId".
 	condsValue := reflect.ValueOf(conds)
 	field := condsValue.Elem().FieldByName("BusinessId")
 	if field.IsValid() {
@@ -83,11 +90,15 @@ func (accessor *BusinessAuthorizedAccessorImpl) GetAll(business *Business, conds
 		}
 	}
 
+	// Create result object, add preloads
 	dbResult := reflect.New(reflect.SliceOf(reflect.TypeOf(conds).Elem()))
+
 	tx := accessor.database
 	for _, v := range preloads {
 		tx = tx.Preload(v)
 	}
+
+	// Execute query, handle errors
 	tx = tx.Find(dbResult.Interface(), condsValue.Interface())
 	if err := tx.GetError(); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -96,6 +107,7 @@ func (accessor *BusinessAuthorizedAccessorImpl) GetAll(business *Business, conds
 		return nil, err
 	}
 
+	// Convert results (reflect.Value) to BusinessOwnedEntity
 	var result []BusinessOwnedEntity
 	for i := 0; i != dbResult.Elem().Len(); i += 1 {
 		result = append(result, dbResult.Elem().Index(i).Addr().Interface().(BusinessOwnedEntity))
@@ -132,8 +144,12 @@ func (accessor *UserAuthorizedAccessorImpl) Get(user *User, conds UserOwnedEntit
 	return checkEq(result, user.ID, id, err)
 }
 
-// NOTE shouldnt be used for huge amounts of data
+// NOTE not optimized for huge amounts of data
+// NOTE preloads will most likely get deprecated. Be careful with relation properties in objects returned by accessors.
+// Check comments of BusinessAuthorizedAccessor.GetAll
 func (accessor *UserAuthorizedAccessorImpl) GetAll(user *User, conds UserOwnedEntity, preloads []string) ([]UserOwnedEntity, error) {
+	// Find OwnerId in conds object and set it to id of user
+	// All objects "owned" by a user are required to store the user id in a field named "OwnerId".
 	condsValue := reflect.ValueOf(conds)
 	field := condsValue.Elem().FieldByName("OwnerId")
 	if field.IsValid() {
@@ -142,11 +158,16 @@ func (accessor *UserAuthorizedAccessorImpl) GetAll(user *User, conds UserOwnedEn
 		}
 	}
 
+	// Create result object
 	dbResult := reflect.New(reflect.SliceOf(reflect.TypeOf(conds).Elem()))
+
+	// Create db object with configured preloads
 	tx := accessor.database
 	for _, v := range preloads {
 		tx = tx.Preload(v)
 	}
+
+	// Execute query, handle errors
 	tx = tx.Find(dbResult.Interface(), condsValue.Interface())
 	if err := tx.GetError(); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -155,6 +176,7 @@ func (accessor *UserAuthorizedAccessorImpl) GetAll(user *User, conds UserOwnedEn
 		return nil, err
 	}
 
+	// Convert results (reflect.Value) to UserOwnedEntity
 	var result []UserOwnedEntity
 	for i := 0; i != dbResult.Elem().Len(); i += 1 {
 		result = append(result, dbResult.Elem().Index(i).Addr().Interface().(UserOwnedEntity))
