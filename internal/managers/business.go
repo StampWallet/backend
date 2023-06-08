@@ -204,9 +204,9 @@ func (manager *BusinessManagerImpl) GetById(businessId string, preloadDetails bo
 
 	r := db.First(&business, &Business{PublicId: businessId})
 	err := r.GetError()
-	if err == nil {
+	if err == gorm.ErrRecordNotFound {
 		return nil, ErrNoSuchBusiness
-	} else if err != gorm.ErrRecordNotFound {
+	} else if err != gorm.ErrRecordNotFound && err != nil {
 		return nil, fmt.Errorf("tx.First returned an error: %+v", err)
 	}
 

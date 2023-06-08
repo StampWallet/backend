@@ -211,6 +211,99 @@ func TestUserHandlersGetSearchBusinessesOk(t *testing.T) {
 	require.Truef(t, reflect.DeepEqual(respBodyExpected, *respBody), "Response returned unexpected body contents")
 }
 
+func TestUserHandlersGetBusinessesOk(t *testing.T) {
+	testUser := GetDefaultUser()
+	testBusinessUser := GetDefaultUser()
+	testBusiness := GetDefaultBusiness(testBusinessUser)
+	testMenuImage := GetTestMenuImage(nil, testBusinessUser.Business)
+	testMenuImage2 := GetTestMenuImage(nil, testBusinessUser.Business)
+	testItemDef := GetTestItemDefinition(nil, testBusinessUser.Business, *GetTestFileMetadata(nil, testBusinessUser))
+	testItemDef2 := GetTestItemDefinition(nil, testBusinessUser.Business, *GetTestFileMetadata(nil, testBusinessUser))
+
+	gin.SetMode(gin.TestMode)
+	w := httptest.NewRecorder()
+
+	context := NewTestContextBuilder(w).
+		SetDefaultUrl().
+		SetEndpoint("/user/businesses/"+testBusiness.PublicId).
+		SetUser(testUser).
+		SetMethod("GET").
+		SetDefaultToken().
+		SetParam("businessId", testBusiness.PublicId).
+		Context
+
+	sd := testItemDef.StartDate.Time.Truncate(time.Millisecond)
+	ed := testItemDef.EndDate.Time.Truncate(time.Millisecond)
+	sd2 := testItemDef2.StartDate.Time.Truncate(time.Millisecond)
+	ed2 := testItemDef2.EndDate.Time.Truncate(time.Millisecond)
+
+	testItemDef.StartDate.Time = sd
+	testItemDef.EndDate.Time = ed
+	testItemDef2.StartDate.Time = sd2
+	testItemDef2.EndDate.Time = ed2
+
+	testBusiness.MenuImages = []database.MenuImage{*testMenuImage, *testMenuImage2}
+	testBusiness.ItemDefinitions = []database.ItemDefinition{*testItemDef, *testItemDef2}
+
+	respBodyExpected := api.PublicBusinessDetailsApiModel{
+		PublicId:       testBusiness.PublicId,
+		Name:           testBusiness.Name,
+		Address:        testBusiness.Address,
+		Description:    testBusiness.Description,
+		GpsCoordinates: testBusiness.GPSCoordinates.ToString(),
+		BannerImageId:  testBusiness.BannerImageId,
+		IconImageId:    testBusiness.IconImageId,
+		MenuImageIds:   []string{testMenuImage.FileId, testMenuImage2.FileId},
+		ItemDefinitions: []api.ItemDefinitionApiModel{
+			{
+				PublicId:    testItemDef.PublicId,
+				Name:        testItemDef.Name,
+				Price:       int32(testItemDef.Price),
+				Description: testItemDef.Description,
+				ImageId:     testItemDef.ImageId,
+				StartDate:   &sd,
+				EndDate:     &ed,
+				MaxAmount:   int32(testItemDef.MaxAmount),
+				Available:   testItemDef.Available,
+			},
+			{
+				PublicId:    testItemDef2.PublicId,
+				Name:        testItemDef2.Name,
+				Price:       int32(testItemDef2.Price),
+				Description: testItemDef2.Description,
+				ImageId:     testItemDef2.ImageId,
+				StartDate:   &sd2,
+				EndDate:     &ed2,
+				MaxAmount:   int32(testItemDef2.MaxAmount),
+				Available:   testItemDef2.Available,
+			},
+		},
+	}
+
+	// test env prep
+	ctrl := gomock.NewController(t)
+	handler := getUserHandlers(ctrl)
+
+	// setup mocks
+	handler.businessManager.(*MockBusinessManager).
+		EXPECT().
+		GetById(
+			testBusiness.PublicId,
+			true,
+		).
+		Return(testBusiness, nil)
+
+	handler.getBusiness(context)
+
+	respBody, respCode, respParseErr := ExtractResponse[api.PublicBusinessDetailsApiModel](w)
+
+	require.Nilf(t, respParseErr, "Failed to parse JSON response")
+	require.Equalf(t, respCode, int(200), "Response returned unexpected status code")
+	require.Truef(t, reflect.DeepEqual(respBodyExpected, *respBody), "Response returned unexpected body contents")
+}
+
+//		VirtualCardHandlers
+
 func TestUserVirtualCardHandlersPostCardOk(t *testing.T) {
 	testUser := GetDefaultUser()
 	testBusinessUser := GetDefaultUser()

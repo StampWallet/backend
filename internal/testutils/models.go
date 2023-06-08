@@ -264,6 +264,6 @@ func GetTestMenuImage(db GormDB, business *Business) *MenuImage {
 		BusinessId: business.ID,
 		Business:   business,
 	}
-	Save(db, &business)
+	Save(db, &menuImage)
 	return &menuImage
 }

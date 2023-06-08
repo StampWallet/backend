@@ -128,7 +128,6 @@ func (handler *UserHandlers) getUserCards(c *gin.Context) {
 }
 
 // Handles business search request
-// Requires middleware that will insert user object into the context under "user".
 func (handler *UserHandlers) getSearchBusinesses(c *gin.Context) {
 	// Text search
 	textQuery := c.Query("text")
@@ -213,6 +212,24 @@ func (handler *UserHandlers) getSearchBusinesses(c *gin.Context) {
 	return
 }
 
+// Handles get business info request
+// Requires businessId path parameter
+func (handler *UserHandlers) getBusiness(c *gin.Context) {
+	businessId := c.Param("businessId")
+
+	// Execute the query, handle errors
+	businesses, err := handler.businessManager.GetById(businessId, true)
+	if err != nil {
+		handler.logger.Printf("%s unknown error after businessManager.Search %+v", CallerFilename(), err)
+		c.JSON(500, api.DefaultResponse{Status: api.UNKNOWN_ERROR})
+		return
+	}
+
+	// Respond with business data
+	response := apiUtils.ConvertBusinessToApiModel(businesses, businesses.ItemDefinitions, businesses.MenuImages)
+	c.JSON(200, response)
+}
+
 // Connects handler to gin router
 func (handler *UserHandlers) Connect(rg *gin.RouterGroup) {
 	cards := rg.Group("/cards")
@@ -220,7 +237,11 @@ func (handler *UserHandlers) Connect(rg *gin.RouterGroup) {
 		cards.GET("", handler.getUserCards)
 		handler.localCardHandlers.Connect(cards.Group("/local"))
 	}
-	rg.GET("/businesses", handler.getSearchBusinesses)
+	businesses := rg.Group("/businesses")
+	{
+		businesses.GET("", handler.getSearchBusinesses)
+		businesses.GET("/:businessId", handler.getBusiness)
+	}
 }
 
 //		UserVirtualCardHandlers
