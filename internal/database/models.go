@@ -17,6 +17,10 @@ import (
 type ActionTypeEnum string
 
 //TODO inconsistent naming. recalled vs withdrawn
+/*
+	NOTE user id field in relations should always be named "OwnerId"
+	business id field in relations should always be named "BusinessId"
+*/
 
 const (
 	NoActionType        ActionTypeEnum = "NO_ACTION"
@@ -135,6 +139,16 @@ func (g *GPSCoordinates) Scan(input interface{}) error {
 	gc := GPSCoordinates(*gp)
 	g = &gc
 	return nil
+}
+
+func (g *GPSCoordinates) ToString() string {
+	// TODO
+	return ""
+}
+
+func GPSCoordinatesFromString(coords string) (GPSCoordinates, error) {
+	// TODO
+	return GPSCoordinates{}, nil
 }
 
 //// TODO probably does not work

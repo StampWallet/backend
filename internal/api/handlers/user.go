@@ -2,6 +2,7 @@ package api
 
 import (
 	"log"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 
@@ -13,6 +14,14 @@ import (
 	. "github.com/StampWallet/backend/internal/utils"
 )
 
+// UserHandlers stores UserLocalCardHandlers and UserVirtualCardHandlers. It also implements
+// few requests related to functionalities for users that did not fit other handlers.
+// (currently retrieving a list of local and virtual cards, searching for businesses)
+// Retrieval of local and virtual cards is coupled in a single request to limit number
+// of requests made by the application.
+// All requests require middleware that will insert user object into the context under "user".
+// Such middleware has to be set up by owner of the external router group
+// (whoever calls UserHandlers.Connect).
 type UserHandlers struct {
 	businessManager       BusinessManager
 	userAuthorizedAcessor UserAuthorizedAccessor
@@ -29,6 +38,8 @@ type UserHandlers struct {
 	logger *log.Logger
 }
 
+// Creates UserHandlers. UserHandlers "owns" UserVirtualCardHandlers and UserLocalCardHandlers,
+// hence these two structs are created in this function, not passed as arguments.
 func CreateUserHandlers(
 	virtualCardManager VirtualCardManager,
 	localCardManager LocalCardManager,
@@ -63,19 +74,169 @@ func CreateUserHandlers(
 	}
 }
 
+// Converts database.Business to api.ShortBusinessDetailsApiModel
+// Most data is lost in conversion - api.ShortBusinessDetailsApiModel does not contain all
+// data from model
+func convertBusinessToShortApiModel(business *database.Business) api.ShortBusinessDetailsApiModel {
+	return api.ShortBusinessDetailsApiModel{
+		PublicId:       business.PublicId,
+		Name:           business.Name,
+		Description:    business.Description,
+		GpsCoordinates: business.GPSCoordinates.ToString(),
+		BannerImageId:  business.BannerImageId,
+		IconImageId:    business.IconImageId,
+	}
+}
+
+// Handles local and virtual cards retrieval request
 func (handler *UserHandlers) getUserCards(c *gin.Context) {
+	// Get user object from middleware
+	userAny, exists := c.Get("user")
+	if !exists {
+		handler.logger.Printf("user not available context")
+		c.JSON(500, api.DefaultResponse{Status: api.UNKNOWN_ERROR})
+		return
+	}
+	user := userAny.(*database.User)
 
+	result := api.GetUserCardsResponse{}
+
+	// Get all local cards of user
+	localCards, err := handler.userAuthorizedAcessor.GetAll(user, &database.LocalCard{}, []string{})
+	if err != nil {
+		handler.logger.Printf("%s unknown error after userAuthorizedAcessor.GetAll for localCard: %+v",
+			CallerFilename(), err)
+		c.JSON(500, api.DefaultResponse{Status: api.UNKNOWN_ERROR})
+		return
+	}
+
+	// Convert database.LocalCard to api model
+	for _, v := range localCards {
+		card := v.(*database.LocalCard)
+		result.LocalCards = append(result.LocalCards, api.LocalCardApiModel{
+			PublicId: card.PublicId,
+			Name:     card.Name,
+			Type:     card.Type,
+			Code:     card.Code,
+		})
+	}
+
+	// Get all virtual cards of user
+	virtualCards, err := handler.userAuthorizedAcessor.GetAll(user, &database.VirtualCard{},
+		[]string{"Business"})
+	if err != nil {
+		handler.logger.Printf("%s unknown error after userAuthorizedAcessor.GetAll for virtualCard: %+v",
+			CallerFilename(), err)
+		c.JSON(500, api.DefaultResponse{Status: api.UNKNOWN_ERROR})
+		return
+	}
+
+	// Convert database.VirtualCard to api model
+	for _, v := range virtualCards {
+		card := v.(*database.VirtualCard)
+		result.VirtualCards = append(result.VirtualCards, api.ShortVirtualCardApiModel{
+			BusinessDetails: convertBusinessToShortApiModel(card.Business),
+			Points:          int32(card.Points),
+		})
+	}
+
+	c.JSON(200, result)
 }
 
+// Handles business search request
+// Requires middleware that will insert user object into the context under "user".
 func (handler *UserHandlers) getSearchBusinesses(c *gin.Context) {
+	// Text search
+	textQuery := c.Query("text")
+	// Filter by location (long,lat)
+	locationQuery := c.Query("location")
+	// Filter by location - proximity in meters
+	proximityQuery, proximityExists := c.GetQuery("proximity")
+	// Pagination - offset
+	offsetQuery := c.Query("offset")
+	// Pagination - limit
+	limitQuery := c.Query("limit")
 
+	// Parse text query if presetn
+	var text *string
+	if textQuery != "" {
+		text = &textQuery
+	}
+
+	// Parse location if present
+	var location *database.GPSCoordinates
+	if locationQuery != "" {
+		coords, err := database.GPSCoordinatesFromString(locationQuery)
+		if err != nil {
+			c.JSON(400, api.DefaultResponse{Status: api.INVALID_REQUEST, Message: "INVALID_LOCATION"})
+			return
+		}
+		location = &coords
+	}
+
+	// Default proximity - 1000 meters
+	var proximity uint = 1000
+	if location != nil && !proximityExists {
+		c.JSON(400, api.DefaultResponse{Status: api.INVALID_REQUEST, Message: "LOCATION_BUT_NO_PROXIMITY"})
+		return
+	} else if location != nil {
+		localProximity, err := strconv.ParseUint(proximityQuery, 10, 32)
+		if err != nil {
+			c.JSON(400, api.DefaultResponse{Status: api.INVALID_REQUEST, Message: "INVALID_PROXIMITY"})
+			return
+		}
+		proximity = uint(localProximity)
+	}
+
+	var offset uint = 0
+	var limit uint = 50
+
+	// Parse offset if exists
+	if offsetQuery != "" {
+		localOffset, err := strconv.ParseUint(offsetQuery, 10, 32)
+		if err != nil {
+			c.JSON(400, api.DefaultResponse{Status: api.INVALID_REQUEST, Message: "INVALID_OFFSET"})
+			return
+		}
+		offset = uint(localOffset)
+	}
+
+	// Parse limit if exists
+	if limitQuery != "" {
+		localLimit, err := strconv.ParseUint(limitQuery, 10, 32)
+		if err != nil {
+			c.JSON(400, api.DefaultResponse{Status: api.INVALID_REQUEST, Message: "INVALID_OFFSET"})
+			return
+		}
+		offset = uint(localLimit)
+	}
+
+	// Execute the query, handle errors
+	businesses, err := handler.businessManager.Search(text, location, proximity, offset, limit)
+	if err != nil {
+		handler.logger.Printf("%s unknown error after businessManager.Search %+v", CallerFilename(), err)
+		c.JSON(500, api.DefaultResponse{Status: api.UNKNOWN_ERROR})
+		return
+	}
+
+	// Convert results to api model
+	result := api.GetUserBusinessesSearchResponse{}
+	for _, v := range businesses {
+		result.Businesses = append(result.Businesses, convertBusinessToShortApiModel(&v))
+	}
+
+	c.JSON(200, result)
+	return
 }
 
+// Connects handler to gin router
 func (handler *UserHandlers) Connect(rg *gin.RouterGroup) {
 	cards := rg.Group("/cards")
 	{
+		cards.GET("", handler.getUserCards)
 		handler.localCardHandlers.Connect(cards.Group("/local"))
 	}
+	rg.GET("/businesses", handler.getSearchBusinesses)
 }
 
 type UserVirtualCardHandlers struct {
@@ -115,6 +276,9 @@ func (handler *UserVirtualCardHandlers) Connect(rg *gin.RouterGroup) {
 
 }
 
+// UserLocalCardHandlers implements API handlers for requests related to
+// managing local cards (creating, deleting, retrieving types of cards).
+// All requests require middleware that will insert user object into the context under "user".
 type UserLocalCardHandlers struct {
 	localCardManager      LocalCardManager
 	userAuthorizedAcessor UserAuthorizedAccessor
@@ -218,6 +382,7 @@ func (handler *UserLocalCardHandlers) deleteCard(c *gin.Context) {
 	return
 }
 
+// Connects UserLocalCardHandlers to gin router
 func (handler *UserLocalCardHandlers) Connect(rg *gin.RouterGroup) {
 	rg.POST("", handler.postCard)
 	rg.GET("/types", handler.getCardTypes)

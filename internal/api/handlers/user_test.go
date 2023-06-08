@@ -4,17 +4,20 @@ import (
 	"encoding/json"
 	"log"
 	"net/http/httptest"
+	"reflect"
 	"testing"
+
+	"github.com/gin-gonic/gin"
+	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/require"
 
 	api "github.com/StampWallet/backend/internal/api/models"
 	"github.com/StampWallet/backend/internal/database"
+	accessors "github.com/StampWallet/backend/internal/database/accessors"
 	. "github.com/StampWallet/backend/internal/database/accessors/mocks"
 	"github.com/StampWallet/backend/internal/managers"
 	. "github.com/StampWallet/backend/internal/managers/mocks"
 	. "github.com/StampWallet/backend/internal/testutils"
-	"github.com/gin-gonic/gin"
-	"github.com/golang/mock/gomock"
-	"github.com/stretchr/testify/require"
 )
 
 func getUserHandlers(ctrl *gomock.Controller) *UserHandlers {
@@ -63,6 +66,23 @@ func getLocalCardHandlers(ctrl *gomock.Controller) *UserLocalCardHandlers {
 	}
 }
 
+type pointerMatcherTypes interface {
+	string | int | uint
+}
+
+// pointerMatcher.Matches(x) checks if *x == pointerMatcher.value
+type pointerMatcher[T pointerMatcherTypes] struct {
+	value T
+}
+
+func (matcher *pointerMatcher[T]) Matches(x interface{}) bool {
+	return reflect.ValueOf(x).Elem().Equal(reflect.ValueOf(matcher.value))
+}
+
+func (matcher *pointerMatcher[T]) String() string {
+	return "pointerMatcher"
+}
+
 // TODO
 func TestUserHandlersGetUserCardsOk(t *testing.T) {
 	testUser := GetDefaultUser()
@@ -70,6 +90,7 @@ func TestUserHandlersGetUserCardsOk(t *testing.T) {
 	testBusiness := GetDefaultBusiness(testBusinessUser)
 	testLocalCard := GetTestLocalCard(nil, testUser)
 	testVirtualCard := GetTestVirtualCard(nil, testUser, testBusiness)
+	testVirtualCard.Business = testBusiness
 
 	gin.SetMode(gin.TestMode)
 	w := httptest.NewRecorder()
@@ -113,21 +134,21 @@ func TestUserHandlersGetUserCardsOk(t *testing.T) {
 
 	handler.userAuthorizedAcessor.(*MockUserAuthorizedAccessor).
 		EXPECT().
-		GetAll(gomock.Eq(testUser), &database.LocalCard{}).
-		Return([]database.LocalCard{*testLocalCard})
+		GetAll(gomock.Eq(testUser), &database.LocalCard{}, []string{}).
+		Return(([]accessors.UserOwnedEntity{testLocalCard}), nil)
 
 	handler.userAuthorizedAcessor.(*MockUserAuthorizedAccessor).
 		EXPECT().
-		GetAll(gomock.Eq(testUser), &database.VirtualCard{}).
-		Return([]database.VirtualCard{*testVirtualCard})
+		GetAll(gomock.Eq(testUser), &database.VirtualCard{}, []string{"Business"}).
+		Return([]accessors.UserOwnedEntity{testVirtualCard}, nil)
 
 	handler.getUserCards(context)
 
-	respBody, respCode, respParseErr := ExtractResponse[api.DefaultResponse](w)
+	respBody, respCode, respParseErr := ExtractResponse[api.GetUserCardsResponse](w)
 
 	require.Nilf(t, respParseErr, "Failed to parse JSON response")
-	require.Equalf(t, respCode, int(201), "Response returned unexpected status code")
-	require.Truef(t, MatchEntities(respBodyExpected, respBody), "Response returned unexpected body contents")
+	require.Equalf(t, int(200), respCode, "Response returned unexpected status code")
+	require.Truef(t, reflect.DeepEqual(*respBodyExpected, *respBody), "Response returned unexpected body contents")
 	// TODO: test MatchEntities and gomock.Eq
 }
 
@@ -171,13 +192,13 @@ func TestUserHandlersGetSearchBusinessesOk(t *testing.T) {
 	handler.businessManager.(*MockBusinessManager).
 		EXPECT().
 		Search(
-			gomock.Eq("example business search"),
+			&pointerMatcher[string]{"example business search"},
 			gomock.Any(),
 			gomock.Any(),
 			gomock.Any(),
 			gomock.Any(),
 		).
-		Return([]database.Business{*testBusiness})
+		Return([]database.Business{*testBusiness}, nil)
 
 	handler.getSearchBusinesses(context)
 
@@ -185,7 +206,7 @@ func TestUserHandlersGetSearchBusinessesOk(t *testing.T) {
 
 	require.Nilf(t, respParseErr, "Failed to parse JSON response")
 	require.Equalf(t, respCode, int(200), "Response returned unexpected status code")
-	require.Truef(t, MatchEntities(respBodyExpected, respBody), "Response returned unexpected body contents")
+	require.Truef(t, reflect.DeepEqual(respBodyExpected, *respBody), "Response returned unexpected body contents")
 	// TODO: test MatchEntities and gomock.Eq
 }
 
@@ -591,7 +612,7 @@ func TestUserLocalCardHandlersPostCardOk(t *testing.T) {
 		SetBody(payloadJson).
 		Context
 
-	respBodyExpected := &api.DefaultResponse{Status: api.OK}
+	respBodyExpected := &api.PostUserLocalCardsResponse{PublicId: testCard.PublicId}
 
 	// test env prep
 	ctrl := gomock.NewController(t)
@@ -604,17 +625,17 @@ func TestUserLocalCardHandlersPostCardOk(t *testing.T) {
 			gomock.Eq(testCardDetails),
 		).
 		Return(
-			*testCard,
+			testCard,
 			nil,
 		)
 
 	handler.postCard(context)
 
-	respBody, respCode, respParseErr := ExtractResponse[api.DefaultResponse](w)
+	respBody, respCode, respParseErr := ExtractResponse[api.PostUserLocalCardsResponse](w)
 
 	require.Nilf(t, respParseErr, "Failed to parse JSON response")
 	require.Equalf(t, respCode, int(201), "Response returned unexpected status code")
-	require.Truef(t, MatchEntities(respBodyExpected, respBody), "Response returned unexpected body contents")
+	require.Truef(t, reflect.DeepEqual(respBodyExpected, respBody), "Response returned unexpected body contents")
 	// TODO: test MatchEntities and gomock.Eq
 }
 
@@ -663,6 +684,6 @@ func TestUserLocalCardHandlersDeleteCardOk(t *testing.T) {
 
 	require.Nilf(t, respParseErr, "Failed to parse JSON response")
 	require.Equalf(t, respCode, int(200), "Response returned unexpected status code")
-	require.Truef(t, MatchEntities(respBodyExpected, respBody), "Response returned unexpected body contents")
+	require.Truef(t, reflect.DeepEqual(respBodyExpected, respBody), "Response returned unexpected body contents")
 	// TODO: test MatchEntities and gomock.Eq
 }

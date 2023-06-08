@@ -50,6 +50,21 @@ func (mr *MockBusinessAuthorizedAccessorMockRecorder) Get(arg0, arg1 interface{}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockBusinessAuthorizedAccessor)(nil).Get), arg0, arg1)
 }
 
+// GetAll mocks base method.
+func (m *MockBusinessAuthorizedAccessor) GetAll(arg0 *database.Business, arg1 database0.BusinessOwnedEntity) ([]database0.BusinessOwnedEntity, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAll", arg0, arg1)
+	ret0, _ := ret[0].([]database0.BusinessOwnedEntity)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAll indicates an expected call of GetAll.
+func (mr *MockBusinessAuthorizedAccessorMockRecorder) GetAll(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAll", reflect.TypeOf((*MockBusinessAuthorizedAccessor)(nil).GetAll), arg0, arg1)
+}
+
 // MockUserAuthorizedAccessor is a mock of UserAuthorizedAccessor interface.
 type MockUserAuthorizedAccessor struct {
 	ctrl     *gomock.Controller
@@ -86,6 +101,21 @@ func (m *MockUserAuthorizedAccessor) Get(arg0 *database.User, arg1 database0.Use
 func (mr *MockUserAuthorizedAccessorMockRecorder) Get(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockUserAuthorizedAccessor)(nil).Get), arg0, arg1)
+}
+
+// GetAll mocks base method.
+func (m *MockUserAuthorizedAccessor) GetAll(arg0 *database.User, arg1 database0.UserOwnedEntity, arg2 []string) ([]database0.UserOwnedEntity, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAll", arg0, arg1, arg2)
+	ret0, _ := ret[0].([]database0.UserOwnedEntity)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAll indicates an expected call of GetAll.
+func (mr *MockUserAuthorizedAccessorMockRecorder) GetAll(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAll", reflect.TypeOf((*MockUserAuthorizedAccessor)(nil).GetAll), arg0, arg1, arg2)
 }
 
 // MockAuthorizedTransactionAccessor is a mock of AuthorizedTransactionAccessor interface.

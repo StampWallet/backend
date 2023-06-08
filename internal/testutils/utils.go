@@ -2,22 +2,26 @@ package testutils
 
 import (
 	"bytes"
-	"database/sql/driver"
-	"encoding/json"
 	"io"
-	"mime/multipart"
-	"net/http"
-	"net/http/httptest"
-	"net/url"
 	"os"
 	"path"
 	"reflect"
 	"time"
 
+	"database/sql/driver"
+	"encoding/json"
+	"mime/multipart"
+	"net/http"
+	"net/http/httptest"
+	"net/url"
+
 	"github.com/StampWallet/backend/internal/database"
 	"github.com/gin-gonic/gin"
 )
 
+// Recursively compares matcher with obj. Only keys present in matcher are compared
+// Mostly broken. Should only be used in tests.
+// Note: for exact equality reflect.DeepEqual should be used instead
 func MatchEntities(matcher interface{}, Obj interface{}) bool {
 	o := reflect.ValueOf(Obj)
 	m := reflect.ValueOf(matcher)
@@ -35,14 +39,14 @@ func MatchEntities(matcher interface{}, Obj interface{}) bool {
 			mtf := mt.Field(i)
 			of := o.FieldByName(mtf.Name)
 			mf := m.FieldByName(mtf.Name)
-			if !of.Equal(mf) {
-				if (mf.Kind() == reflect.Pointer || mf.Kind() == reflect.Interface) && !mf.IsNil() && !of.Equal(mf.Elem()) {
-					return false
-				} else if (mf.Kind() == reflect.Array || mf.Kind() == reflect.Slice) && !reflect.DeepEqual(of, mf) {
-					return false
-				} else if mf.Kind() == reflect.Struct && !MatchEntities(of, mf) {
-					return false
-				}
+			if (mf.Kind() == reflect.Pointer || mf.Kind() == reflect.Interface) && !mf.IsNil() && !of.Equal(mf.Elem()) {
+				return false
+			} else if (mf.Kind() == reflect.Array || mf.Kind() == reflect.Slice) && !reflect.DeepEqual(of, mf) {
+				return false
+			} else if mf.Kind() == reflect.Struct && !MatchEntities(of, mf) {
+				return false
+			} else if !of.Equal(mf) {
+				return false
 			}
 		}
 		return true
