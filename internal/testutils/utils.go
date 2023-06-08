@@ -2,22 +2,26 @@ package testutils
 
 import (
 	"bytes"
-	"database/sql/driver"
-	"encoding/json"
 	"io"
-	"mime/multipart"
-	"net/http"
-	"net/http/httptest"
-	"net/url"
 	"os"
 	"path"
 	"reflect"
 	"time"
 
+	"database/sql/driver"
+	"encoding/json"
+	"mime/multipart"
+	"net/http"
+	"net/http/httptest"
+	"net/url"
+
 	"github.com/StampWallet/backend/internal/database"
 	"github.com/gin-gonic/gin"
 )
 
+// Recursively compares matcher with obj. Only keys present in matcher are compared
+// Mostly broken. Should only be used in tests.
+// Note: for exact equality reflect.DeepEqual should be used instead
 func MatchEntities(matcher interface{}, Obj interface{}) bool {
 	o := reflect.ValueOf(Obj)
 	m := reflect.ValueOf(matcher)

@@ -82,7 +82,7 @@ func TestBusinessAuthorizedAccessorValidAccessAll(t *testing.T) {
 	_ = GetTestItemDefinition(accessor.database, business2,
 		*GetTestFileMetadata(accessor.database, user2))
 
-	result, err := accessor.GetAll(business, &ItemDefinition{}, []string{})
+	result, err := accessor.GetAll(business, &ItemDefinition{})
 	require.Nilf(t, err, "accessor returned non nil error")
 	require.NotNilf(t, result, "accessor returned nil")
 	var obtainedItemDefinitions []ItemDefinition

@@ -98,6 +98,7 @@ func (handler *UserHandlers) getUserCards(c *gin.Context) {
 
 	result := api.GetUserCardsResponse{}
 
+	// Get all local cards of user
 	localCards, err := handler.userAuthorizedAcessor.GetAll(user, &database.LocalCard{}, []string{})
 	if err != nil {
 		handler.logger.Printf("%s unknown error after userAuthorizedAcessor.GetAll for localCard: %+v",
@@ -106,6 +107,7 @@ func (handler *UserHandlers) getUserCards(c *gin.Context) {
 		return
 	}
 
+	// Convert database.LocalCard to api model
 	for _, v := range localCards {
 		card := v.(*database.LocalCard)
 		result.LocalCards = append(result.LocalCards, api.LocalCardApiModel{
@@ -116,6 +118,7 @@ func (handler *UserHandlers) getUserCards(c *gin.Context) {
 		})
 	}
 
+	// Get all virtual cards of user
 	virtualCards, err := handler.userAuthorizedAcessor.GetAll(user, &database.VirtualCard{},
 		[]string{"Business"})
 	if err != nil {
@@ -125,6 +128,7 @@ func (handler *UserHandlers) getUserCards(c *gin.Context) {
 		return
 	}
 
+	// Convert database.VirtualCard to api model
 	for _, v := range virtualCards {
 		card := v.(*database.VirtualCard)
 		result.VirtualCards = append(result.VirtualCards, api.ShortVirtualCardApiModel{
@@ -139,17 +143,24 @@ func (handler *UserHandlers) getUserCards(c *gin.Context) {
 // Handles business search request
 // Requires middleware that will insert user object into the context under "user".
 func (handler *UserHandlers) getSearchBusinesses(c *gin.Context) {
+	// Text search
 	textQuery := c.Query("text")
+	// Filter by location (long,lat)
 	locationQuery := c.Query("location")
+	// Filter by location - proximity in meters
 	proximityQuery, proximityExists := c.GetQuery("proximity")
+	// Pagination - offset
 	offsetQuery := c.Query("offset")
+	// Pagination - limit
 	limitQuery := c.Query("limit")
 
+	// Parse text query if presetn
 	var text *string
 	if textQuery != "" {
 		text = &textQuery
 	}
 
+	// Parse location if present
 	var location *database.GPSCoordinates
 	if locationQuery != "" {
 		coords, err := database.GPSCoordinatesFromString(locationQuery)
@@ -160,7 +171,8 @@ func (handler *UserHandlers) getSearchBusinesses(c *gin.Context) {
 		location = &coords
 	}
 
-	var proximity uint = 50
+	// Default proximity - 1000 meters
+	var proximity uint = 1000
 	if location != nil && !proximityExists {
 		c.JSON(400, api.DefaultResponse{Status: api.INVALID_REQUEST, Message: "LOCATION_BUT_NO_PROXIMITY"})
 		return
@@ -176,6 +188,7 @@ func (handler *UserHandlers) getSearchBusinesses(c *gin.Context) {
 	var offset uint = 0
 	var limit uint = 50
 
+	// Parse offset if exists
 	if offsetQuery != "" {
 		localOffset, err := strconv.ParseUint(offsetQuery, 10, 32)
 		if err != nil {
@@ -185,6 +198,7 @@ func (handler *UserHandlers) getSearchBusinesses(c *gin.Context) {
 		offset = uint(localOffset)
 	}
 
+	// Parse limit if exists
 	if limitQuery != "" {
 		localLimit, err := strconv.ParseUint(limitQuery, 10, 32)
 		if err != nil {
@@ -194,6 +208,7 @@ func (handler *UserHandlers) getSearchBusinesses(c *gin.Context) {
 		offset = uint(localLimit)
 	}
 
+	// Execute the query, handle errors
 	businesses, err := handler.businessManager.Search(text, location, proximity, offset, limit)
 	if err != nil {
 		handler.logger.Printf("%s unknown error after businessManager.Search %+v", CallerFilename(), err)
@@ -201,8 +216,8 @@ func (handler *UserHandlers) getSearchBusinesses(c *gin.Context) {
 		return
 	}
 
+	// Convert results to api model
 	result := api.GetUserBusinessesSearchResponse{}
-
 	for _, v := range businesses {
 		result.Businesses = append(result.Businesses, convertBusinessToShortApiModel(&v))
 	}
