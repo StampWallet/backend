@@ -10,7 +10,6 @@ import (
 
 	"database/sql/driver"
 	"encoding/json"
-	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -110,14 +109,13 @@ type TestContextBuilder struct{ Context *gin.Context }
 
 func TestFileReader(filename string) io.Reader {
 	buf := new(bytes.Buffer)
-	mw := multipart.NewWriter(buf)
-	w, _ := mw.CreateFormFile("file", "test")
+	//mw := multipart.NewWriter(buf)
+	//w, _ := mw.CreateFormFile("file", "test")
 
 	file, _ := os.Open(filename)
-	io.Copy(w, file)
+	io.Copy(buf, file)
 
 	file.Close()
-	mw.Close()
 	return buf
 }
 
