@@ -4,8 +4,44 @@ All URIs are relative to **
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
+[**getBusiness**](UserApi.md#getBusiness) | **GET** /user/businesses/{businessId} | Get business info
 [**searchBusinesses**](UserApi.md#searchBusinesses) | **GET** /user/businesses | Search businesses
 
+
+
+## getBusiness
+
+Get business info
+
+This endpoint is used to get info about a business
+
+### Example
+
+```bash
+ getBusiness businessId=value
+```
+
+### Parameters
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **businessId** | **string** | Public id of the business | [default to null]
+
+### Return type
+
+[**PublicBusinessDetailsAPIModel**](PublicBusinessDetailsAPIModel.md)
+
+### Authorization
+
+[sessionToken](../README.md#sessionToken)
+
+### HTTP request headers
+
+- **Content-Type**: Not Applicable
+- **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 
 ## searchBusinesses

@@ -20,7 +20,7 @@ var _ MappedNullable = &GetUserVirtualCardTransactionResponse{}
 
 // GetUserVirtualCardTransactionResponse struct for GetUserVirtualCardTransactionResponse
 type GetUserVirtualCardTransactionResponse struct {
-	ItemId      *string               `json:"itemId,omitempty"`
+	PublicId    *string               `json:"publicId,omitempty"`
 	State       *TransactionStateEnum `json:"state,omitempty"`
 	AddedPoints *int32                `json:"addedPoints,omitempty"`
 	ItemActions []ItemActionAPIModel  `json:"itemActions,omitempty"`
@@ -43,36 +43,36 @@ func NewGetUserVirtualCardTransactionResponseWithDefaults() *GetUserVirtualCardT
 	return &this
 }
 
-// GetItemId returns the ItemId field value if set, zero value otherwise.
-func (o *GetUserVirtualCardTransactionResponse) GetItemId() string {
-	if o == nil || isNil(o.ItemId) {
+// GetPublicId returns the PublicId field value if set, zero value otherwise.
+func (o *GetUserVirtualCardTransactionResponse) GetPublicId() string {
+	if o == nil || isNil(o.PublicId) {
 		var ret string
 		return ret
 	}
-	return *o.ItemId
+	return *o.PublicId
 }
 
-// GetItemIdOk returns a tuple with the ItemId field value if set, nil otherwise
+// GetPublicIdOk returns a tuple with the PublicId field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *GetUserVirtualCardTransactionResponse) GetItemIdOk() (*string, bool) {
-	if o == nil || isNil(o.ItemId) {
+func (o *GetUserVirtualCardTransactionResponse) GetPublicIdOk() (*string, bool) {
+	if o == nil || isNil(o.PublicId) {
 		return nil, false
 	}
-	return o.ItemId, true
+	return o.PublicId, true
 }
 
-// HasItemId returns a boolean if a field has been set.
-func (o *GetUserVirtualCardTransactionResponse) HasItemId() bool {
-	if o != nil && !isNil(o.ItemId) {
+// HasPublicId returns a boolean if a field has been set.
+func (o *GetUserVirtualCardTransactionResponse) HasPublicId() bool {
+	if o != nil && !isNil(o.PublicId) {
 		return true
 	}
 
 	return false
 }
 
-// SetItemId gets a reference to the given string and assigns it to the ItemId field.
-func (o *GetUserVirtualCardTransactionResponse) SetItemId(v string) {
-	o.ItemId = &v
+// SetPublicId gets a reference to the given string and assigns it to the PublicId field.
+func (o *GetUserVirtualCardTransactionResponse) SetPublicId(v string) {
+	o.PublicId = &v
 }
 
 // GetState returns the State field value if set, zero value otherwise.
@@ -181,8 +181,8 @@ func (o GetUserVirtualCardTransactionResponse) MarshalJSON() ([]byte, error) {
 
 func (o GetUserVirtualCardTransactionResponse) ToMap() (map[string]interface{}, error) {
 	toSerialize := map[string]interface{}{}
-	if !isNil(o.ItemId) {
-		toSerialize["itemId"] = o.ItemId
+	if !isNil(o.PublicId) {
+		toSerialize["publicId"] = o.PublicId
 	}
 	if !isNil(o.State) {
 		toSerialize["state"] = o.State

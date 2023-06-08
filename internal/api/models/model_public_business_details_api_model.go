@@ -21,6 +21,8 @@ type PublicBusinessDetailsApiModel struct {
 
 	BannerImageId string `json:"bannerImageId,omitempty"`
 
+	Description string `json:"description,omitempty"`
+
 	IconImageId string `json:"iconImageId,omitempty"`
 
 	MenuImageIds []string `json:"menuImageIds,omitempty"`

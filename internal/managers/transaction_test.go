@@ -102,7 +102,7 @@ func TestTransactionManagerStartWithInvalidItems(t *testing.T) {
 		Save(s.db, ownedItem)
 		transaction, err := s.manager.Start(s.virtualCard, []OwnedItem{*s.ownedItem})
 		require.Nilf(t, transaction, "TransactionManager.Start should return a nil transaction")
-		require.Equalf(t, err, InvalidItem, "TransactionManager.Start should return a InvalidItem error")
+		require.Equalf(t, err, ErrInvalidItem, "TransactionManager.Start should return a InvalidItem error")
 	}
 }
 
@@ -193,8 +193,8 @@ func TestTransactionManagerFinalizeWithItemsNotFromTransaction(t *testing.T) {
 	transaction, err := s.manager.Finalize(transaction, []ItemWithAction{
 		{ownedItemFromOutside, RedeemedActionType},
 	}, 10)
-	require.Equalf(t, InvalidItem, err, "TransactionManager.Finalize did not return InvalidItemError %w",
-		InvalidItem)
+	require.Equalf(t, ErrInvalidItem, err, "TransactionManager.Finalize did not return InvalidItemError %w",
+		ErrInvalidItem)
 
 	var dbTransaction Transaction
 	tx := s.db.First(&dbTransaction, Transaction{Model: gorm.Model{ID: transaction.ID}})
@@ -229,7 +229,7 @@ func testTransactionManagerFinalizeWithChnagedItemStatusTemplate(t *testing.T, i
 		{ownedItemToRedeemNewStatus, RedeemedActionType},
 	}, 10)
 	require.Nilf(t, transaction, "transaction finalize should not return a transaction")
-	require.ErrorAsf(t, err, InvalidItem, "transaction should return a InvalidItem error")
+	require.ErrorAsf(t, err, ErrInvalidItem, "transaction should return a InvalidItem error")
 
 	var dbTransaction Transaction
 	tx := s.db.First(&dbTransaction, Transaction{Model: gorm.Model{ID: transaction.ID}})
@@ -262,7 +262,7 @@ func testTransactionManagerFinalizeFinishedTransactionTemplate(t *testing.T, sta
 	transaction, err := s.manager.Finalize(transaction, []ItemWithAction{
 		{ownedItemToRedeem, RedeemedActionType},
 	}, 10)
-	require.ErrorAsf(t, err, InvalidTransaction, "transaction finalize should return InvalidTransaction error")
+	require.ErrorAsf(t, err, ErrInvalidTransaction, "transaction finalize should return InvalidTransaction error")
 	require.Nilf(t, transaction, "transaction finalize should return a nil transaction")
 
 	var dbVirtualCard VirtualCard

@@ -8,8 +8,9 @@ import (
 )
 
 var (
-	InvalidItem        = errors.New("Invalid item")        // no such item or item already used
-	InvalidTransaction = errors.New("Invalid transaction") // transaction finished
+	// TODO perhaps return a new error object with item id as a property
+	ErrInvalidItem        = errors.New("Invalid item")        // no such item or item already used
+	ErrInvalidTransaction = errors.New("Invalid transaction") // transaction finished
 )
 
 // TODO
