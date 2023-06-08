@@ -13,6 +13,9 @@ import (
 	. "github.com/StampWallet/backend/internal/utils"
 )
 
+// FileHandlers is a struct that implements handlers for all operations under "/file/" URL path.
+// Operations include: uploading files to existing FileMetadata, deleting files from FileMetadata and
+// downloading files (does not require the requester to be the owner of the file).
 type FileHandlers struct {
 	fileStorageService    FileStorageService
 	logger                *log.Logger
