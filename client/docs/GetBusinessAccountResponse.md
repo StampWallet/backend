@@ -8,6 +8,7 @@ Name | Type | Description | Notes
 **address** | **string** |  | [optional] [default to null]
 **gpsCoordinates** | **string** |  | [optional] [default to null]
 **bannerImageId** | **string** |  | [optional] [default to null]
+**description** | **string** |  | [optional] [default to null]
 **iconImageId** | **string** |  | [optional] [default to null]
 **menuImageIds** | **array[string]** |  | [optional] [default to null]
 **itemDefinitions** | [**array[ItemDefinitionAPIModel]**](ItemDefinitionAPIModel.md) |  | [optional] [default to null]

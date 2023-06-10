@@ -253,6 +253,14 @@ paths:
               schema:
                 $ref: '#/components/schemas/DefaultResponse'
           description: Invalid request format
+        "409":
+          content:
+            application/json:
+              example:
+                status: ALREADY_EXISTS
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+          description: Business already exists
         "401":
           content:
             application/json:
@@ -798,11 +806,11 @@ paths:
           type: string
         style: simple
       responses:
-        "200":
+        "201":
           content:
             application/json:
               example:
-                status: OK
+                status: CREATED
               schema:
                 $ref: '#/components/schemas/DefaultResponse'
           description: Successful operation
@@ -827,7 +835,7 @@ paths:
       summary: Add a new virtual card
       tags:
       - virtualCards
-  /user/cards/virtual/{businessId}/items/{itemDefinitionId}:
+  /user/cards/virtual/{businessId}/itemsDefinitions/{itemDefinitionId}:
     post:
       description: This endpoint is used to buy an item for points from the virtual
         card.
@@ -864,6 +872,14 @@ paths:
               schema:
                 $ref: '#/components/schemas/DefaultResponse'
           description: No such item or item does not belong to this business
+        "401":
+          content:
+            application/json:
+              example:
+                status: NOT_FOUND
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+          description: "Item withdrawn, not available etc"
       security:
       - sessionToken: []
       summary: Buy an item
@@ -908,6 +924,14 @@ paths:
               schema:
                 $ref: '#/components/schemas/DefaultResponse'
           description: No such item
+        "401":
+          content:
+            application/json:
+              example:
+                status: INVALID_REQUEST
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+          description: Item cannot be returned
       security:
       - sessionToken: []
       summary: Delete an item
@@ -935,7 +959,7 @@ paths:
               $ref: '#/components/schemas/PostUserVirtualCardTransactionRequest'
         required: true
       responses:
-        "200":
+        "201":
           content:
             application/json:
               schema:
@@ -1053,6 +1077,39 @@ paths:
       security:
       - sessionToken: []
       summary: Search businesses
+      tags:
+      - user
+  /user/businesses/{businessId}:
+    get:
+      description: This endpoint is used to get info about a business
+      operationId: getBusiness
+      parameters:
+      - description: Public id of the business
+        explode: false
+        in: path
+        name: businessId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetUserBusinessesResponse'
+          description: Successful operation
+        "400":
+          content:
+            application/json:
+              example:
+                status: INVALID_REQUEST
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+          description: Invalid request
+      security:
+      - sessionToken: []
+      summary: Get business info
       tags:
       - user
   /file/{fileId}:
@@ -1307,6 +1364,9 @@ components:
         gpsCoordinates:
           type: string
           x-go-custom-tag: binding:"required"
+        description:
+          type: string
+          x-go-custom-tag: binding:"required"
         nip:
           type: string
           x-go-custom-tag: binding:"required"
@@ -1343,7 +1403,8 @@ components:
       properties:
         name:
           type: string
-          x-go-custom-tag: binding:"required"
+        description:
+          type: string
       type: object
     PostBusinessAccountMenuImageResponse:
       example:
@@ -1447,6 +1508,7 @@ components:
       - PROCESSING
       - FINISHED
       - EXPIRED
+      - FAILED
       type: string
     GetUserCardsResponse:
       example:
@@ -1518,9 +1580,11 @@ components:
       example:
         types:
         - code: code
+          imageUrl: imageUrl
           name: name
           publicId: publicId
         - code: code
+          imageUrl: imageUrl
           name: name
           publicId: publicId
       properties:
@@ -1621,7 +1685,7 @@ components:
           itemId: bWlhOGFoYnVKYWl0Cg
           action: REDEEMED
       properties:
-        itemId:
+        publicId:
           type: string
         state:
           $ref: '#/components/schemas/TransactionStateEnum'
@@ -1727,6 +1791,8 @@ components:
           type: string
         bannerImageId:
           type: string
+        description:
+          type: string
         iconImageId:
           type: string
         menuImageIds:
@@ -1785,6 +1851,7 @@ components:
       type: object
     ItemActionTypeEnum:
       enum:
+      - NO_ACTION
       - REDEEMED
       - RECALLED
       - CANCELLED
@@ -1804,6 +1871,7 @@ components:
     GetUserLocalCardTypesResponse_types_inner:
       example:
         code: code
+        imageUrl: imageUrl
         name: name
         publicId: publicId
       properties:
@@ -1812,6 +1880,8 @@ components:
         name:
           type: string
         code:
+          type: string
+        imageUrl:
           type: string
       type: object
   securitySchemes:

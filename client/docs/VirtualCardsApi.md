@@ -4,7 +4,7 @@ All URIs are relative to **
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
-[**buyItem**](VirtualCardsApi.md#buyItem) | **POST** /user/cards/virtual/{businessId}/items/{itemDefinitionId} | Buy an item
+[**buyItem**](VirtualCardsApi.md#buyItem) | **POST** /user/cards/virtual/{businessId}/itemsDefinitions/{itemDefinitionId} | Buy an item
 [**createVirtualCard**](VirtualCardsApi.md#createVirtualCard) | **POST** /user/cards/virtual/{businessId} | Add a new virtual card
 [**deleteItem**](VirtualCardsApi.md#deleteItem) | **DELETE** /user/cards/virtual/{businessId}/items/{itemId} | Delete an item
 [**deleteVirtualCard**](VirtualCardsApi.md#deleteVirtualCard) | **DELETE** /user/cards/virtual/{businessId} | Delete a virtual card

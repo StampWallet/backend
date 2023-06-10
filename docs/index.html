@@ -252,11 +252,12 @@ font-style: italic;
   </ul>
   <h4><a href="#User">User</a></h4>
   <ul>
+  <li><a href="#getBusiness"><code><span class="http-method">get</span> /user/businesses/{businessId}</code></a></li>
   <li><a href="#searchBusinesses"><code><span class="http-method">get</span> /user/businesses</code></a></li>
   </ul>
   <h4><a href="#VirtualCards">VirtualCards</a></h4>
   <ul>
-  <li><a href="#buyItem"><code><span class="http-method">post</span> /user/cards/virtual/{businessId}/items/{itemDefinitionId}</code></a></li>
+  <li><a href="#buyItem"><code><span class="http-method">post</span> /user/cards/virtual/{businessId}/itemsDefinitions/{itemDefinitionId}</code></a></li>
   <li><a href="#createVirtualCard"><code><span class="http-method">post</span> /user/cards/virtual/{businessId}</code></a></li>
   <li><a href="#deleteItem"><code><span class="http-method">delete</span> /user/cards/virtual/{businessId}/items/{itemId}</code></a></li>
   <li><a href="#deleteVirtualCard"><code><span class="http-method">delete</span> /user/cards/virtual/{businessId}</code></a></li>
@@ -591,6 +592,9 @@ font-style: italic;
         <a href="#PostBusinessAccountResponse">PostBusinessAccountResponse</a>
     <h4 class="field-label">400</h4>
     Invalid request format
+        <a href="#DefaultResponse">DefaultResponse</a>
+    <h4 class="field-label">409</h4>
+    Business already exists
         <a href="#DefaultResponse">DefaultResponse</a>
     <h4 class="field-label">401</h4>
     Invalid credentials
@@ -1344,10 +1348,12 @@ font-style: italic;
     <pre class="example"><code>{
   "types" : [ {
     "code" : "code",
+    "imageUrl" : "imageUrl",
     "name" : "name",
     "publicId" : "publicId"
   }, {
     "code" : "code",
+    "imageUrl" : "imageUrl",
     "name" : "name",
     "publicId" : "publicId"
   } ]
@@ -1580,7 +1586,7 @@ font-style: italic;
     </ul>
 
     <h3 class="field-label">Responses</h3>
-    <h4 class="field-label">200</h4>
+    <h4 class="field-label">201</h4>
     Successful operation
         <a href="#PostUserVirtualCardTransactionResponse">PostUserVirtualCardTransactionResponse</a>
     <h4 class="field-label">400</h4>
@@ -1712,6 +1718,72 @@ font-style: italic;
   </div> <!-- method -->
   <hr/>
   <h1><a name="User">User</a></h1>
+  <div class="method"><a name="getBusiness"/>
+    <div class="method-path">
+    <a class="up" href="#__Methods">Up</a>
+    <pre class="get"><code class="huge"><span class="http-method">get</span> /user/businesses/{businessId}</code></pre></div>
+    <div class="method-summary">Get business info (<span class="nickname">getBusiness</span>)</div>
+    <div class="method-notes">This endpoint is used to get info about a business</div>
+
+    <h3 class="field-label">Path parameters</h3>
+    <div class="field-items">
+      <div class="param">businessId (required)</div>
+
+      <div class="param-desc"><span class="param-type">Path Parameter</span> &mdash; Public id of the business default: null </div>
+    </div>  <!-- field-items -->
+
+
+
+
+
+
+    <h3 class="field-label">Return type</h3>
+    <div class="return-type">
+      <a href="#PublicBusinessDetailsAPIModel">PublicBusinessDetailsAPIModel</a>
+      
+    </div>
+
+    <!--Todo: process Response Object and its headers, schema, examples -->
+
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>{
+  "publicId" : "ZUNoYWkyYWV4aVRhCg",
+  "name" : "test",
+  "address" : "ul. Łojasiewicza 6",
+  "gpsCoordinates" : "+48.8577+002.295/",
+  "bannerImageId" : "WG9ocGg2b0h1ZWNoCg",
+  "iconImageId" : "c2VlbGVlNEVlV29vCg",
+  "menuImageIds" : [ "bXU5YWltMm1haUdpCg" ],
+  "itemDefinitions" : [ {
+    "publicId" : "QWl5ZWlwaG8ySWl2Cg",
+    "name" : "Cool item",
+    "price" : 10,
+    "description" : "idk",
+    "imageId" : "QWhDOXBvdTdhaTZQCg",
+    "startDate" : "2023-04-21T15:25:37+02:00",
+    "endDate" : "2024-04-21T17:25:37+02:00",
+    "maxAmount" : 2,
+    "available" : true
+  } ]
+}</code></pre>
+
+    <h3 class="field-label">Produces</h3>
+    This API call produces the following media types according to the <span class="header">Accept</span> request header;
+    the media type will be conveyed by the <span class="header">Content-Type</span> response header.
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Responses</h3>
+    <h4 class="field-label">200</h4>
+    Successful operation
+        <a href="#PublicBusinessDetailsAPIModel">PublicBusinessDetailsAPIModel</a>
+    <h4 class="field-label">400</h4>
+    Invalid request
+        <a href="#DefaultResponse">DefaultResponse</a>
+  </div> <!-- method -->
+  <hr/>
   <div class="method"><a name="searchBusinesses"/>
     <div class="method-path">
     <a class="up" href="#__Methods">Up</a>
@@ -1776,7 +1848,7 @@ font-style: italic;
   <div class="method"><a name="buyItem"/>
     <div class="method-path">
     <a class="up" href="#__Methods">Up</a>
-    <pre class="post"><code class="huge"><span class="http-method">post</span> /user/cards/virtual/{businessId}/items/{itemDefinitionId}</code></pre></div>
+    <pre class="post"><code class="huge"><span class="http-method">post</span> /user/cards/virtual/{businessId}/itemsDefinitions/{itemDefinitionId}</code></pre></div>
     <div class="method-summary">Buy an item (<span class="nickname">buyItem</span>)</div>
     <div class="method-notes">This endpoint is used to buy an item for points from the virtual card.</div>
 
@@ -1822,6 +1894,9 @@ font-style: italic;
     <h4 class="field-label">404</h4>
     No such item or item does not belong to this business
         <a href="#DefaultResponse">DefaultResponse</a>
+    <h4 class="field-label">401</h4>
+    Item withdrawn, not available etc
+        <a href="#DefaultResponse">DefaultResponse</a>
   </div> <!-- method -->
   <hr/>
   <div class="method"><a name="createVirtualCard"/>
@@ -1865,7 +1940,7 @@ font-style: italic;
     </ul>
 
     <h3 class="field-label">Responses</h3>
-    <h4 class="field-label">200</h4>
+    <h4 class="field-label">201</h4>
     Successful operation
         <a href="#DefaultResponse">DefaultResponse</a>
     <h4 class="field-label">404</h4>
@@ -1924,6 +1999,9 @@ font-style: italic;
         <a href="#DefaultResponse">DefaultResponse</a>
     <h4 class="field-label">404</h4>
     No such item
+        <a href="#DefaultResponse">DefaultResponse</a>
+    <h4 class="field-label">401</h4>
+    Item cannot be returned
         <a href="#DefaultResponse">DefaultResponse</a>
   </div> <!-- method -->
   <hr/>
@@ -2125,6 +2203,7 @@ font-style: italic;
 <div class="param">address (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
 <div class="param">gpsCoordinates (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
 <div class="param">bannerImageId (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">description (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
 <div class="param">iconImageId (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
 <div class="param">menuImageIds (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">array[String]</a></span>  </div>
 <div class="param">itemDefinitions (optional)</div><div class="param-desc"><span class="param-type"><a href="#ItemDefinitionAPIModel">array[ItemDefinitionAPIModel]</a></span>  </div>
@@ -2190,6 +2269,7 @@ font-style: italic;
       <div class="param">publicId (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
 <div class="param">name (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
 <div class="param">code (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">imageUrl (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
     </div>  <!-- field-items -->
   </div>
   <div class="model">
@@ -2205,7 +2285,7 @@ font-style: italic;
     <h3><a name="GetUserVirtualCardTransactionResponse"><code>GetUserVirtualCardTransactionResponse</code> - </a> <a class="up" href="#__Models">Up</a></h3>
     <div class='model-description'></div>
     <div class="field-items">
-      <div class="param">itemId (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+      <div class="param">publicId (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
 <div class="param">state (optional)</div><div class="param-desc"><span class="param-type"><a href="#TransactionStateEnum">TransactionStateEnum</a></span>  </div>
 <div class="param">addedPoints (optional)</div><div class="param-desc"><span class="param-type"><a href="#integer">Integer</a></span>  </div>
 <div class="param">itemActions (optional)</div><div class="param-desc"><span class="param-type"><a href="#ItemActionAPIModel">array[ItemActionAPIModel]</a></span>  </div>
@@ -2263,6 +2343,7 @@ font-style: italic;
     <div class='model-description'></div>
     <div class="field-items">
       <div class="param">name (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">description (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
     </div>  <!-- field-items -->
   </div>
   <div class="model">
@@ -2346,6 +2427,7 @@ font-style: italic;
       <div class="param">name (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
 <div class="param">address (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
 <div class="param">gpsCoordinates (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">description (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
 <div class="param">nip (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
 <div class="param">krs (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
 <div class="param">regon (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
@@ -2438,6 +2520,7 @@ font-style: italic;
 <div class="param">address (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
 <div class="param">gpsCoordinates (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
 <div class="param">bannerImageId (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">description (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
 <div class="param">iconImageId (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
 <div class="param">menuImageIds (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">array[String]</a></span>  </div>
 <div class="param">itemDefinitions (optional)</div><div class="param-desc"><span class="param-type"><a href="#ItemDefinitionAPIModel">array[ItemDefinitionAPIModel]</a></span>  </div>

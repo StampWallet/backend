@@ -20,7 +20,8 @@ var _ MappedNullable = &PatchBusinessAccountRequest{}
 
 // PatchBusinessAccountRequest struct for PatchBusinessAccountRequest
 type PatchBusinessAccountRequest struct {
-	Name *string `json:"name,omitempty" binding:"required"`
+	Name        *string `json:"name,omitempty"`
+	Description *string `json:"description,omitempty"`
 }
 
 // NewPatchBusinessAccountRequest instantiates a new PatchBusinessAccountRequest object
@@ -72,6 +73,38 @@ func (o *PatchBusinessAccountRequest) SetName(v string) {
 	o.Name = &v
 }
 
+// GetDescription returns the Description field value if set, zero value otherwise.
+func (o *PatchBusinessAccountRequest) GetDescription() string {
+	if o == nil || isNil(o.Description) {
+		var ret string
+		return ret
+	}
+	return *o.Description
+}
+
+// GetDescriptionOk returns a tuple with the Description field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *PatchBusinessAccountRequest) GetDescriptionOk() (*string, bool) {
+	if o == nil || isNil(o.Description) {
+		return nil, false
+	}
+	return o.Description, true
+}
+
+// HasDescription returns a boolean if a field has been set.
+func (o *PatchBusinessAccountRequest) HasDescription() bool {
+	if o != nil && !isNil(o.Description) {
+		return true
+	}
+
+	return false
+}
+
+// SetDescription gets a reference to the given string and assigns it to the Description field.
+func (o *PatchBusinessAccountRequest) SetDescription(v string) {
+	o.Description = &v
+}
+
 func (o PatchBusinessAccountRequest) MarshalJSON() ([]byte, error) {
 	toSerialize, err := o.ToMap()
 	if err != nil {
@@ -84,6 +117,9 @@ func (o PatchBusinessAccountRequest) ToMap() (map[string]interface{}, error) {
 	toSerialize := map[string]interface{}{}
 	if !isNil(o.Name) {
 		toSerialize["name"] = o.Name
+	}
+	if !isNil(o.Description) {
+		toSerialize["description"] = o.Description
 	}
 	return toSerialize, nil
 }

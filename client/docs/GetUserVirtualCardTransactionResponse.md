@@ -3,7 +3,7 @@
 ## Properties
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**itemId** | **string** |  | [optional] [default to null]
+**publicId** | **string** |  | [optional] [default to null]
 **state** | [**TransactionStateEnum**](TransactionStateEnum.md) |  | [optional] [default to null]
 **addedPoints** | **integer** |  | [optional] [default to null]
 **itemActions** | [**array[ItemActionAPIModel]**](ItemActionAPIModel.md) |  | [optional] [default to null]

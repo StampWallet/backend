@@ -18,4 +18,5 @@ const (
 	PROCESSING TransactionStateEnum = "PROCESSING"
 	FINISHED   TransactionStateEnum = "FINISHED"
 	EXPIRED    TransactionStateEnum = "EXPIRED"
+	FAILED     TransactionStateEnum = "FAILED"
 )

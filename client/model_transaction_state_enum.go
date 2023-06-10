@@ -25,6 +25,7 @@ const (
 	PROCESSING TransactionStateEnum = "PROCESSING"
 	FINISHED   TransactionStateEnum = "FINISHED"
 	EXPIRED    TransactionStateEnum = "EXPIRED"
+	FAILED     TransactionStateEnum = "FAILED"
 )
 
 // All allowed values of TransactionStateEnum enum
@@ -33,6 +34,7 @@ var AllowedTransactionStateEnumEnumValues = []TransactionStateEnum{
 	"PROCESSING",
 	"FINISHED",
 	"EXPIRED",
+	"FAILED",
 }
 
 func (v *TransactionStateEnum) UnmarshalJSON(src []byte) error {

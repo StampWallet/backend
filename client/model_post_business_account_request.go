@@ -23,6 +23,7 @@ type PostBusinessAccountRequest struct {
 	Name           *string `json:"name,omitempty" binding:"required"`
 	Address        *string `json:"address,omitempty" binding:"required"`
 	GpsCoordinates *string `json:"gpsCoordinates,omitempty" binding:"required"`
+	Description    *string `json:"description,omitempty" binding:"required"`
 	Nip            *string `json:"nip,omitempty" binding:"required"`
 	Krs            *string `json:"krs,omitempty" binding:"required"`
 	Regon          *string `json:"regon,omitempty" binding:"required"`
@@ -140,6 +141,38 @@ func (o *PostBusinessAccountRequest) HasGpsCoordinates() bool {
 // SetGpsCoordinates gets a reference to the given string and assigns it to the GpsCoordinates field.
 func (o *PostBusinessAccountRequest) SetGpsCoordinates(v string) {
 	o.GpsCoordinates = &v
+}
+
+// GetDescription returns the Description field value if set, zero value otherwise.
+func (o *PostBusinessAccountRequest) GetDescription() string {
+	if o == nil || isNil(o.Description) {
+		var ret string
+		return ret
+	}
+	return *o.Description
+}
+
+// GetDescriptionOk returns a tuple with the Description field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *PostBusinessAccountRequest) GetDescriptionOk() (*string, bool) {
+	if o == nil || isNil(o.Description) {
+		return nil, false
+	}
+	return o.Description, true
+}
+
+// HasDescription returns a boolean if a field has been set.
+func (o *PostBusinessAccountRequest) HasDescription() bool {
+	if o != nil && !isNil(o.Description) {
+		return true
+	}
+
+	return false
+}
+
+// SetDescription gets a reference to the given string and assigns it to the Description field.
+func (o *PostBusinessAccountRequest) SetDescription(v string) {
+	o.Description = &v
 }
 
 // GetNip returns the Nip field value if set, zero value otherwise.
@@ -288,6 +321,9 @@ func (o PostBusinessAccountRequest) ToMap() (map[string]interface{}, error) {
 	}
 	if !isNil(o.GpsCoordinates) {
 		toSerialize["gpsCoordinates"] = o.GpsCoordinates
+	}
+	if !isNil(o.Description) {
+		toSerialize["description"] = o.Description
 	}
 	if !isNil(o.Nip) {
 		toSerialize["nip"] = o.Nip

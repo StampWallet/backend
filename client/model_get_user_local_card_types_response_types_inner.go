@@ -23,6 +23,7 @@ type GetUserLocalCardTypesResponseTypesInner struct {
 	PublicId *string `json:"publicId,omitempty"`
 	Name     *string `json:"name,omitempty"`
 	Code     *string `json:"code,omitempty"`
+	ImageUrl *string `json:"imageUrl,omitempty"`
 }
 
 // NewGetUserLocalCardTypesResponseTypesInner instantiates a new GetUserLocalCardTypesResponseTypesInner object
@@ -138,6 +139,38 @@ func (o *GetUserLocalCardTypesResponseTypesInner) SetCode(v string) {
 	o.Code = &v
 }
 
+// GetImageUrl returns the ImageUrl field value if set, zero value otherwise.
+func (o *GetUserLocalCardTypesResponseTypesInner) GetImageUrl() string {
+	if o == nil || isNil(o.ImageUrl) {
+		var ret string
+		return ret
+	}
+	return *o.ImageUrl
+}
+
+// GetImageUrlOk returns a tuple with the ImageUrl field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *GetUserLocalCardTypesResponseTypesInner) GetImageUrlOk() (*string, bool) {
+	if o == nil || isNil(o.ImageUrl) {
+		return nil, false
+	}
+	return o.ImageUrl, true
+}
+
+// HasImageUrl returns a boolean if a field has been set.
+func (o *GetUserLocalCardTypesResponseTypesInner) HasImageUrl() bool {
+	if o != nil && !isNil(o.ImageUrl) {
+		return true
+	}
+
+	return false
+}
+
+// SetImageUrl gets a reference to the given string and assigns it to the ImageUrl field.
+func (o *GetUserLocalCardTypesResponseTypesInner) SetImageUrl(v string) {
+	o.ImageUrl = &v
+}
+
 func (o GetUserLocalCardTypesResponseTypesInner) MarshalJSON() ([]byte, error) {
 	toSerialize, err := o.ToMap()
 	if err != nil {
@@ -156,6 +189,9 @@ func (o GetUserLocalCardTypesResponseTypesInner) ToMap() (map[string]interface{}
 	}
 	if !isNil(o.Code) {
 		toSerialize["code"] = o.Code
+	}
+	if !isNil(o.ImageUrl) {
+		toSerialize["imageUrl"] = o.ImageUrl
 	}
 	return toSerialize, nil
 }
