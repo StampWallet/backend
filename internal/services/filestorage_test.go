@@ -93,7 +93,7 @@ func TestFileStorageServiceGetDataInvalid(t *testing.T) {
 
 	file, err := service.GetData("invalid uuid lol")
 	require.Nilf(t, file, "service.GetData returned a file")
-	require.ErrorAsf(t, err, NoSuchFile, "service.GetData returned a file")
+	require.ErrorAsf(t, err, &ErrNoSuchFile, "service.GetData returned a file")
 }
 
 func TestFileStorageServiceGetDataNotUploaded(t *testing.T) {
@@ -112,10 +112,12 @@ func TestFileStorageServiceGetDataNotUploaded(t *testing.T) {
 
 	newFile, err := service.GetData(metadata.PublicId)
 	require.Nilf(t, newFile, "service.GetData returned a file")
-	require.ErrorAsf(t, err, FileNotUploaded, "service.GetData returned a file")
+	require.ErrorAsf(t, err, &ErrFileNotUploaded, "service.GetData returned a file")
 }
 
 func TestFileStorageServiceUpload(t *testing.T) {
+	// __jm__ refactor tests so data includes mimetypes
+
 	ctrl := gomock.NewController(t)
 	service := GetFileStorageService(ctrl)
 	defer os.RemoveAll(service.basePath)
@@ -128,7 +130,7 @@ func TestFileStorageServiceUpload(t *testing.T) {
 	tx := service.baseServices.Database.Create(&metadata)
 	require.Nilf(t, tx.GetError(), "Database.Create returned an error")
 
-	file, err := os.Create(path.Join(service.basePath, metadata.PublicId))
+	_, err := os.Create(path.Join(service.basePath, metadata.PublicId))
 	require.Nilf(t, err, "os.Create returned an error")
 
 	file, toWrite := createFile(t, service, shortuuid.New())
@@ -149,7 +151,7 @@ func TestFileStorageServiceUpload(t *testing.T) {
 	var fileMetadataDb FileMetadata
 	tx = service.baseServices.Database.First(&fileMetadataDb,
 		FileMetadata{PublicId: newFileMetadata.PublicId})
-	require.Nilf(t, err, "Database.First returned an error")
+	require.Nilf(t, tx.GetError(), "Database.First returned an error")
 	require.Equal(t, newFileMetadata.Uploaded.Time, fileMetadataDb.Uploaded.Time)
 	require.Equal(t, newFileMetadata.ContentType.String, fileMetadataDb.ContentType.String)
 	require.Equal(t, newFileMetadata.OwnerId, fileMetadataDb.OwnerId)
@@ -168,13 +170,13 @@ func TestFileStorageServiceUploadInvalidMimeType(t *testing.T) {
 	tx := service.baseServices.Database.Create(&metadata)
 	require.Nilf(t, tx.GetError(), "Database.Create returned an error")
 
-	file, err := os.Create(path.Join(service.basePath, metadata.PublicId))
+	_, err := os.Create(path.Join(service.basePath, metadata.PublicId))
 	require.Nilf(t, err, "os.Create returned an error")
 
-	file, _ = createFile(t, service, shortuuid.New())
+	file, _ := createFile(t, service, shortuuid.New())
 
 	newFileMetadata, err := service.Upload(metadata, file, "test/test")
-	require.ErrorAsf(t, err, InvalidMimeType, "FileStorageService.Upload did not return InvalidMimeType")
+	require.ErrorAsf(t, err, ErrInvalidMimeType, "FileStorageService.Upload did not return InvalidMimeType")
 	require.Nilf(t, newFileMetadata, "FileStorageService.Upload did not return nil FileMetadata")
 }
 
@@ -205,12 +207,12 @@ func TestFileStorageServiceRemove(t *testing.T) {
 
 	serviceFile, err := service.GetData(metadata.PublicId)
 	require.Nilf(t, serviceFile, "service.GetData returned a file")
-	require.ErrorAs(t, err, FileNotUploaded, "service.GetData did not return a FileNotUploaded error")
+	require.ErrorAs(t, err, ErrFileNotUploaded, "service.GetData did not return a FileNotUploaded error")
 
 	var fileMetadataDb FileMetadata
 	tx = service.baseServices.Database.First(&fileMetadataDb,
 		FileMetadata{PublicId: metadata.PublicId})
-	require.Nilf(t, err, "Database.First returned an error")
+	require.Nilf(t, tx.GetError(), "Database.First returned an error")
 	require.Falsef(t, fileMetadataDb.Uploaded.Valid, "fileMetadataDb.Uploaded.Valid is not false")
 	require.Falsef(t, fileMetadataDb.ContentType.Valid, "fileMetadataDb.ContentType.Valid is not false")
 }
@@ -231,12 +233,12 @@ func TestFileStorageServiceRemoveNotUploaded(t *testing.T) {
 	require.Nilf(t, tx.GetError(), "Database.Create returned an error")
 
 	err := service.Remove(metadata)
-	require.ErrorAsf(t, err, FileNotUploaded, "FileStorageService.Remove did not return FileNotUploaded")
+	require.ErrorAsf(t, err, &ErrFileNotUploaded, "FileStorageService.Remove did not return FileNotUploaded")
 
 	var fileMetadataDb FileMetadata
 	tx = service.baseServices.Database.First(&fileMetadataDb,
 		FileMetadata{PublicId: metadata.PublicId})
-	require.Nilf(t, err, "Database.First returned an error")
+	require.Nilf(t, tx.GetError(), "Database.First returned an error")
 	require.Falsef(t, fileMetadataDb.Uploaded.Valid, "fileMetadataDb.Uploaded.Valid is not false")
 	require.Falsef(t, fileMetadataDb.ContentType.Valid, "fileMetadataDb.ContentType.Valid is not false")
 }
