@@ -10,6 +10,7 @@ import (
 	"time"
 
 	. "github.com/StampWallet/backend/internal/database"
+	"github.com/StampWallet/backend/internal/utils"
 	"github.com/lithammer/shortuuid/v4"
 	"gorm.io/gorm"
 )
@@ -54,7 +55,6 @@ func CreateFileStorageServiceImpl(baseServices BaseServices, basePath string) (*
 	} else if !fi.IsDir() {
 		return nil, ErrInvalidBasePath
 	}
-	// __jm__ make sure is writable?
 
 	return &FileStorageServiceImpl{
 		basePath:     basePath,
@@ -92,35 +92,34 @@ func (service *FileStorageServiceImpl) GetData(id string) (*os.File, error) {
 
 // limit upload to ~1mb
 func (service *FileStorageServiceImpl) Upload(fileMetadata FileMetadata, data io.Reader, mimetype string) (*FileMetadata, error) {
-	// check mimetype is in allowedMimetypes slice
 	dataBytes := []byte{}
 	n, err := data.Read(dataBytes)
 	if err != nil {
-		return nil, err // __jm__ failed to read
+		return nil, err
 	}
 	if n > UploadSizeLimit_b {
 		return nil, ErrUploadSizeExceeded
 	}
 
 	actualMimeType := http.DetectContentType(dataBytes)
-	if actualMimeType != mimetype {
+	if actualMimeType != mimetype || !utils.Contains(AllowedMimeTypes, actualMimeType) {
 		return nil, ErrInvalidMimeType
 	}
 
 	file, err := os.Open(path.Join(service.basePath, fileMetadata.PublicId))
 	if err != nil {
-		return nil, err // __jm__ failed to open
+		return nil, err
 	}
 
 	if _, err = file.Write(dataBytes); err != nil {
-		return nil, err // __jm__ failed to write
+		return nil, err
 	}
 
 	fileMetadata.ContentType = sql.NullString{String: mimetype, Valid: true}
 	fileMetadata.Uploaded = sql.NullTime{Time: time.Now(), Valid: true}
 	tx := service.baseServices.Database.Save(&fileMetadata)
 	if err = tx.GetError(); err != nil {
-		return nil, err // __jm__ failed to save
+		return nil, err
 	}
 
 	return &fileMetadata, nil
