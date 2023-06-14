@@ -12,3 +12,13 @@ func CallerFilename() string {
 	_, name := filepath.Split(filename)
 	return "[" + name + ":" + strconv.Itoa(line) + "]"
 }
+
+// Are you fucking kidding me
+func Contains[T comparable](s []T, e T) bool {
+	for _, v := range s {
+		if v == e {
+			return true
+		}
+	}
+	return false
+}

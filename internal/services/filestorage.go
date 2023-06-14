@@ -1,17 +1,27 @@
 package services
 
 import (
+	"database/sql"
 	"errors"
 	"io"
+	"io/fs"
+	"net/http"
 	"os"
+	"path"
+	"time"
 
 	. "github.com/StampWallet/backend/internal/database"
+	"github.com/StampWallet/backend/internal/utils"
+	"github.com/lithammer/shortuuid/v4"
+	"gorm.io/gorm"
 )
 
 var (
-	ErrNoSuchFile      = errors.New("No such file")
-	ErrFileNotUploaded = errors.New("File not uploaded")
-	ErrInvalidMimeType = errors.New("Invalid Mimetype")
+	ErrInvalidBasePath    = errors.New("invalid base path")
+	ErrNoSuchFile         = errors.New("no such file")
+	ErrFileNotUploaded    = errors.New("file not uploaded")
+	ErrInvalidMimeType    = errors.New("invalid mimetype")
+	ErrUploadSizeExceeded = errors.New("upload size exceeded")
 )
 
 var AllowedMimeTypes = []string{
@@ -20,6 +30,9 @@ var AllowedMimeTypes = []string{
 	"image/gif",
 	"image/webp",
 }
+
+// limit upload to ~1mb
+const UploadSizeLimit_b = 1_000_000
 
 type FileStorageService interface {
 	CreateStub(user *User) (*FileMetadata, error)
@@ -37,26 +50,101 @@ type FileStorageServiceImpl struct {
 }
 
 func CreateFileStorageServiceImpl(baseServices BaseServices, basePath string) (*FileStorageServiceImpl, error) {
-	//TODO check if path is accessible etc
+	fi, err := os.Stat(basePath)
+	if err != nil {
+		return nil, err
+	} else if !fi.IsDir() {
+		return nil, ErrInvalidBasePath
+	}
+
 	return &FileStorageServiceImpl{
 		basePath:     basePath,
 		baseServices: baseServices,
 	}, nil
 }
 
-func (service *FileStorageServiceImpl) CreateStub(user *User) (*FileMetadata, string, error) {
-	return nil, "", nil
+func (service *FileStorageServiceImpl) CreateStub(user *User) (*FileMetadata, error) {
+	fileMetadata := &FileMetadata{
+		PublicId: shortuuid.New(),
+		OwnerId:  user.ID,
+	}
+	tx := service.baseServices.Database.Create(fileMetadata)
+	if err := tx.GetError(); err != nil {
+		return nil, err
+	}
+	return fileMetadata, nil
 }
 
-func (service *FileStorageServiceImpl) GetData(id string) (*os.File, error) {
-	return nil, nil
+func (service *FileStorageServiceImpl) GetData(id string) (*os.File, string, error) {
+	md := FileMetadata{}
+	tx := service.baseServices.Database.Find(&md, FileMetadata{PublicId: id})
+	if err := tx.GetError(); errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, "", ErrNoSuchFile // TODO: using errors.Join?
+	} else if err != nil {
+		return nil, "", err
+	}
+
+	file, err := os.Open(path.Join(service.basePath, id))
+	if err != nil {
+		return nil, "", ErrFileNotUploaded
+	}
+
+	return file, md.ContentType.String, nil
 }
 
-// limit upload to ~1mb
 func (service *FileStorageServiceImpl) Upload(fileMetadata FileMetadata, data io.Reader, mimetype string) (*FileMetadata, error) {
-	return nil, nil
+	dataBytes := []byte{}
+	for {
+		buf := make([]byte, 512)
+		_, err := data.Read(buf)
+
+		if err == io.EOF {
+			break
+		} else if err != nil {
+			return nil, err
+		}
+		if len(dataBytes)+len(buf) > UploadSizeLimit_b {
+			return nil, ErrUploadSizeExceeded
+		}
+		dataBytes = append(dataBytes, buf...)
+	}
+
+	actualMimeType := http.DetectContentType(dataBytes)
+	if actualMimeType != mimetype || !utils.Contains(AllowedMimeTypes, actualMimeType) {
+		return nil, ErrInvalidMimeType
+	}
+
+	err := os.WriteFile(
+		path.Join(service.basePath, fileMetadata.PublicId),
+		dataBytes,
+		fs.FileMode(os.O_WRONLY),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	fileMetadata.ContentType = sql.NullString{String: mimetype, Valid: true}
+	fileMetadata.Uploaded = sql.NullTime{Time: time.Now().Round(time.Microsecond), Valid: true}
+	tx := service.baseServices.Database.Save(&fileMetadata)
+	if err = tx.GetError(); err != nil {
+		return nil, err
+	}
+
+	return &fileMetadata, nil
 }
 
 func (service *FileStorageServiceImpl) Remove(fileMetadata FileMetadata) error {
+	err := os.Remove(path.Join(service.basePath, fileMetadata.PublicId))
+	if err != nil {
+		return ErrFileNotUploaded
+	}
+
+	fileMetadata.ContentType = sql.NullString{}
+	fileMetadata.Uploaded = sql.NullTime{}
+	tx := service.baseServices.Database.Save(&fileMetadata)
+	if err := tx.GetError(); err != nil {
+		return err
+	}
+
 	return nil
 }
