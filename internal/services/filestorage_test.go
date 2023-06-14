@@ -35,7 +35,7 @@ func createFile(t *testing.T, service *FileStorageServiceImpl, publicId string) 
 	file, err := os.Create(path.Join(service.basePath, publicId))
 	require.Nilf(t, err, "os.Create returned an error")
 
-	toWrite := shortuuid.New()
+	toWrite := "\x89PNG\x0D\x0A\x1A\x0A" // png magic numbers
 	n, err := file.Write([]byte(toWrite))
 	require.Nilf(t, err, "file.Write returned an error")
 	require.Equalf(t, len(toWrite), n, "file.Write returned an error")
@@ -116,8 +116,6 @@ func TestFileStorageServiceGetDataNotUploaded(t *testing.T) {
 }
 
 func TestFileStorageServiceUpload(t *testing.T) {
-	// __jm__ refactor tests so data includes mimetypes
-
 	ctrl := gomock.NewController(t)
 	service := GetFileStorageService(ctrl)
 	defer os.RemoveAll(service.basePath)
@@ -137,13 +135,13 @@ func TestFileStorageServiceUpload(t *testing.T) {
 	_, err = file.Seek(0, 0)
 	require.Nilf(t, err, "file.Seek returned an error")
 
-	newFileMetadata, err := service.Upload(metadata, file, AllowedMimeTypes[0])
+	newFileMetadata, err := service.Upload(metadata, file, AllowedMimeTypes[1])
 	require.Nilf(t, err, "service.GetData returned an error")
 	require.NotNilf(t, newFileMetadata, "service.GetData returned a nil FileMetadata")
 	require.Truef(t, newFileMetadata.Uploaded.Valid, "newFileMetadata has invalid upload time")
 	require.Truef(t, TimeJustAroundNow(newFileMetadata.Uploaded.Time), "newFileMetadata has invalid upload time")
 	require.Truef(t, newFileMetadata.ContentType.Valid, "newFileMetadata has invalid content type")
-	require.Equalf(t, AllowedMimeTypes[0], newFileMetadata.ContentType.String,
+	require.Equalf(t, AllowedMimeTypes[1], newFileMetadata.ContentType.String,
 		"newFileMetadata has invalid content type")
 
 	readAndCompare(t, toWrite, service, metadata.PublicId)
@@ -152,7 +150,7 @@ func TestFileStorageServiceUpload(t *testing.T) {
 	tx = service.baseServices.Database.First(&fileMetadataDb,
 		FileMetadata{PublicId: newFileMetadata.PublicId})
 	require.Nilf(t, tx.GetError(), "Database.First returned an error")
-	require.Equal(t, newFileMetadata.Uploaded.Time, fileMetadataDb.Uploaded.Time)
+	require.True(t, newFileMetadata.Uploaded.Time.Equal(fileMetadataDb.Uploaded.Time))
 	require.Equal(t, newFileMetadata.ContentType.String, fileMetadataDb.ContentType.String)
 	require.Equal(t, newFileMetadata.OwnerId, fileMetadataDb.OwnerId)
 }
@@ -176,7 +174,7 @@ func TestFileStorageServiceUploadInvalidMimeType(t *testing.T) {
 	file, _ := createFile(t, service, shortuuid.New())
 
 	newFileMetadata, err := service.Upload(metadata, file, "test/test")
-	require.ErrorAsf(t, err, ErrInvalidMimeType, "FileStorageService.Upload did not return InvalidMimeType")
+	require.ErrorAsf(t, err, &ErrInvalidMimeType, "FileStorageService.Upload did not return InvalidMimeType")
 	require.Nilf(t, newFileMetadata, "FileStorageService.Upload did not return nil FileMetadata")
 }
 
@@ -207,7 +205,7 @@ func TestFileStorageServiceRemove(t *testing.T) {
 
 	serviceFile, err := service.GetData(metadata.PublicId)
 	require.Nilf(t, serviceFile, "service.GetData returned a file")
-	require.ErrorAs(t, err, ErrFileNotUploaded, "service.GetData did not return a FileNotUploaded error")
+	require.ErrorAs(t, err, &ErrFileNotUploaded, "service.GetData did not return a FileNotUploaded error")
 
 	var fileMetadataDb FileMetadata
 	tx = service.baseServices.Database.First(&fileMetadataDb,

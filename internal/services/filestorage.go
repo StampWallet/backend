@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"io"
+	"io/fs"
 	"net/http"
 	"os"
 	"path"
@@ -30,7 +31,7 @@ var AllowedMimeTypes = []string{
 	"image/webp",
 }
 
-const MimeHeaderSize_b = 512
+// limit upload to ~1mb
 const UploadSizeLimit_b = 1_000_000
 
 type FileStorageService interface {
@@ -75,7 +76,7 @@ func (service *FileStorageServiceImpl) CreateStub(user *User) (*FileMetadata, er
 }
 
 func (service *FileStorageServiceImpl) GetData(id string) (*os.File, error) {
-	tx := service.baseServices.Database.Find(nil, FileMetadata{PublicId: id})
+	tx := service.baseServices.Database.Find(&FileMetadata{}, FileMetadata{PublicId: id})
 	if err := tx.GetError(); errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, ErrNoSuchFile // TODO: using errors.Join?
 	} else if err != nil {
@@ -90,15 +91,21 @@ func (service *FileStorageServiceImpl) GetData(id string) (*os.File, error) {
 	return file, nil
 }
 
-// limit upload to ~1mb
 func (service *FileStorageServiceImpl) Upload(fileMetadata FileMetadata, data io.Reader, mimetype string) (*FileMetadata, error) {
 	dataBytes := []byte{}
-	n, err := data.Read(dataBytes)
-	if err != nil {
-		return nil, err
-	}
-	if n > UploadSizeLimit_b {
-		return nil, ErrUploadSizeExceeded
+	for {
+		buf := make([]byte, 512)
+		_, err := data.Read(buf)
+
+		if err == io.EOF {
+			break
+		} else if err != nil {
+			return nil, err
+		}
+		if len(dataBytes)+len(buf) > UploadSizeLimit_b {
+			return nil, ErrUploadSizeExceeded
+		}
+		dataBytes = append(dataBytes, buf...)
 	}
 
 	actualMimeType := http.DetectContentType(dataBytes)
@@ -106,17 +113,17 @@ func (service *FileStorageServiceImpl) Upload(fileMetadata FileMetadata, data io
 		return nil, ErrInvalidMimeType
 	}
 
-	file, err := os.Open(path.Join(service.basePath, fileMetadata.PublicId))
+	err := os.WriteFile(
+		path.Join(service.basePath, fileMetadata.PublicId),
+		dataBytes,
+		fs.FileMode(os.O_WRONLY),
+	)
 	if err != nil {
 		return nil, err
 	}
 
-	if _, err = file.Write(dataBytes); err != nil {
-		return nil, err
-	}
-
 	fileMetadata.ContentType = sql.NullString{String: mimetype, Valid: true}
-	fileMetadata.Uploaded = sql.NullTime{Time: time.Now(), Valid: true}
+	fileMetadata.Uploaded = sql.NullTime{Time: time.Now().Round(time.Microsecond), Valid: true}
 	tx := service.baseServices.Database.Save(&fileMetadata)
 	if err = tx.GetError(); err != nil {
 		return nil, err
@@ -129,6 +136,13 @@ func (service *FileStorageServiceImpl) Remove(fileMetadata FileMetadata) error {
 	err := os.Remove(path.Join(service.basePath, fileMetadata.PublicId))
 	if err != nil {
 		return ErrFileNotUploaded
+	}
+
+	fileMetadata.ContentType = sql.NullString{}
+	fileMetadata.Uploaded = sql.NullTime{}
+	tx := service.baseServices.Database.Save(&fileMetadata)
+	if err := tx.GetError(); err != nil {
+		return err
 	}
 
 	return nil
