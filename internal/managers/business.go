@@ -16,7 +16,8 @@ var ErrTooManyMenuImages = errors.New("Too many menu images")
 type BusinessManager interface {
 	Create(user *User, businessDetails *BusinessDetails) (*Business, error)
 	ChangeDetails(business *Business, businessDetails *ChangeableBusinessDetails) (*Business, error)
-	AddMenuImage(business *Business) (*MenuImage, error)
+	//explicitly requires user becuase fileStorageService requires user
+	AddMenuImage(user *User, business *Business) (*MenuImage, error)
 	RemoveMenuImage(menuImage *MenuImage) error
 
 	//? not a fan
@@ -123,8 +124,11 @@ func (manager *BusinessManagerImpl) ChangeDetails(business *Business, businessDe
 	return business, nil
 }
 
-func (manager *BusinessManagerImpl) AddMenuImage(business *Business) (*MenuImage, error) {
+func (manager *BusinessManagerImpl) AddMenuImage(user *User, business *Business) (*MenuImage, error) {
 	var menuImage *MenuImage
+	if user.ID != business.OwnerId {
+		return nil, fmt.Errorf("invalid user passed, business.OwnerId != user.ID")
+	}
 	err := manager.baseServices.Database.Transaction(func(db GormDB) error {
 		var images []MenuImage
 		tx := db.Find(&images, MenuImage{BusinessId: business.ID})
@@ -135,7 +139,7 @@ func (manager *BusinessManagerImpl) AddMenuImage(business *Business) (*MenuImage
 			return ErrTooManyMenuImages
 		}
 
-		metadata, err := manager.fileStorageService.CreateStub(business.User)
+		metadata, err := manager.fileStorageService.CreateStub(user)
 		if err != nil {
 			return fmt.Errorf("failed to create image stub: %w", err)
 		}
@@ -156,9 +160,21 @@ func (manager *BusinessManagerImpl) AddMenuImage(business *Business) (*MenuImage
 }
 
 func (manager *BusinessManagerImpl) RemoveMenuImage(menuImage *MenuImage) error {
-	tx := manager.baseServices.Database.Delete(menuImage)
+	var fileMetadata FileMetadata
+	tx := manager.baseServices.Database.First(&fileMetadata, &FileMetadata{PublicId: menuImage.FileId})
+	if err := tx.GetError(); err != nil {
+		return fmt.Errorf("database error when looking up filemetadata: %w", err)
+	}
+
+	tx = manager.baseServices.Database.Delete(menuImage)
 	if err := tx.GetError(); err != nil {
 		return fmt.Errorf("database error when removing menuImage: %w", err)
+	}
+
+	//NOTE it would be good to rollback the transaction here, but I think this is good enough
+	err := manager.fileStorageService.RemoveMetadata(fileMetadata)
+	if err != nil {
+		return fmt.Errorf("fileStorageService.RemoveMetadata error: %w", err)
 	}
 
 	return nil

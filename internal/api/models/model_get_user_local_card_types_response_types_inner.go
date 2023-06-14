@@ -16,4 +16,6 @@ type GetUserLocalCardTypesResponseTypesInner struct {
 	Name string `json:"name,omitempty"`
 
 	Code string `json:"code,omitempty"`
+
+	ImageUrl string `json:"imageUrl,omitempty"`
 }

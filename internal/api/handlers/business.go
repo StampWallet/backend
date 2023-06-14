@@ -194,6 +194,7 @@ func (handler *BusinessHandlers) getAccountInfo(c *gin.Context) {
 		Krs:             business.KRS,
 		Regon:           business.REGON,
 		OwnerName:       business.OwnerName,
+		Description:     business.Description,
 	})
 }
 
@@ -370,7 +371,7 @@ func (handler *BusinessHandlers) postMenuImage(c *gin.Context) {
 		return
 	}
 
-	menuImage, err := handler.businessManager.AddMenuImage(business)
+	menuImage, err := handler.businessManager.AddMenuImage(user, business)
 	if err == ErrTooManyMenuImages {
 		c.JSON(400, api.DefaultResponse{
 			Status:  api.INVALID_REQUEST,

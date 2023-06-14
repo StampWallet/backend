@@ -363,6 +363,7 @@ func setupBusinessHandlersGetAccountInfo() (
 		Regon:          testBusiness.REGON,
 		Krs:            testBusiness.KRS,
 		OwnerName:      testBusiness.OwnerName,
+		Description:    testBusiness.Description,
 		MenuImageIds: []string{
 			testBusiness.MenuImages[0].FileId,
 		},
@@ -633,6 +634,7 @@ func TestBusinessHandlersPostMenuImage(t *testing.T) {
 	handler.businessManager.(*MockBusinessManager).
 		EXPECT().
 		AddMenuImage(
+			gomock.Eq(testBusinessUser),
 			gomock.Eq(testBusiness),
 		).
 		Return(
@@ -686,6 +688,7 @@ func TestBusinessHandlersPostMenuImageTooManyImages(t *testing.T) {
 	handler.businessManager.(*MockBusinessManager).
 		EXPECT().
 		AddMenuImage(
+			gomock.Eq(testBusinessUser),
 			gomock.Eq(testBusiness),
 		).
 		Return(

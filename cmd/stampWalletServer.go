@@ -83,6 +83,11 @@ func createServer(config config.Config) (*api.APIServer, error) {
 			authorizedTransactionAccessor,
 			services.NewPrefix(logger, "UserHandlers"),
 		),
+		FileHandlers: handlers.CreateFileHandlers(
+			fileStorageService,
+			services.NewPrefix(logger, "FileHandlers"),
+			userAuthorizedAcessor,
+		),
 	}
 
 	server := api.CreateAPIServer(authMiddleware, requireValidEmailMiddleware, &handlers,

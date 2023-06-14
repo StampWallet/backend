@@ -144,7 +144,7 @@ func (g *GPSCoordinates) Scan(input interface{}) error {
 	}
 	gp := gt.(*geom.Point)
 	gc := GPSCoordinates(*gp)
-	g = &gc
+	*g = gc
 	return nil
 }
 

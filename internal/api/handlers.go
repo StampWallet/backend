@@ -11,7 +11,7 @@ type APIHandlers struct {
 	AuthHandlers     *AuthHandlers
 	BusinessHandlers *BusinessHandlers
 	UserHandlers     *UserHandlers
-	//FileHandlers     *FileHandlers
+	FileHandlers     *FileHandlers
 }
 
 func (handlers *APIHandlers) Connect(rg *gin.RouterGroup, authMiddleware *AuthMiddleware,
@@ -26,6 +26,6 @@ func (handlers *APIHandlers) Connect(rg *gin.RouterGroup, authMiddleware *AuthMi
 	user := rg.Group("/user", authMiddleware.Handle, requireValidEmailMiddleware.Handle)
 	handlers.UserHandlers.Connect(user)
 
-	//file := rg.Group("/file", authMiddleware.Handle, requireValidEmailMiddleware.Handle)
-	//handlers.FileHandlers.Connect(file)
+	file := rg.Group("/file", authMiddleware.Handle, requireValidEmailMiddleware.Handle)
+	handlers.FileHandlers.Connect(file)
 }

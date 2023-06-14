@@ -184,7 +184,7 @@ func (manager *AuthManagerImpl) Create(userDetails UserDetails) (*User, *Token, 
 	mailErr := manager.emailService.Send(userDetails.Email, "test", "test "+emailToken.TokenId+":"+emailSecret)
 	if mailErr != nil {
 		tx.Rollback()
-		return nil, nil, "", fmt.Errorf("%s failed to to create session token, tokenservice error: %+v", CallerFilename(), err)
+		return nil, nil, "", fmt.Errorf("%s failed to to create session token, tokenservice error: %+v", CallerFilename(), mailErr)
 	}
 
 	// Commit transaction

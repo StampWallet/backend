@@ -1580,9 +1580,11 @@ components:
       example:
         types:
         - code: code
+          imageUrl: imageUrl
           name: name
           publicId: publicId
         - code: code
+          imageUrl: imageUrl
           name: name
           publicId: publicId
       properties:
@@ -1869,6 +1871,7 @@ components:
     GetUserLocalCardTypesResponse_types_inner:
       example:
         code: code
+        imageUrl: imageUrl
         name: name
         publicId: publicId
       properties:
@@ -1877,6 +1880,8 @@ components:
         name:
           type: string
         code:
+          type: string
+        imageUrl:
           type: string
       type: object
   securitySchemes:
