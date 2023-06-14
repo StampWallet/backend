@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	api "github.com/StampWallet/backend/internal/api/models"
+	database "github.com/StampWallet/backend/internal/database"
 	services "github.com/StampWallet/backend/internal/services"
 )
 
@@ -52,8 +53,11 @@ func (middleware *AuthMiddleware) Handle(c *gin.Context) {
 	}
 
 	// Call TokenService to make sure that the token is valid
+
 	token, err := middleware.tokenService.Check(token_split[0], token_split[1])
-	if err == services.ErrUnknownToken || err == services.ErrTokenExpired || err == services.ErrTokenUsed {
+	knownError := err == services.ErrUnknownToken || err == services.ErrTokenExpired || err == services.ErrTokenUsed
+	invalidPurpose := (token != nil && token.TokenPurpose != database.TokenPurposeSession)
+	if knownError || invalidPurpose {
 		c.AbortWithStatusJSON(401, api.DefaultResponse{
 			Status: api.UNAUTHORIZED,
 		})
