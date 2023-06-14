@@ -96,7 +96,7 @@ func (service *FileStorageServiceImpl) Upload(fileMetadata FileMetadata, data io
 	dataBytes := []byte{}
 	for {
 		buf := make([]byte, 512)
-		_, err := data.Read(buf)
+		n, err := data.Read(buf)
 
 		if err == io.EOF {
 			break
@@ -106,10 +106,15 @@ func (service *FileStorageServiceImpl) Upload(fileMetadata FileMetadata, data io
 		if len(dataBytes)+len(buf) > UploadSizeLimit_b {
 			return nil, ErrUploadSizeExceeded
 		}
-		dataBytes = append(dataBytes, buf...)
+		//NOTE: from docs: Even if Read returns n < len(p), it may use all of p
+		//as scratch space during the call.
+		//not respecting that was garbling the file probably
+		dataBytes = append(dataBytes, buf[:n]...)
 	}
 
 	actualMimeType := http.DetectContentType(dataBytes)
+	service.baseServices.Logger.Printf("mimetype: %s\n", actualMimeType)
+	service.baseServices.Logger.Printf("%x\n", dataBytes[:8])
 	if actualMimeType != mimetype || !utils.Contains(AllowedMimeTypes, actualMimeType) {
 		return nil, ErrInvalidMimeType
 	}
@@ -117,7 +122,7 @@ func (service *FileStorageServiceImpl) Upload(fileMetadata FileMetadata, data io
 	err := os.WriteFile(
 		path.Join(service.basePath, fileMetadata.PublicId),
 		dataBytes,
-		fs.FileMode(os.O_WRONLY),
+		fs.FileMode(0660),
 	)
 	if err != nil {
 		return nil, err

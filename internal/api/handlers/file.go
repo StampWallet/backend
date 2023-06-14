@@ -140,6 +140,15 @@ func (handler *FileHandlers) deleteFile(c *gin.Context) {
 	return
 }
 
+func CreateFileHandlers(fileStorageService FileStorageService, logger *log.Logger,
+	userAuthorizedAcessor UserAuthorizedAccessor) *FileHandlers {
+	return &FileHandlers{
+		fileStorageService:    fileStorageService,
+		logger:                logger,
+		userAuthorizedAcessor: userAuthorizedAcessor,
+	}
+}
+
 func (handler *FileHandlers) Connect(rg *gin.RouterGroup) {
 	rg.GET("/:fileId", handler.getFile)
 	rg.POST("/:fileId", handler.postFile)
