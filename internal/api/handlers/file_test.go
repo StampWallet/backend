@@ -1,13 +1,16 @@
 package api
 
 import (
+	"bytes"
 	"io"
 	"log"
 	"net/http/httptest"
 	"os"
+	"reflect"
 	"testing"
 
 	api "github.com/StampWallet/backend/internal/api/models"
+	"github.com/StampWallet/backend/internal/database"
 	. "github.com/StampWallet/backend/internal/database/accessors/mocks"
 	. "github.com/StampWallet/backend/internal/services/mocks"
 	. "github.com/StampWallet/backend/internal/testutils"
@@ -38,6 +41,7 @@ func TestFileHandlerGetFileOk(t *testing.T) {
 		SetMethod("GET").
 		SetHeader("Content-Type", "application/json").
 		SetHeader("Accept", "multipart/form-data").
+		SetParam("fileId", fileId).
 		SetDefaultToken().
 		Context
 
@@ -55,15 +59,16 @@ func TestFileHandlerGetFileOk(t *testing.T) {
 		GetData(gomock.Eq(fileId)).
 		Return(
 			testFileHandle, // Q: Should this change upon upload?
+			"image/png",
 			nil,
 		)
 
 	handler.getFile(context)
 
 	expectedContents, _ := io.ReadAll(TestFileReader("resources/test.png"))
-	require.Equalf(t, w.Result().StatusCode, int(201), "Response returned unexpected status code")
-	require.Equalf(t, w.Body.Bytes(), expectedContents, "Response returned unexpected file data")
-	// TODO: test MatchEntities and gomock.Eq
+
+	require.Equalf(t, w.Result().StatusCode, int(200), "Response returned unexpected status code")
+	require.Truef(t, bytes.Compare(w.Body.Bytes(), expectedContents) == 0, "Response returned unexpected file data")
 }
 
 func TestFileHandlersPostFileOk(t *testing.T) {
@@ -81,6 +86,8 @@ func TestFileHandlersPostFileOk(t *testing.T) {
 		SetMethod("POST").
 		AttachTestPng().
 		SetHeader("Accept", "application/json").
+		SetHeader("Content-Type", "image/png").
+		SetParam("fileId", fileId).
 		SetDefaultToken().
 		Context
 
@@ -89,15 +96,15 @@ func TestFileHandlersPostFileOk(t *testing.T) {
 	handler := getFileHandlers(ctrl)
 
 	// setup mocks
-	handler.fileStorageService.(*MockFileStorageService).
+	handler.userAuthorizedAcessor.(*MockUserAuthorizedAccessor).
 		EXPECT().
-		CreateStub(testUser).
+		Get(testUser, &database.FileMetadata{PublicId: fileId}).
 		Return(testFileMetadata, nil)
 
 	handler.fileStorageService.(*MockFileStorageService).
 		EXPECT().
 		Upload(
-			gomock.Eq(testFileMetadata),
+			gomock.Eq(*testFileMetadata),
 			gomock.Any(), // TODO: Matcher for test png?
 			gomock.Eq("image/png"),
 		).
@@ -112,8 +119,8 @@ func TestFileHandlersPostFileOk(t *testing.T) {
 	respBody, respCode, respParseErr := ExtractResponse[api.DefaultResponse](w)
 
 	require.Nilf(t, respParseErr, "Failed to parse JSON response")
-	require.Equalf(t, respCode, int(201), "Response returned unexpected status code")
-	require.Truef(t, MatchEntities(respBodyExpected, respBody), "Response returned unexpected body contents")
+	require.Equalf(t, respCode, int(200), "Response returned unexpected status code")
+	require.Truef(t, reflect.DeepEqual(respBodyExpected, *respBody), "Response returned unexpected body contents")
 	// TODO: test MatchEntities and gomock.Eq
 }
 
@@ -131,6 +138,7 @@ func TestFileHandlersDeleteFileOk(t *testing.T) {
 		SetUser(testUser).
 		SetMethod("DELETE").
 		SetHeader("Accept", "application/json").
+		SetParam("fileId", fileId).
 		SetDefaultToken().
 		Context
 
@@ -138,9 +146,14 @@ func TestFileHandlersDeleteFileOk(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	handler := getFileHandlers(ctrl)
 
+	handler.userAuthorizedAcessor.(*MockUserAuthorizedAccessor).
+		EXPECT().
+		Get(testUser, &database.FileMetadata{PublicId: fileId}).
+		Return(testFileMetadata, nil)
+
 	handler.fileStorageService.(*MockFileStorageService).
 		EXPECT().
-		Remove(gomock.Eq(testFileMetadata)).
+		Remove(gomock.Eq(*testFileMetadata)).
 		Return(nil)
 
 	handler.deleteFile(context)
@@ -150,6 +163,5 @@ func TestFileHandlersDeleteFileOk(t *testing.T) {
 
 	require.Nilf(t, respParseErr, "Failed to parse JSON response")
 	require.Equalf(t, respCode, int(200), "Response returned unexpected status code")
-	require.Truef(t, MatchEntities(respBodyExpected, respBody), "Response returned unexpected body contents")
-	// TODO: test MatchEntities and gomock.Eq
+	require.Truef(t, reflect.DeepEqual(respBodyExpected, *respBody), "Response returned unexpected body contents")
 }
