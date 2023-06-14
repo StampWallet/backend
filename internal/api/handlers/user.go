@@ -329,6 +329,7 @@ func (handler *UserLocalCardHandlers) getCardTypes(c *gin.Context) {
 			PublicId: v.PublicId,
 			Name:     v.Name,
 			Code:     string(v.Code),
+			ImageUrl: v.ImageUrl,
 		})
 	}
 

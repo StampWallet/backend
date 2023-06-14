@@ -129,8 +129,9 @@ Class | Method | HTTP request | Description
 *TransactionApi* | [**startTransaction**](docs/TransactionApi.md#starttransaction) | **POST** /user/cards/virtual/{businessId}/transactions | Start a transaction
 *TransactionsApi* | [**finishTransaction**](docs/TransactionsApi.md#finishtransaction) | **POST** /business/transactions/{transactionCode} | Finish a transaction
 *TransactionsApi* | [**getTransactionDetails**](docs/TransactionsApi.md#gettransactiondetails) | **GET** /business/transactions/{transactionCode} | Get info about a started transaction
+*UserApi* | [**getBusiness**](docs/UserApi.md#getbusiness) | **GET** /user/businesses/{businessId} | Get business info
 *UserApi* | [**searchBusinesses**](docs/UserApi.md#searchbusinesses) | **GET** /user/businesses | Search businesses
-*VirtualCardsApi* | [**buyItem**](docs/VirtualCardsApi.md#buyitem) | **POST** /user/cards/virtual/{businessId}/items/{itemDefinitionId} | Buy an item
+*VirtualCardsApi* | [**buyItem**](docs/VirtualCardsApi.md#buyitem) | **POST** /user/cards/virtual/{businessId}/itemsDefinitions/{itemDefinitionId} | Buy an item
 *VirtualCardsApi* | [**createVirtualCard**](docs/VirtualCardsApi.md#createvirtualcard) | **POST** /user/cards/virtual/{businessId} | Add a new virtual card
 *VirtualCardsApi* | [**deleteItem**](docs/VirtualCardsApi.md#deleteitem) | **DELETE** /user/cards/virtual/{businessId}/items/{itemId} | Delete an item
 *VirtualCardsApi* | [**deleteVirtualCard**](docs/VirtualCardsApi.md#deletevirtualcard) | **DELETE** /user/cards/virtual/{businessId} | Delete a virtual card

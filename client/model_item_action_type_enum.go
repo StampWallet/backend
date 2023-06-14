@@ -21,6 +21,7 @@ type ItemActionTypeEnum string
 
 // List of ItemActionTypeEnum
 const (
+	NO_ACTION ItemActionTypeEnum = "NO_ACTION"
 	REDEEMED  ItemActionTypeEnum = "REDEEMED"
 	RECALLED  ItemActionTypeEnum = "RECALLED"
 	CANCELLED ItemActionTypeEnum = "CANCELLED"
@@ -28,6 +29,7 @@ const (
 
 // All allowed values of ItemActionTypeEnum enum
 var AllowedItemActionTypeEnumEnumValues = []ItemActionTypeEnum{
+	"NO_ACTION",
 	"REDEEMED",
 	"RECALLED",
 	"CANCELLED",

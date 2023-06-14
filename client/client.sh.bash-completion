@@ -94,6 +94,7 @@ _()
     operations["startTransaction"]=1
     operations["finishTransaction"]=1
     operations["getTransactionDetails"]=1
+    operations["getBusiness"]=1
     operations["searchBusinesses"]=1
     operations["buyItem"]=1
     operations["createVirtualCard"]=1
@@ -130,6 +131,7 @@ _()
     operation_parameters["startTransaction"]="businessId= "
     operation_parameters["finishTransaction"]="transactionCode= "
     operation_parameters["getTransactionDetails"]="transactionCode= "
+    operation_parameters["getBusiness"]="businessId= "
     operation_parameters["searchBusinesses"]="text= location= proximity= "
     operation_parameters["buyItem"]="businessId= itemDefinitionId= "
     operation_parameters["createVirtualCard"]="businessId= "

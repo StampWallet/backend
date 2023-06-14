@@ -313,7 +313,8 @@ case $state in
             "getLocalCardTypes[Get list of local card types]"             "login[Login]" \
             "logout[Logout]"             "getTransactionStatus[Get info about a transaction]" \
             "startTransaction[Start a transaction]"             "finishTransaction[Finish a transaction]" \
-            "getTransactionDetails[Get info about a started transaction]"             "searchBusinesses[Search businesses]"             "buyItem[Buy an item]" \
+            "getTransactionDetails[Get info about a started transaction]"             "getBusiness[Get business info]" \
+            "searchBusinesses[Search businesses]"             "buyItem[Buy an item]" \
             "createVirtualCard[Add a new virtual card]" \
             "deleteItem[Delete an item]" \
             "deleteVirtualCard[Delete a virtual card]" \
@@ -490,6 +491,13 @@ case $state in
         local -a _op_arguments
         _op_arguments=(
           "transactionCode=:[PATH] Transaction code (scanned or typed in)"
+                    )
+        _describe -t actions 'operations' _op_arguments -S '' && ret=0
+        ;;
+      getBusiness)
+        local -a _op_arguments
+        _op_arguments=(
+          "businessId=:[PATH] Public id of the business"
                     )
         _describe -t actions 'operations' _op_arguments -S '' && ret=0
         ;;

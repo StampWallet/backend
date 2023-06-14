@@ -69,7 +69,7 @@ func (a *VirtualCardsApiService) BuyItemExecute(r ApiBuyItemRequest) (*PostUserV
 		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
 
-	localVarPath := localBasePath + "/user/cards/virtual/{businessId}/items/{itemDefinitionId}"
+	localVarPath := localBasePath + "/user/cards/virtual/{businessId}/itemsDefinitions/{itemDefinitionId}"
 	localVarPath = strings.Replace(localVarPath, "{"+"businessId"+"}", url.PathEscape(parameterValueToString(r.businessId, "businessId")), -1)
 	localVarPath = strings.Replace(localVarPath, "{"+"itemDefinitionId"+"}", url.PathEscape(parameterValueToString(r.itemDefinitionId, "itemDefinitionId")), -1)
 
@@ -117,6 +117,17 @@ func (a *VirtualCardsApiService) BuyItemExecute(r ApiBuyItemRequest) (*PostUserV
 			error: localVarHTTPResponse.Status,
 		}
 		if localVarHTTPResponse.StatusCode == 404 {
+			var v DefaultResponse
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+			newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
+			newErr.model = v
+			return localVarReturnValue, localVarHTTPResponse, newErr
+		}
+		if localVarHTTPResponse.StatusCode == 401 {
 			var v DefaultResponse
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
@@ -360,6 +371,17 @@ func (a *VirtualCardsApiService) DeleteItemExecute(r ApiDeleteItemRequest) (*Def
 			error: localVarHTTPResponse.Status,
 		}
 		if localVarHTTPResponse.StatusCode == 404 {
+			var v DefaultResponse
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+			newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
+			newErr.model = v
+			return localVarReturnValue, localVarHTTPResponse, newErr
+		}
+		if localVarHTTPResponse.StatusCode == 401 {
 			var v DefaultResponse
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
