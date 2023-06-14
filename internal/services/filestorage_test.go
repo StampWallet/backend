@@ -12,6 +12,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/lithammer/shortuuid/v4"
 	"github.com/stretchr/testify/require"
+	"gorm.io/gorm"
 
 	. "github.com/StampWallet/backend/internal/database"
 	. "github.com/StampWallet/backend/internal/testutils"
@@ -180,7 +181,7 @@ func TestFileStorageServiceUploadInvalidMimeType(t *testing.T) {
 	require.Nilf(t, newFileMetadata, "FileStorageService.Upload did not return nil FileMetadata")
 }
 
-func TestFileStorageServiceRemove(t *testing.T) {
+func TestFileStorageServiceRemoveFile(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	service := GetFileStorageService(ctrl)
 	defer os.RemoveAll(service.basePath)
@@ -198,8 +199,8 @@ func TestFileStorageServiceRemove(t *testing.T) {
 	file, _ := createFile(t, service, metadata.PublicId)
 	file.Close()
 
-	err := service.Remove(metadata)
-	require.Nilf(t, err, "FileStorageService.Remove returned an error")
+	err := service.RemoveFile(metadata)
+	require.Nilf(t, err, "FileStorageService.RemoveFile returned an error")
 
 	openedFile, err := os.Open(path.Join(service.basePath, metadata.PublicId))
 	require.Nilf(t, openedFile, "os.Open returned a file - file exists, but should have been removed")
@@ -218,7 +219,7 @@ func TestFileStorageServiceRemove(t *testing.T) {
 	require.Falsef(t, fileMetadataDb.ContentType.Valid, "fileMetadataDb.ContentType.Valid is not false")
 }
 
-func TestFileStorageServiceRemoveNotUploaded(t *testing.T) {
+func TestFileStorageServiceRemoveFileNotUploaded(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	service := GetFileStorageService(ctrl)
 	defer os.RemoveAll(service.basePath)
@@ -233,8 +234,8 @@ func TestFileStorageServiceRemoveNotUploaded(t *testing.T) {
 	tx := service.baseServices.Database.Create(&metadata)
 	require.Nilf(t, tx.GetError(), "Database.Create returned an error")
 
-	err := service.Remove(metadata)
-	require.ErrorAsf(t, err, &ErrFileNotUploaded, "FileStorageService.Remove did not return FileNotUploaded")
+	err := service.RemoveFile(metadata)
+	require.ErrorAsf(t, err, &ErrFileNotUploaded, "FileStorageService.RemoveFile did not return FileNotUploaded")
 
 	var fileMetadataDb FileMetadata
 	tx = service.baseServices.Database.First(&fileMetadataDb,
@@ -242,4 +243,64 @@ func TestFileStorageServiceRemoveNotUploaded(t *testing.T) {
 	require.Nilf(t, tx.GetError(), "Database.First returned an error")
 	require.Falsef(t, fileMetadataDb.Uploaded.Valid, "fileMetadataDb.Uploaded.Valid is not false")
 	require.Falsef(t, fileMetadataDb.ContentType.Valid, "fileMetadataDb.ContentType.Valid is not false")
+}
+
+func TestFileStorageServiceRemoveMetadataWithFile(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	service := GetFileStorageService(ctrl)
+	defer os.RemoveAll(service.basePath)
+	user := GetTestUser(service.baseServices.Database)
+
+	metadata := FileMetadata{
+		PublicId:    shortuuid.New(),
+		OwnerId:     user.ID,
+		Uploaded:    sql.NullTime{Time: time.Now(), Valid: true},
+		ContentType: sql.NullString{String: AllowedMimeTypes[0], Valid: true},
+	}
+	tx := service.baseServices.Database.Create(&metadata)
+	require.Nilf(t, tx.GetError(), "Database.Create returned an error")
+
+	file, _ := createFile(t, service, metadata.PublicId)
+	file.Close()
+
+	err := service.RemoveMetadata(metadata)
+	require.Nilf(t, err, "FileStorageService.RemoveMetadata returned an error")
+
+	openedFile, err := os.Open(path.Join(service.basePath, metadata.PublicId))
+	require.Nilf(t, openedFile, "os.Open returned a file - file exists, but should have been removed")
+	require.Errorf(t, err, "os.Open did not return an error")
+
+	serviceFile, mime, err := service.GetData(metadata.PublicId)
+	require.Nilf(t, serviceFile, "service.GetData returned a file")
+	require.Equalf(t, "", mime, "service.GetData returned a mimetype")
+	require.ErrorAs(t, err, &ErrFileNotUploaded, "service.GetData did not return a FileNotUploaded error")
+
+	var fileMetadataDb FileMetadata
+	tx = service.baseServices.Database.First(&fileMetadataDb,
+		FileMetadata{PublicId: metadata.PublicId})
+	require.ErrorIsf(t, tx.GetError(), gorm.ErrRecordNotFound, "Database.First did not return ErrRecordNotFound")
+}
+
+func TestFileStorageServiceRemoveMetadataNotUploaded(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	service := GetFileStorageService(ctrl)
+	defer os.RemoveAll(service.basePath)
+	user := GetTestUser(service.baseServices.Database)
+
+	metadata := FileMetadata{
+		PublicId:    shortuuid.New(),
+		OwnerId:     user.ID,
+		Uploaded:    sql.NullTime{Valid: false},
+		ContentType: sql.NullString{Valid: false},
+	}
+	tx := service.baseServices.Database.Create(&metadata)
+	require.Nilf(t, tx.GetError(), "Database.Create returned an error")
+
+	err := service.RemoveMetadata(metadata)
+	require.Nilf(t, err, "FileStorageService.RemoveMetadata returned an error")
+
+	var fileMetadataDb FileMetadata
+	tx = service.baseServices.Database.First(&fileMetadataDb,
+		FileMetadata{PublicId: metadata.PublicId})
+	require.ErrorIsf(t, tx.GetError(), gorm.ErrRecordNotFound, "Database.First did not return ErrRecordNotFound")
 }

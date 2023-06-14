@@ -190,18 +190,32 @@ func (mr *MockFileStorageServiceMockRecorder) GetData(arg0 interface{}) *gomock.
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetData", reflect.TypeOf((*MockFileStorageService)(nil).GetData), arg0)
 }
 
-// Remove mocks base method.
-func (m *MockFileStorageService) Remove(arg0 database.FileMetadata) error {
+// RemoveFile mocks base method.
+func (m *MockFileStorageService) RemoveFile(arg0 database.FileMetadata) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Remove", arg0)
+	ret := m.ctrl.Call(m, "RemoveFile", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// Remove indicates an expected call of Remove.
-func (mr *MockFileStorageServiceMockRecorder) Remove(arg0 interface{}) *gomock.Call {
+// RemoveFile indicates an expected call of RemoveFile.
+func (mr *MockFileStorageServiceMockRecorder) RemoveFile(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Remove", reflect.TypeOf((*MockFileStorageService)(nil).Remove), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveFile", reflect.TypeOf((*MockFileStorageService)(nil).RemoveFile), arg0)
+}
+
+// RemoveMetadata mocks base method.
+func (m *MockFileStorageService) RemoveMetadata(arg0 database.FileMetadata) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RemoveMetadata", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RemoveMetadata indicates an expected call of RemoveMetadata.
+func (mr *MockFileStorageServiceMockRecorder) RemoveMetadata(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveMetadata", reflect.TypeOf((*MockFileStorageService)(nil).RemoveMetadata), arg0)
 }
 
 // Upload mocks base method.

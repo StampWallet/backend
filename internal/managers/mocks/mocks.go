@@ -154,18 +154,18 @@ func (m *MockBusinessManager) EXPECT() *MockBusinessManagerMockRecorder {
 }
 
 // AddMenuImage mocks base method.
-func (m *MockBusinessManager) AddMenuImage(arg0 *database.Business) (*database.MenuImage, error) {
+func (m *MockBusinessManager) AddMenuImage(arg0 *database.User, arg1 *database.Business) (*database.MenuImage, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AddMenuImage", arg0)
+	ret := m.ctrl.Call(m, "AddMenuImage", arg0, arg1)
 	ret0, _ := ret[0].(*database.MenuImage)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // AddMenuImage indicates an expected call of AddMenuImage.
-func (mr *MockBusinessManagerMockRecorder) AddMenuImage(arg0 interface{}) *gomock.Call {
+func (mr *MockBusinessManagerMockRecorder) AddMenuImage(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddMenuImage", reflect.TypeOf((*MockBusinessManager)(nil).AddMenuImage), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddMenuImage", reflect.TypeOf((*MockBusinessManager)(nil).AddMenuImage), arg0, arg1)
 }
 
 // ChangeDetails mocks base method.

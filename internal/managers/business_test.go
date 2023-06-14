@@ -188,7 +188,7 @@ func TestBusinessManagerAddMenuImage(t *testing.T) {
 		CreateStub(user).
 		Return(menuImageMetadata, nil)
 
-	menuImage, err := manager.AddMenuImage(business)
+	menuImage, err := manager.AddMenuImage(user, business)
 	require.Nilf(t, err, "BusinessManager.AddMenuImage returned an error")
 	require.NotNilf(t, menuImage, "BusinessManager.AddMenuImage returned a nil menuImage")
 	require.Equalf(t, business.ID, menuImage.BusinessId,
@@ -217,7 +217,7 @@ func TestBusinessManagerAddMenuImageTooManyImages(t *testing.T) {
 				Return(menuImageMetadata, nil)
 		}
 
-		menuImage, err := manager.AddMenuImage(business)
+		menuImage, err := manager.AddMenuImage(user, business)
 		if i == 11 {
 			require.ErrorAsf(t, ErrTooManyMenuImages, err,
 				"BusinessManager.AddMenuImage did not return TooManyMenuImages")
@@ -243,17 +243,26 @@ func TestBusinessManagerRemoveMenuImage(t *testing.T) {
 		CreateStub(user).
 		Return(menuImageMetadata, nil)
 
-	menuImage, err := manager.AddMenuImage(business)
+	menuImage, err := manager.AddMenuImage(user, business)
 	require.Nilf(t, err, "BusinessManager.AddMenuImage returned an error")
 	require.NotNilf(t, menuImage, "BusinessManager.AddMenuImage returned a nil menuImage")
 	require.Equalf(t, business.ID, menuImage.BusinessId,
 		"BusinessManager.AddMenuImage returned a menuImage with invalid businessId")
 
+	var dbFileMetadata FileMetadata
+	tx := manager.baseServices.Database.First(&dbFileMetadata, &FileMetadata{PublicId: menuImageMetadata.PublicId})
+	require.Nilf(t, tx.GetError(), "manager.baseServices.Database.First(&dbFileMetadata returned an error")
+
+	manager.fileStorageService.(*MockFileStorageService).
+		EXPECT().
+		RemoveMetadata(dbFileMetadata).
+		Return(nil)
+
 	err = manager.RemoveMenuImage(menuImage)
 	require.Nilf(t, err, "BusinessManager.RemoveMenuImage returned an error")
 
 	var dbMenuImage MenuImage
-	tx := manager.baseServices.Database.First(&dbMenuImage, MenuImage{Model: gorm.Model{ID: menuImage.ID}})
+	tx = manager.baseServices.Database.First(&dbMenuImage, MenuImage{Model: gorm.Model{ID: menuImage.ID}})
 	require.ErrorIsf(t, tx.GetError(), gorm.ErrRecordNotFound,
 		"Database.First did not return ErrRecordNotFound on MenuImage serach")
 }

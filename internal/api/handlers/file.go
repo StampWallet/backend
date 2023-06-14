@@ -126,7 +126,7 @@ func (handler *FileHandlers) deleteFile(c *gin.Context) {
 	}
 
 	// Pass removal request to FileStorageService, handle errors
-	err := handler.fileStorageService.Remove(*fileMetadata)
+	err := handler.fileStorageService.RemoveFile(*fileMetadata)
 	if err == ErrNoSuchFile || err == ErrFileNotUploaded {
 		c.JSON(404, api.DefaultResponse{Status: api.NOT_FOUND})
 		return
