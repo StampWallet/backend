@@ -75,20 +75,21 @@ func (service *FileStorageServiceImpl) CreateStub(user *User) (*FileMetadata, er
 	return fileMetadata, nil
 }
 
-func (service *FileStorageServiceImpl) GetData(id string) (*os.File, error) {
-	tx := service.baseServices.Database.Find(&FileMetadata{}, FileMetadata{PublicId: id})
+func (service *FileStorageServiceImpl) GetData(id string) (*os.File, string, error) {
+	md := FileMetadata{}
+	tx := service.baseServices.Database.Find(&md, FileMetadata{PublicId: id})
 	if err := tx.GetError(); errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, ErrNoSuchFile // TODO: using errors.Join?
+		return nil, "", ErrNoSuchFile // TODO: using errors.Join?
 	} else if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
 	file, err := os.Open(path.Join(service.basePath, id))
 	if err != nil {
-		return nil, ErrFileNotUploaded
+		return nil, "", ErrFileNotUploaded
 	}
 
-	return file, nil
+	return file, md.ContentType.String, nil
 }
 
 func (service *FileStorageServiceImpl) Upload(fileMetadata FileMetadata, data io.Reader, mimetype string) (*FileMetadata, error) {
