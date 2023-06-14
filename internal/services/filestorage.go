@@ -49,6 +49,13 @@ type FileStorageServiceImpl struct {
 	baseServices BaseServices
 }
 
+func addTrailingSlash(path string) string {
+	if path[len(path)-1] != '/' {
+		return path + "/"
+	}
+	return path
+}
+
 func CreateFileStorageServiceImpl(baseServices BaseServices, basePath string) (*FileStorageServiceImpl, error) {
 	fi, err := os.Stat(basePath)
 	if err != nil {
@@ -113,14 +120,12 @@ func (service *FileStorageServiceImpl) Upload(fileMetadata FileMetadata, data io
 	}
 
 	actualMimeType := http.DetectContentType(dataBytes)
-	service.baseServices.Logger.Printf("mimetype: %s\n", actualMimeType)
-	service.baseServices.Logger.Printf("%x\n", dataBytes[:8])
 	if actualMimeType != mimetype || !utils.Contains(AllowedMimeTypes, actualMimeType) {
 		return nil, ErrInvalidMimeType
 	}
 
 	filePath := path.Join(service.basePath, fileMetadata.PublicId)
-	if path.Dir(filePath) != path.Dir(service.basePath) {
+	if path.Dir(filePath) != path.Dir(addTrailingSlash(service.basePath)) {
 		return nil, errors.New("file base somehow changed after upload")
 	}
 	err := os.WriteFile(
