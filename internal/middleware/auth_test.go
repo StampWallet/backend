@@ -26,7 +26,7 @@ func getAuthMiddleware(ctrl *gomock.Controller) *AuthMiddleware {
 }
 
 // Test AuthMiddleware on the happy path
-func TestHandleOk(t *testing.T) {
+func TestAuthMiddlewareHandleOk(t *testing.T) {
 	// data prep
 	gin.SetMode(gin.TestMode)
 	w := httptest.NewRecorder()
@@ -79,7 +79,7 @@ func TestHandleOk(t *testing.T) {
 	// TODO: test MatchEntities usage
 }
 
-func TestHandleNok_EmailToken(t *testing.T) {
+func TestAuthMiddlewareHandleNok_EmailToken(t *testing.T) {
 	// data prep
 	gin.SetMode(gin.TestMode)
 	w := httptest.NewRecorder()
@@ -183,7 +183,7 @@ func testHandleTokenError(t *testing.T, err error) {
 	require.Truef(t, userPtr == nil && userExists == false, "User field was overwritten despite no valid user existing")
 }
 
-func TestHandleNok_TokenErrors(t *testing.T) {
+func TestAuthMiddlewareHandleNok_TokenErrors(t *testing.T) {
 	for _, err := range []error{services.ErrUnknownToken, services.ErrTokenExpired, services.ErrTokenUsed} {
 		testHandleTokenError(t, err)
 	}

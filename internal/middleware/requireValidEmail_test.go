@@ -63,11 +63,10 @@ func TestRequireValidEmailMiddlewareNok(t *testing.T) {
 
 	handler.Handle(context)
 
-	respBodyExpected := api.DefaultResponse{Status: api.UNAUTHORIZED}
+	respBodyExpected := api.DefaultResponse{Status: api.FORBIDDEN, Message: "EMAIL_NOT_VERIFIED"}
 	respBody, respCode, respParseErr := ExtractResponse[api.DefaultResponse](w)
 
 	require.Nilf(t, respParseErr, "Failed to parse JSON response")
 	require.Equalf(t, respCode, int(403), "Response returned unexpected status code")
-	require.Truef(t, MatchEntities(respBodyExpected, respBody), "Response returned unexpected body contents")
-
+	require.Truef(t, MatchEntities(respBodyExpected, *respBody), "Response returned unexpected body contents")
 }
