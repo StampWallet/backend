@@ -30,7 +30,7 @@ $$
 declare
   l_stmt text;
 begin
-  select 'truncate ' || string_agg(format('%I.%I', schemaname, tablename), ',')
+  select 'truncate ' || string_agg(format('%I.%I', schemaname, tablename), ',') || ' cascade'
     into l_stmt
   from pg_tables
   where schemaname in ('public') and tablename != 'spatial_ref_sys';

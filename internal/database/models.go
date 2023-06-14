@@ -3,6 +3,10 @@ package database
 import (
 	"context"
 	"database/sql"
+	"errors"
+	"strconv"
+	"strings"
+
 	//"database/sql/driver"
 	"fmt"
 	"time"
@@ -36,6 +40,7 @@ const (
 	TransactionStateProcesing                      = "PROCESSING"
 	TransactionStateFinished                       = "FINISHED"
 	TransactionStateExpired                        = "EXPIRED"
+	TransactionStateFailed                         = "FAILED"
 )
 
 type TokenPurposeEnum string
@@ -130,6 +135,8 @@ type User struct {
 
 type GPSCoordinates geom.Point
 
+var ErrInvalidCoordinates = errors.New("Invalid coordinates")
+
 func (g *GPSCoordinates) Scan(input interface{}) error {
 	gt, err := ewkbhex.Decode(input.(string))
 	if err != nil {
@@ -137,18 +144,30 @@ func (g *GPSCoordinates) Scan(input interface{}) error {
 	}
 	gp := gt.(*geom.Point)
 	gc := GPSCoordinates(*gp)
-	g = &gc
+	*g = gc
 	return nil
 }
 
 func (g *GPSCoordinates) ToString() string {
-	// TODO
-	return ""
+	return strconv.FormatFloat(g.Coords().X(), 'f', -1, 64) +
+		"," +
+		strconv.FormatFloat(g.Coords().Y(), 'f', -1, 64)
 }
 
 func GPSCoordinatesFromString(coords string) (GPSCoordinates, error) {
-	// TODO
-	return GPSCoordinates{}, nil
+	sp := strings.Split(coords, ",")
+	if len(sp) != 2 {
+		return GPSCoordinates{}, ErrInvalidCoordinates
+	}
+	long, err := strconv.ParseFloat(sp[0], 64)
+	if err != nil {
+		return GPSCoordinates{}, ErrInvalidCoordinates
+	}
+	lat, err := strconv.ParseFloat(sp[1], 64)
+	if err != nil {
+		return GPSCoordinates{}, ErrInvalidCoordinates
+	}
+	return GPSCoordinates(*geom.NewPointFlat(geom.XY, []float64{long, lat})), nil
 }
 
 //// TODO probably does not work
@@ -194,20 +213,20 @@ type Business struct {
 	Address        string         `gorm:"not null"`
 	GPSCoordinates GPSCoordinates `gorm:"type:geography(POINT,4326);index:,type:gist"`
 	NIP            string         `gorm:"unique;not null"`
-	KRS            string         `gorm:"unique;not null"`
-	REGON          string         `gorm:"unique;not null"`
+	KRS            string         `gorm:"unique"`
+	REGON          string         `gorm:"unique"`
 	OwnerName      string         `gorm:"not null"`
 	BannerImageId  string         `gorm:"unique;not null"`
 	IconImageId    string         `gorm:"unique;not null"`
 
 	ItemDefinitions []ItemDefinition `gorm:"foreignkey:BusinessId"`
-	MenuItems       []MenuItem       `gorm:"foreignkey:BusinessId"`
+	MenuImages      []MenuImage      `gorm:"foreignkey:BusinessId"`
 	VirtualCards    []VirtualCard    `gorm:"foreignkey:BusinessId"`
 
 	User *User `gorm:"foreignkey:OwnerId"`
 }
 
-func (entity *Business) GetUserId() (uint, error) {
+func (entity *Business) GetUserId(_ GormDB) (uint, error) {
 	return entity.OwnerId, nil
 }
 
@@ -236,9 +255,9 @@ func (entity *ItemDefinition) GetBusinessId(_ GormDB) (uint, error) {
 	return entity.BusinessId, nil
 }
 
-// MenuItem
+// MenuImage
 
-type MenuItem struct {
+type MenuImage struct {
 	gorm.Model
 	BusinessId uint   `gorm:"uniqueIndex:menu_item_idx;not null"`
 	FileId     string `gorm:"uniqueIndex:menu_item_idx;not null"`
@@ -246,7 +265,7 @@ type MenuItem struct {
 	Business *Business `gorm:"foreignkey:BusinessId"`
 }
 
-func (entity *MenuItem) GetBusinessId() (uint, error) {
+func (entity *MenuImage) GetBusinessId(_ GormDB) (uint, error) {
 	return entity.BusinessId, nil
 }
 
@@ -348,4 +367,5 @@ type TransactionDetail struct {
 	Action        ActionTypeEnum `gorm:"default:NO_ACTION;not null"`
 
 	Transaction *Transaction `gorm:"foreignkey:TransactionId"`
+	OwnedItem   *OwnedItem   `gorm:"foreignkey:ItemId"`
 }

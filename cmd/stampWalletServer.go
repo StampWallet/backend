@@ -56,11 +56,23 @@ func createServer(config config.Config) (*api.APIServer, error) {
 	transactionManager := managers.CreateTransactionManagerImpl(baseServices)
 
 	userAuthorizedAcessor := accessors.CreateUserAuthorizedAccessorImpl(baseServices.Database)
+	businessAuthorizedAccessor := accessors.CreateBusinessAuthorizedAccessorImpl(baseServices.Database)
 	authorizedTransactionAccessor := accessors.CreateAuthorizedTransactionAccessorImpl(baseServices.Database)
 
 	//idk if this shouldnt be handled by CreateAPIServer
 	handlers := api.APIHandlers{
 		AuthHandlers: handlers.CreateAuthHandlers(authManager, services.NewPrefix(logger, "AuthHandlers")),
+		BusinessHandlers: handlers.CreateBusinessHandlers(
+			businessManager,
+			transactionManager,
+			itemDefinitionManager,
+
+			userAuthorizedAcessor,
+			businessAuthorizedAccessor,
+			authorizedTransactionAccessor,
+
+			services.NewPrefix(logger, "BusinessHandlers"),
+		),
 		UserHandlers: handlers.CreateUserHandlers(
 			virtualCardManager,
 			localCardManager,

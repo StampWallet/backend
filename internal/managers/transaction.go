@@ -7,7 +7,10 @@ import (
 	. "github.com/StampWallet/backend/internal/services"
 )
 
-var InvalidItem = errors.New("Invalid item")
+var (
+	InvalidItem        = errors.New("Invalid item")        // no such item or item already used
+	InvalidTransaction = errors.New("Invalid transaction") // transaction finished
+)
 
 // TODO
 type ItemWithAction struct {

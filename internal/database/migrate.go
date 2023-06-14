@@ -8,7 +8,7 @@ func GetAllEntities() []interface{} {
 		&Business{},
 		&FileMetadata{},
 		&ItemDefinition{},
-		&MenuItem{},
+		&MenuImage{},
 		&OwnedItem{},
 		&VirtualCard{},
 		&Transaction{},

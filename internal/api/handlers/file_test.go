@@ -153,7 +153,7 @@ func TestFileHandlersDeleteFileOk(t *testing.T) {
 
 	handler.fileStorageService.(*MockFileStorageService).
 		EXPECT().
-		Remove(gomock.Eq(*testFileMetadata)).
+		RemoveFile(gomock.Eq(*testFileMetadata)).
 		Return(nil)
 
 	handler.deleteFile(context)

@@ -73,13 +73,8 @@ func (accessor *BusinessAuthorizedAccessorImpl) Get(business *Business, conds Bu
 	return checkEq(result, business.ID, id, err)
 }
 
-// NOTE not optimized for huge amounts of data
-// NOTE preloads will most likely get deprecated. Be careful with relation properties in objects returned by accessors.
-// Loaded relation object does not mean that the object is owned and can be modified by business/user.
-// This is a problem with both managers and accessors. Without preloads, there is no guarantee that relation properties will be loaded in the object.
-// Perhaps forbidding use of relation properties in the whole codebase, except for code that directly interacts with the database
-// would be a good idea.
-func (accessor *BusinessAuthorizedAccessorImpl) GetAll(business *Business, conds BusinessOwnedEntity, preloads []string) ([]BusinessOwnedEntity, error) {
+// NOTE shouldnt be used for huge amounts of data
+func (accessor *BusinessAuthorizedAccessorImpl) GetAll(business *Business, conds BusinessOwnedEntity) ([]BusinessOwnedEntity, error) {
 	// Find BusinessId in conds object and set it to id of business
 	// All objects "owned" by a business are required to store the business id in a field named "BusinessId".
 	condsValue := reflect.ValueOf(conds)
@@ -93,13 +88,8 @@ func (accessor *BusinessAuthorizedAccessorImpl) GetAll(business *Business, conds
 	// Create result object, add preloads
 	dbResult := reflect.New(reflect.SliceOf(reflect.TypeOf(conds).Elem()))
 
-	tx := accessor.database
-	for _, v := range preloads {
-		tx = tx.Preload(v)
-	}
-
 	// Execute query, handle errors
-	tx = tx.Find(dbResult.Interface(), condsValue.Interface())
+	tx := accessor.database.Find(dbResult.Interface(), condsValue.Interface())
 	if err := tx.GetError(); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return []BusinessOwnedEntity{}, nil
@@ -134,8 +124,16 @@ func CreateUserAuthorizedAccessorImpl(database GormDB) *UserAuthorizedAccessorIm
 }
 
 func (accessor *UserAuthorizedAccessorImpl) Get(user *User, conds UserOwnedEntity) (UserOwnedEntity, error) {
+	condsValue := reflect.ValueOf(conds)
+	field := condsValue.Elem().FieldByName("OwnerId")
+	if field.IsValid() {
+		if field.CanSet() && field.Kind() == reflect.Uint {
+			field.SetUint(uint64(user.ID))
+		}
+	}
+
 	result := reflect.New(reflect.TypeOf(conds).Elem()).Interface().(UserOwnedEntity)
-	tx := accessor.database.First(&result, conds)
+	tx := accessor.database.First(&result, condsValue.Interface())
 	if err := checkErr(tx); err != nil {
 		return nil, err
 	}
@@ -146,7 +144,10 @@ func (accessor *UserAuthorizedAccessorImpl) Get(user *User, conds UserOwnedEntit
 
 // NOTE not optimized for huge amounts of data
 // NOTE preloads will most likely get deprecated. Be careful with relation properties in objects returned by accessors.
-// Check comments of BusinessAuthorizedAccessor.GetAll
+// Loaded relation object does not mean that the object is owned and can be modified by business/user.
+// This is a problem with both managers and accessors. Without preloads, there is no guarantee that relation properties will be loaded in the object.
+// Perhaps forbidding use of relation properties in the whole codebase, except for code that directly interacts with the database
+// would be a good idea.
 func (accessor *UserAuthorizedAccessorImpl) GetAll(user *User, conds UserOwnedEntity, preloads []string) ([]UserOwnedEntity, error) {
 	// Find OwnerId in conds object and set it to id of user
 	// All objects "owned" by a user are required to store the user id in a field named "OwnerId".
@@ -204,10 +205,20 @@ func CreateAuthorizedTransactionAccessorImpl(database GormDB) *AuthorizedTransac
 
 func (accessor *AuthorizedTransactionAccessorImpl) GetForBusiness(business *Business, transactionCode string) (*Transaction, error) {
 	var transaction Transaction
-	tx := accessor.database.Preload("TransactionDetails").First(&transaction, Transaction{
-		Code:        transactionCode,
-		VirtualCard: &VirtualCard{Business: business},
-	})
+	tx := accessor.database.
+		//NOTE I'm not very confident about the efficiency of these preloads
+		// On the other hand, this accessor is currently used in few specific situations
+		// where these preloads are actually useful (at least some fields...
+		// So maybe it's not a good idea to optimize now.
+		// The dataset is never very big and rows by themselves aren't very big either.
+		// Still, double join
+		Preload("TransactionDetails").
+		Preload("TransactionDetails.OwnedItem").
+		Preload("TransactionDetails.OwnedItem.ItemDefinition").
+		First(&transaction, Transaction{
+			Code:        transactionCode,
+			VirtualCard: &VirtualCard{Business: business},
+		})
 	if err := checkErr(tx); err != nil {
 		return nil, err
 	}

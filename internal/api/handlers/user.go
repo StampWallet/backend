@@ -339,6 +339,7 @@ func (handler *UserLocalCardHandlers) getCardTypes(c *gin.Context) {
 }
 
 // Handles delete card request
+// Requires publicId URL path parameter
 func (handler *UserLocalCardHandlers) deleteCard(c *gin.Context) {
 	cardId := c.Param("cardId")
 

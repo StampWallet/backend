@@ -153,6 +153,21 @@ func (m *MockBusinessManager) EXPECT() *MockBusinessManagerMockRecorder {
 	return m.recorder
 }
 
+// AddMenuImage mocks base method.
+func (m *MockBusinessManager) AddMenuImage(arg0 *database.User, arg1 *database.Business) (*database.MenuImage, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AddMenuImage", arg0, arg1)
+	ret0, _ := ret[0].(*database.MenuImage)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// AddMenuImage indicates an expected call of AddMenuImage.
+func (mr *MockBusinessManagerMockRecorder) AddMenuImage(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddMenuImage", reflect.TypeOf((*MockBusinessManager)(nil).AddMenuImage), arg0, arg1)
+}
+
 // ChangeDetails mocks base method.
 func (m *MockBusinessManager) ChangeDetails(arg0 *database.Business, arg1 *managers.ChangeableBusinessDetails) (*database.Business, error) {
 	m.ctrl.T.Helper()
@@ -181,6 +196,20 @@ func (m *MockBusinessManager) Create(arg0 *database.User, arg1 *managers.Busines
 func (mr *MockBusinessManagerMockRecorder) Create(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockBusinessManager)(nil).Create), arg0, arg1)
+}
+
+// RemoveMenuImage mocks base method.
+func (m *MockBusinessManager) RemoveMenuImage(arg0 *database.MenuImage) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RemoveMenuImage", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RemoveMenuImage indicates an expected call of RemoveMenuImage.
+func (mr *MockBusinessManagerMockRecorder) RemoveMenuImage(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveMenuImage", reflect.TypeOf((*MockBusinessManager)(nil).RemoveMenuImage), arg0)
 }
 
 // Search mocks base method.
@@ -222,18 +251,18 @@ func (m *MockItemDefinitionManager) EXPECT() *MockItemDefinitionManagerMockRecor
 }
 
 // AddItem mocks base method.
-func (m *MockItemDefinitionManager) AddItem(arg0 *database.Business, arg1 *managers.ItemDetails) (*database.ItemDefinition, error) {
+func (m *MockItemDefinitionManager) AddItem(arg0 *database.User, arg1 *database.Business, arg2 *managers.ItemDetails) (*database.ItemDefinition, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AddItem", arg0, arg1)
+	ret := m.ctrl.Call(m, "AddItem", arg0, arg1, arg2)
 	ret0, _ := ret[0].(*database.ItemDefinition)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // AddItem indicates an expected call of AddItem.
-func (mr *MockItemDefinitionManagerMockRecorder) AddItem(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockItemDefinitionManagerMockRecorder) AddItem(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddItem", reflect.TypeOf((*MockItemDefinitionManager)(nil).AddItem), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddItem", reflect.TypeOf((*MockItemDefinitionManager)(nil).AddItem), arg0, arg1, arg2)
 }
 
 // ChangeItemDetails mocks base method.

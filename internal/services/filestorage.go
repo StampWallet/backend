@@ -41,7 +41,9 @@ type FileStorageService interface {
 	GetData(id string) (*os.File, string, error)
 	// TODO how to recive an os.File from gin? data perhaps should be changed to reader
 	Upload(fileMetadata FileMetadata, data io.Reader, mimetype string) (*FileMetadata, error)
-	Remove(fileMetadata FileMetadata) error
+	RemoveFile(fileMetadata FileMetadata) error
+	// NOTE it's responsibility of the caller to make sure that all references to this FileMetadata are removed
+	RemoveMetadata(fileMetadata FileMetadata) error
 }
 
 type FileStorageServiceImpl struct {
@@ -152,7 +154,7 @@ func (service *FileStorageServiceImpl) Upload(fileMetadata FileMetadata, data io
 	return &fileMetadata, nil
 }
 
-func (service *FileStorageServiceImpl) Remove(fileMetadata FileMetadata) error {
+func (service *FileStorageServiceImpl) RemoveFile(fileMetadata FileMetadata) error {
 	err := os.Remove(path.Join(service.basePath, fileMetadata.PublicId))
 	if err != nil {
 		return ErrFileNotUploaded
@@ -161,6 +163,20 @@ func (service *FileStorageServiceImpl) Remove(fileMetadata FileMetadata) error {
 	fileMetadata.ContentType = sql.NullString{}
 	fileMetadata.Uploaded = sql.NullTime{}
 	tx := service.baseServices.Database.Save(&fileMetadata)
+	if err := tx.GetError(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (service *FileStorageServiceImpl) RemoveMetadata(fileMetadata FileMetadata) error {
+	err := service.RemoveFile(fileMetadata)
+	if err != nil && err != ErrFileNotUploaded {
+		return err
+	}
+
+	tx := service.baseServices.Database.Delete(&fileMetadata)
 	if err := tx.GetError(); err != nil {
 		return err
 	}
