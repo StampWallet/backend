@@ -171,9 +171,7 @@ func (service *FileStorageServiceImpl) RemoveFile(fileMetadata FileMetadata) err
 }
 
 func (service *FileStorageServiceImpl) RemoveMetadata(fileMetadata FileMetadata) error {
-	service.baseServices.Logger.Printf("remove metadata\n")
 	err := service.RemoveFile(fileMetadata)
-	service.baseServices.Logger.Printf("lmmao?? %+v\n", err)
 	if err != nil && err != ErrFileNotUploaded {
 		return err
 	}
