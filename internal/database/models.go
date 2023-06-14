@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"database/sql"
+
 	//"database/sql/driver"
 	"fmt"
 	"time"
@@ -348,4 +349,6 @@ type TransactionDetail struct {
 	Action        ActionTypeEnum `gorm:"default:NO_ACTION;not null"`
 
 	Transaction *Transaction `gorm:"foreignkey:TransactionId"`
+
+	OwnedItem *OwnedItem `gorm:"foreignkey:ItemId"`
 }
