@@ -208,6 +208,11 @@ func (handler *UserHandlers) getSearchBusinesses(c *gin.Context) {
 		offset = uint(localLimit)
 	}
 
+	if location == nil && text == nil {
+		c.JSON(400, api.DefaultResponse{Status: api.INVALID_REQUEST, Message: "EMPTY_QUERY"})
+		return
+	}
+
 	// Execute the query, handle errors
 	businesses, err := handler.businessManager.Search(text, location, proximity, offset, limit)
 	if err != nil {
@@ -339,6 +344,7 @@ func (handler *UserLocalCardHandlers) getCardTypes(c *gin.Context) {
 }
 
 // Handles delete card request
+// Requires publicId URL path parameter
 func (handler *UserLocalCardHandlers) deleteCard(c *gin.Context) {
 	cardId := c.Param("cardId")
 

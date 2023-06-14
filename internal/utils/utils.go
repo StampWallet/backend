@@ -29,3 +29,13 @@ func Map[U any, V any](us []U, fc func(U) V) []V {
 	}
 	return vs
 }
+
+// Are you fucking kidding me
+func Contains[T comparable](s []T, e T) bool {
+	for _, v := range s {
+		if v == e {
+			return true
+		}
+	}
+	return false
+}

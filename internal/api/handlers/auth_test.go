@@ -109,7 +109,7 @@ func TestAuthHandlersPostAccountOk(t *testing.T) {
 
 	require.Nilf(t, respParseErr, "Failed to parse JSON response")
 	require.Equalf(t, int(201), respCode, "Response returned unexpected status code")
-	require.Truef(t, MatchEntities(respBodyExpected, *respBody), "Response returned unexpected body contents")
+	require.Truef(t, reflect.DeepEqual(respBodyExpected, *respBody), "Response returned unexpected body contents")
 	// TODO: test MatchEntities and gomock.Eq
 }
 
@@ -138,7 +138,7 @@ func TestAuthHandlersPostAccountNok_DupMail(t *testing.T) {
 
 	require.Nilf(t, respParseErr, "Failed to parse JSON response")
 	require.Equalf(t, int(409), respCode, "Response returned unexpected status code")
-	require.Truef(t, MatchEntities(respBodyExpected, respBody), "Response returned unexpected body contents")
+	require.Truef(t, reflect.DeepEqual(respBodyExpected, *respBody), "Response returned unexpected body contents")
 	// TODO: test MatchEntities and gomock.Eq
 }
 
@@ -224,7 +224,7 @@ func TestAuthHandlersPostSessionOk(t *testing.T) {
 
 	require.Nilf(t, respParseErr, "Failed to parse JSON response")
 	require.Equalf(t, respCode, int(200), "Response returned unexpected status code")
-	require.Truef(t, MatchEntities(*respBody, respBodyExpected), "Response returned unexpected body contents")
+	require.Truef(t, reflect.DeepEqual(*respBody, respBodyExpected), "Response returned unexpected body contents")
 	// TODO: MatchEntities and gomock.Eq
 }
 
@@ -398,7 +398,7 @@ func TestAuthHandlersDeleteSessionNok_InvTok(t *testing.T) {
 
 	require.Nilf(t, respParseErr, "Failed to parse JSON response")
 	require.Equalf(t, int(401), respCode, "Response returned unexpected status code")
-	require.Truef(t, MatchEntities(respBodyExpected, *respBody), "Response returned unexpected body contents")
+	require.Truef(t, reflect.DeepEqual(respBodyExpected, *respBody), "Response returned unexpected body contents")
 	// TODO: MatchEntities and gomock.Eq
 }
 
@@ -497,7 +497,7 @@ func TestAuthHandlersPostAccountEmailConfirmationNok_InvTok(t *testing.T) {
 
 	require.Nilf(t, respParseErr, "Failed to parse JSON response")
 	require.Equalf(t, int(401), respCode, "Response returned unexpected status code")
-	require.Truef(t, MatchEntities(*respBody, respBodyExpected), "Response returned unexpected body contents")
+	require.Truef(t, reflect.DeepEqual(*respBody, respBodyExpected), "Response returned unexpected body contents")
 	// TODO: MatchEntities and gomock.Eq
 }
 
@@ -560,7 +560,7 @@ func TestAuthHandlersPostAccountPasswordOk(t *testing.T) {
 
 	require.Nilf(t, respParseErr, "Failed to parse JSON response")
 	require.Equalf(t, int(200), respCode, "Response returned unexpected status code")
-	require.Truef(t, MatchEntities(respBodyExpected, respBody), "Response returned unexpected body contents")
+	require.Truef(t, reflect.DeepEqual(respBodyExpected, *respBody), "Response returned unexpected body contents")
 	// TODO: MatchEntities and gomock.Eq
 }
 
@@ -610,7 +610,7 @@ func TestAuthHandlersPostAccountEmptyPassword(t *testing.T) {
 
 	require.Nilf(t, respParseErr, "Failed to parse JSON response")
 	require.Equalf(t, int(400), respCode, "Response returned unexpected status code")
-	require.Truef(t, MatchEntities(respBodyExpected, respBody), "Response returned unexpected body contents")
+	require.Truef(t, reflect.DeepEqual(respBodyExpected, *respBody), "Response returned unexpected body contents")
 	// TODO: MatchEntities and gomock.Eq
 }
 
@@ -732,8 +732,7 @@ func TestAuthHandlersPostAccountEmailOk(t *testing.T) {
 
 	require.Nilf(t, respParseErr, "Failed to parse JSON response")
 	require.Equalf(t, int(200), respCode, "Response returned unexpected status code")
-	require.Truef(t, MatchEntities(respBodyExpected, respBody), "Response returned unexpected body contents")
-	// TODO: MatchEntities and gomock.Eq
+	require.Truef(t, reflect.DeepEqual(respBodyExpected, *respBody), "Response returned unexpected body contents")
 }
 
 // Tests postAccountEmail when another account with the same email already exists
@@ -761,6 +760,5 @@ func TestAuthHandlersPostAccountEmailNok_DupMail(t *testing.T) {
 
 	require.Nilf(t, respParseErr, "Failed to parse JSON response")
 	require.Equalf(t, int(409), respCode, "Response returned unexpected status code")
-	require.Truef(t, MatchEntities(respBodyExpected, respBody), "Response returned unexpected body contents")
-	// TODO: MatchEntities and gomock.Eq
+	require.Truef(t, reflect.DeepEqual(respBodyExpected, *respBody), "Response returned unexpected body contents")
 }

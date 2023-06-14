@@ -15,9 +15,12 @@ import (
 
 const transactionCodeLength = 6
 
-var ErrInvalidItem = errors.New("Invalid item")
-var ErrItemBadCardId = errors.New("Owned item vcard id does not match that of provided vcard")
-var ErrInvalidAction = errors.New("NoActionType is not a valid action when finalizing transaction")
+var (
+	ErrInvalidItem        = errors.New("Invalid item")        // no such item or item already used
+	ErrInvalidTransaction = errors.New("Invalid transaction") // transaction finished
+	ErrItemBadCardId      = errors.New("Owned item vcard id does not match that of provided vcard")
+	ErrInvalidAction      = errors.New("NoActionType is not a valid action when finalizing transaction")
+)
 
 // TODO
 type ItemWithAction struct {

@@ -212,3 +212,65 @@ func TestTransactionManagerFinalizeWithItemsNotFromTransaction(t *testing.T) {
 	require.Equalf(t, NoActionType, dbTransactionDetail.Action,
 		"dbTransactionDetail action is not NoActionType %s", dbTransactionDetail.Action)
 }
+
+// Scenario: Item was not yet used when the transaction was started.
+// However, after starting this transaction, another transaction with the same item
+// was finalized. The item changed it's status from "OWNED" to something else.
+// For simplicity, the test assumes that the whole transaction will be failed.
+func testTransactionManagerFinalizeWithChnagedItemStatusTemplate(t *testing.T, itemStatus OwnedItemStatusEnum) {
+	s := setupTransactionTest(t)
+	ownedItemToRedeem := GetTestOwnedItem(s.db, s.itemDefinition, s.virtualCard)
+	ownedItemToRedeemNewStatus := GetTestOwnedItem(s.db, s.itemDefinition, s.virtualCard)
+	transaction, _ := GetTestTransaction(s.db, s.virtualCard,
+		[]OwnedItem{*ownedItemToRedeem, *ownedItemToRedeemNewStatus})
+
+	ownedItemToRedeemNewStatus.Status = itemStatus
+	Save(s.db, &ownedItemToRedeemNewStatus)
+
+	transaction, err := s.manager.Finalize(transaction, []ItemWithAction{
+		{ownedItemToRedeem, RedeemedActionType},
+		{ownedItemToRedeemNewStatus, RedeemedActionType},
+	}, 10)
+	require.Nilf(t, transaction, "transaction finalize should not return a transaction")
+	require.ErrorAsf(t, err, InvalidItem, "transaction should return a InvalidItem error")
+
+	var dbTransaction Transaction
+	tx := s.db.First(&dbTransaction, Transaction{Model: gorm.Model{ID: transaction.ID}})
+	err = tx.GetError()
+	require.Nilf(t, err, "database find for Transaction returned an error")
+	require.Equalf(t, 0, dbTransaction.AddedPoints, "db transaction should have 0 added points")
+	require.Equalf(t, TransactionStateFailed, dbTransaction.State, "transaction is not failed")
+
+	var dbVirtualCard VirtualCard
+	tx = s.db.First(&dbVirtualCard, VirtualCard{Model: gorm.Model{ID: s.virtualCard.ID}})
+	err = tx.GetError()
+	require.Nilf(t, err, "database find for TransactionDetails returned an error %w", err)
+	require.Equalf(t, s.virtualCard.Points, dbVirtualCard.Points, "number of points on card should not change")
+}
+
+func TestTransactionManagerFinalizeWithChnagedItemStatus(t *testing.T) {
+	for _, v := range []OwnedItemStatusEnum{OwnedItemStatusReturned, OwnedItemStatusUsed,
+		OwnedItemStatusWithdrawn} {
+		testTransactionManagerFinalizeWithChnagedItemStatusTemplate(t, v)
+	}
+}
+
+func testTransactionManagerFinalizeFinishedTransactionTemplate(t *testing.T, state TransactionStateEnum) {
+	s := setupTransactionTest(t)
+	ownedItemToRedeem := GetTestOwnedItem(s.db, s.itemDefinition, s.virtualCard)
+	transaction, _ := GetTestTransaction(s.db, s.virtualCard,
+		[]OwnedItem{*ownedItemToRedeem})
+	transaction.State = state
+
+	transaction, err := s.manager.Finalize(transaction, []ItemWithAction{
+		{ownedItemToRedeem, RedeemedActionType},
+	}, 10)
+	require.ErrorAsf(t, err, InvalidTransaction, "transaction finalize should return InvalidTransaction error")
+	require.Nilf(t, transaction, "transaction finalize should return a nil transaction")
+
+	var dbVirtualCard VirtualCard
+	tx := s.db.First(&dbVirtualCard, VirtualCard{Model: gorm.Model{ID: s.virtualCard.ID}})
+	err = tx.GetError()
+	require.Nilf(t, err, "database find for TransactionDetails returned an error %w", err)
+	require.Equalf(t, s.virtualCard.Points, dbVirtualCard.Points, "virtual card should not points")
+}

@@ -10,7 +10,6 @@ import (
 
 	"database/sql/driver"
 	"encoding/json"
-	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -32,15 +31,19 @@ func MatchEntities(matcher interface{}, Obj interface{}) bool {
 			return MatchEntities(matcher, o.Elem().Interface())
 		}
 	} else if m.Kind() == reflect.Pointer {
-		return MatchEntities(m.Elem().Interface(), o)
+		return MatchEntities(m.Elem().Interface(), Obj)
 	} else {
 		mt := reflect.TypeOf(matcher)
 		for i := 0; i < mt.NumField(); i++ {
 			mtf := mt.Field(i)
 			of := o.FieldByName(mtf.Name)
 			mf := m.FieldByName(mtf.Name)
-			if (mf.Kind() == reflect.Pointer || mf.Kind() == reflect.Interface) && !mf.IsNil() && !of.Equal(mf.Elem()) {
-				return false
+			if mf.Kind() == reflect.Pointer || mf.Kind() == reflect.Interface {
+				if mf.IsNil() {
+					continue
+				} else if !of.Equal(mf.Elem()) {
+					return false
+				}
 			} else if (mf.Kind() == reflect.Array || mf.Kind() == reflect.Slice) && !reflect.DeepEqual(of, mf) {
 				return false
 			} else if mf.Kind() == reflect.Struct && !MatchEntities(of, mf) {
@@ -110,14 +113,13 @@ type TestContextBuilder struct{ Context *gin.Context }
 
 func TestFileReader(filename string) io.Reader {
 	buf := new(bytes.Buffer)
-	mw := multipart.NewWriter(buf)
-	w, _ := mw.CreateFormFile("file", "test")
+	//mw := multipart.NewWriter(buf)
+	//w, _ := mw.CreateFormFile("file", "test")
 
 	file, _ := os.Open(filename)
-	io.Copy(w, file)
+	io.Copy(buf, file)
 
 	file.Close()
-	mw.Close()
 	return buf
 }
 
