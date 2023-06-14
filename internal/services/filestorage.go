@@ -119,8 +119,12 @@ func (service *FileStorageServiceImpl) Upload(fileMetadata FileMetadata, data io
 		return nil, ErrInvalidMimeType
 	}
 
+	filePath := path.Join(service.basePath, fileMetadata.PublicId)
+	if path.Dir(filePath) != path.Dir(service.basePath) {
+		return nil, errors.New("file base somehow changed after upload")
+	}
 	err := os.WriteFile(
-		path.Join(service.basePath, fileMetadata.PublicId),
+		filePath,
 		dataBytes,
 		fs.FileMode(0660),
 	)
