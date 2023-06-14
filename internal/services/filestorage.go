@@ -91,7 +91,12 @@ func (service *FileStorageServiceImpl) GetData(id string) (*os.File, string, err
 		return nil, "", err
 	}
 
-	file, err := os.Open(path.Join(service.basePath, id))
+	filePath := path.Join(service.basePath, md.PublicId)
+	if path.Dir(filePath) != path.Dir(addTrailingSlash(service.basePath)) {
+		return nil, "", errors.New("file base somehow changed in GetData")
+	}
+
+	file, err := os.Open(filePath)
 	if err != nil {
 		return nil, "", ErrFileNotUploaded
 	}
