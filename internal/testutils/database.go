@@ -67,6 +67,9 @@ var globalDb *GormDBImpl = nil
 // Creates a new database connection from environment variables. Wipes the database.
 // TEST_DATABASE_URL - database URL, ex. 'postgres://postgres@localhost/stampwallet'
 // TEST_DATABASE_NAME - database name, ex. 'stampwallet'
+// NOTE NEVER CALL THIS FROM PARALLEL TESTS. MAKE SURE go test HAD `-p 1` PARAMETER
+// otherwise existing db connections might unexpectedly close.
+// TODO move connection closing to tests
 func GetTestDatabase() *GormDBImpl {
 	// Get environment variables
 	url := os.Getenv("TEST_DATABASE_URL")

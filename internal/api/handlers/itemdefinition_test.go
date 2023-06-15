@@ -15,6 +15,7 @@ import (
 	"github.com/StampWallet/backend/internal/managers"
 	. "github.com/StampWallet/backend/internal/managers/mocks"
 	. "github.com/StampWallet/backend/internal/testutils"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
@@ -114,6 +115,21 @@ func setupItemDefinitionHandlersPostItemDefinition() (
 	return w, context, testBusinessUser, testBusiness, testItemDetails, testItemDef
 }
 
+type itemDetailsMatcher struct {
+	val *managers.ItemDetails
+}
+
+func (matcher *itemDetailsMatcher) Matches(x interface{}) bool {
+	b := *x.(*managers.ItemDetails)
+	spew.Dump(b)
+	spew.Dump(matcher.val)
+	return EqualStructs(*matcher.val, b)
+}
+
+func (matcher *itemDetailsMatcher) String() string {
+	return "itemDetailsMatcher"
+}
+
 func TestItemDefinitionHandlersPostItemDefinitionOk(t *testing.T) {
 	w, context, testBusinessUser, testBusiness, testItemDetails, testItemDef := setupItemDefinitionHandlersPostItemDefinition()
 
@@ -131,7 +147,7 @@ func TestItemDefinitionHandlersPostItemDefinitionOk(t *testing.T) {
 		AddItem(
 			gomock.Eq(testBusinessUser),
 			gomock.Eq(testBusiness),
-			gomock.Eq(testItemDetails),
+			&itemDetailsMatcher{testItemDetails},
 		).
 		Return(
 			testItemDef,
@@ -170,7 +186,7 @@ func TestItemDefinitionHandlersPostItemDefinitionNok_BadDef(t *testing.T) {
 		AddItem(
 			gomock.Eq(testBusinessUser),
 			gomock.Eq(testBusiness),
-			gomock.Eq(testItemDetails),
+			&itemDetailsMatcher{testItemDetails},
 		).
 		Return(
 			nil,
@@ -288,7 +304,7 @@ func TestItemDefinitionHandlersPutItemDefinitionOk(t *testing.T) {
 		EXPECT().
 		ChangeItemDetails(
 			gomock.Eq(testItemDef),
-			gomock.Eq(newItemDetails),
+			&itemDetailsMatcher{newItemDetails},
 		).
 		Return(
 			newItemDef,
@@ -365,7 +381,7 @@ func TestItemDefinitionHandlersPutItemDefinitionNok_BadDef(t *testing.T) {
 		EXPECT().
 		ChangeItemDetails(
 			gomock.Eq(testItemDef),
-			gomock.Eq(newItemDetails),
+			&itemDetailsMatcher{newItemDetails},
 		).
 		Return(
 			nil,
