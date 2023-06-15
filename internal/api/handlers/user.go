@@ -492,7 +492,7 @@ func (handler *UserVirtualCardHandlers) postTransaction(c *gin.Context) {
 
 	// Parse request
 	req := api.PostUserVirtualCardTransactionRequest{}
-	if err := c.BindJSON(&req); err != nil || len(req.ItemIds) == 0 {
+	if err := c.BindJSON(&req); err != nil {
 		handler.logger.Printf("failed to parse in postTransaction %+v", err)
 		c.JSON(400, api.DefaultResponse{Status: api.INVALID_REQUEST})
 		return
@@ -531,7 +531,7 @@ func (handler *UserVirtualCardHandlers) postTransaction(c *gin.Context) {
 		c.JSON(401, api.DefaultResponse{Status: api.INVALID_REQUEST, Message: "INVALID_ITEM"})
 		return
 	} else if err != nil {
-		handler.logger.Printf("unknown error virtualCardManager.FilterOwnedItems in postTransaction %+v", err)
+		handler.logger.Printf("unknown error transactionManager.Start in postTransaction %+v", err)
 		c.JSON(500, api.DefaultResponse{Status: api.UNKNOWN_ERROR})
 		return
 	}

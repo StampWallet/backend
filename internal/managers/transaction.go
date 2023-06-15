@@ -80,17 +80,19 @@ func (manager *TransactionManagerImpl) Start(card *VirtualCard, items []OwnedIte
 			return err
 		}
 
-		transactionDetails := []TransactionDetail{}
-		for _, chosenItem := range items {
-			transactionDetails = append(transactionDetails, TransactionDetail{
-				TransactionId: transaction.ID,
-				ItemId:        chosenItem.ID,
-				Action:        NoActionType,
-			})
-		}
-		res = tx.Create(transactionDetails)
-		if err := res.GetError(); err != nil {
-			return err
+		if len(items) != 0 {
+			transactionDetails := []TransactionDetail{}
+			for _, chosenItem := range items {
+				transactionDetails = append(transactionDetails, TransactionDetail{
+					TransactionId: transaction.ID,
+					ItemId:        chosenItem.ID,
+					Action:        NoActionType,
+				})
+			}
+			res = tx.Create(transactionDetails)
+			if err := res.GetError(); err != nil {
+				return err
+			}
 		}
 
 		return nil

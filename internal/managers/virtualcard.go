@@ -171,6 +171,9 @@ func (manager *VirtualCardManagerImpl) GetOwnedItems(virtualCard *VirtualCard) (
 }
 
 func (manager *VirtualCardManagerImpl) FilterOwnedItems(virtualCard *VirtualCard, ids []string) ([]OwnedItem, error) {
+	if len(ids) == 0 {
+		return nil, nil
+	}
 	var ownedItems []OwnedItem
 	result := manager.baseServices.Database.
 		Where("virtual_card_id = ?", virtualCard.ID).
