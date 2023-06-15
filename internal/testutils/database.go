@@ -22,27 +22,33 @@ func RecreateDatabase(db GormDB, databaseName string) error {
 		},
 	)
 
-	// Truncates all tables
-	//https://dba.stackexchange.com/a/154075
-	tx := db.Session(&gorm.Session{Logger: newLogger}).Exec(`
-do
-$$
-declare
-  l_stmt text;
-begin
-  select 'truncate ' || string_agg(format('%I.%I', schemaname, tablename), ',') || ' cascade'
-    into l_stmt
-  from pg_tables
-  where schemaname in ('public') and tablename != 'spatial_ref_sys';
+	for i := 0; i <= 5; i++ {
+		// Truncates all tables
+		//https://dba.stackexchange.com/a/154075
+		tx := db.Session(&gorm.Session{Logger: newLogger}).Exec(`
+	do
+	$$
+	declare
+	  l_stmt text;
+	begin
+	  select 'truncate ' || string_agg(format('%I.%I', schemaname, tablename), ',') || ' cascade'
+		into l_stmt
+	  from pg_tables
+	  where schemaname in ('public') and tablename != 'spatial_ref_sys';
 
-  if l_stmt is not null then 
-	execute l_stmt;
-  end if;
-end;
-$$
-	`)
-	if err := tx.GetError(); err != nil {
-		return err
+	  if l_stmt is not null then 
+		execute l_stmt;
+	  end if;
+	end;
+	$$
+		`)
+		if err := tx.GetError(); err != nil {
+			if i == 5 {
+				return err
+			} else {
+				time.Sleep(time.Second * 10)
+			}
+		}
 	}
 
 	// Applies auto migration
