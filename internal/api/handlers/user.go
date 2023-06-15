@@ -492,7 +492,7 @@ func (handler *UserVirtualCardHandlers) postTransaction(c *gin.Context) {
 
 	// Parse request
 	req := api.PostUserVirtualCardTransactionRequest{}
-	if err := c.BindJSON(&req); err != nil {
+	if err := c.BindJSON(&req); err != nil || len(req.ItemIds) == 0 {
 		handler.logger.Printf("failed to parse in postTransaction %+v", err)
 		c.JSON(400, api.DefaultResponse{Status: api.INVALID_REQUEST})
 		return
