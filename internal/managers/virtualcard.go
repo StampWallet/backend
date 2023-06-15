@@ -33,6 +33,9 @@ type VirtualCardManager interface {
 	// Removes virtual card
 	Remove(virtualCard *VirtualCard) error
 
+	// act of desperation since accessors do not work as expected
+	GetForUser(user *User, businessId string) (*VirtualCard, error)
+
 	// Returns items owned by virtual card
 	GetOwnedItems(virtualCard *VirtualCard) ([]OwnedItem, error)
 
@@ -157,6 +160,44 @@ func (manager *VirtualCardManagerImpl) Remove(virtualCard *VirtualCard) error {
 
 		return nil
 	})
+}
+
+func (manager *VirtualCardManagerImpl) GetForUser(user *User, businessId string) (*VirtualCard, error) {
+	var business Business
+	result := manager.baseServices.Database.
+		Find(&business, &Business{PublicId: businessId})
+	err := result.GetError()
+	if err == gorm.ErrRecordNotFound {
+		return nil, ErrNoSuchBusiness
+	} else if err != nil {
+		return nil, fmt.Errorf("db.Find(Business) returned an error: %+v", err)
+	}
+
+	var virtualCard VirtualCard
+	result = manager.baseServices.Database.
+		Preload("Business").
+		Preload("Business.ItemDefinitions").
+		Preload("Business.MenuImages").
+		Find(&virtualCard, &VirtualCard{BusinessId: business.ID,
+			OwnerId: user.ID})
+	err = result.GetError()
+	if err == gorm.ErrRecordNotFound {
+		return nil, ErrNoSuchVirtualCard
+	} else if err != nil {
+		return nil, fmt.Errorf("db.Find(VirtualCard) returned an error: %+v", err)
+	}
+
+	var ownedItems []OwnedItem
+	result = manager.baseServices.Database.
+		Preload("ItemDefinition").
+		Find(&ownedItems, &OwnedItem{VirtualCardId: virtualCard.ID, Status: OwnedItemStatusOwned})
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return nil, fmt.Errorf("db.Find(OwnedItem) returned an error: %+v", err)
+	}
+
+	virtualCard.OwnedItems = ownedItems
+
+	return &virtualCard, nil
 }
 
 // idk if this is even necessary

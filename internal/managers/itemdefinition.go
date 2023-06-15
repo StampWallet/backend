@@ -54,7 +54,7 @@ func (manager *ItemDefinitionManagerImpl) AddItem(user *User, business *Business
 		return nil, ErrInvalidArgs
 	}
 
-	if details.Name == "" || details.Description == "" || details.Price == nil {
+	if details.Name == "" || details.Description == "" {
 		return nil, ErrInvalidItemDetails
 	}
 
@@ -66,6 +66,11 @@ func (manager *ItemDefinitionManagerImpl) AddItem(user *User, business *Business
 	var available bool = true
 	if details.Available != nil {
 		available = *details.Available
+	}
+
+	var price uint = 0
+	if details.Price != nil {
+		price = *details.Price
 	}
 
 	startDate := sql.NullTime{Valid: true, Time: time.Now()}
@@ -89,7 +94,7 @@ func (manager *ItemDefinitionManagerImpl) AddItem(user *User, business *Business
 			PublicId:    shortuuid.New(),
 			BusinessId:  business.ID,
 			Name:        details.Name,
-			Price:       *details.Price,
+			Price:       price,
 			Description: details.Description,
 			ImageId:     imageFile.PublicId, // TODO: expect PublicId here?
 			StartDate:   startDate,

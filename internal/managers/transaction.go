@@ -132,45 +132,51 @@ func (manager *TransactionManagerImpl) Finalize(transaction *Transaction, action
 			return err
 		}
 
+		if transaction.State != TransactionStateStarted && transaction.State != TransactionStateProcesing {
+			return ErrInvalidTransaction
+		}
+
 		tds := transaction.TransactionDetails
 		if len(actions) != len(tds) {
 			// TODO: log diff between item sets
 			return ErrInvalidActionSet
 		}
 
-		for i := range tds {
-			td := &tds[i] // need to modify tds slice to save after loop
-			// item changed between transactions
-			if td.OwnedItem.Status != OwnedItemStatusOwned {
-				failTransaction = true
-				return ErrInvalidItem
-			}
+		if len(actions) != 0 {
+			for i := range tds {
+				td := &tds[i] // need to modify tds slice to save after loop
+				// item changed between transactions
+				if td.OwnedItem.Status != OwnedItemStatusOwned {
+					failTransaction = true
+					return ErrInvalidItem
+				}
 
-			action, ok := itemIdToAction[td.OwnedItem.ID]
-			if !ok {
-				return ErrInvalidItem
-			}
+				action, ok := itemIdToAction[td.OwnedItem.ID]
+				if !ok {
+					return ErrInvalidItem
+				}
 
-			td.Action = action
-			switch action {
-			case RedeemedActionType:
-				td.OwnedItem.Used = sql.NullTime{Time: time.Now(), Valid: true}
-				td.OwnedItem.Status = OwnedItemStatusUsed
-			case RecalledActionType:
-				td.OwnedItem.Status = OwnedItemStatusWithdrawn
-				transaction.VirtualCard.Points += td.OwnedItem.ItemDefinition.Price
-			case CancelledActionType:
-				// ?
-			}
+				td.Action = action
+				switch action {
+				case RedeemedActionType:
+					td.OwnedItem.Used = sql.NullTime{Time: time.Now(), Valid: true}
+					td.OwnedItem.Status = OwnedItemStatusUsed
+				case RecalledActionType:
+					td.OwnedItem.Status = OwnedItemStatusWithdrawn
+					transaction.VirtualCard.Points += td.OwnedItem.ItemDefinition.Price
+				case CancelledActionType:
+					// ?
+				}
 
-			result = tx.Save(td.OwnedItem)
+				result = tx.Save(td.OwnedItem)
+				if err := result.GetError(); err != nil {
+					return err
+				}
+			}
+			result = tx.Save(tds)
 			if err := result.GetError(); err != nil {
 				return err
 			}
-		}
-		result = tx.Save(tds)
-		if err := result.GetError(); err != nil {
-			return err
 		}
 
 		transaction.State = TransactionStateFinished

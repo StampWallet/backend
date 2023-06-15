@@ -267,8 +267,7 @@ func (handler *UserVirtualCardHandlers) getVirtualCardOfUser(c *gin.Context,
 	user *database.User, businessId string) *database.VirtualCard {
 
 	// Get virtual card, handle errors
-	cardTmp, err := handler.userAuthorizedAcessor.Get(user, &database.VirtualCard{
-		Business: &database.Business{PublicId: businessId}})
+	cardTmp, err := handler.virtualCardManager.GetForUser(user, businessId)
 
 	if err == ErrNotFound {
 		c.JSON(404, api.DefaultResponse{Status: api.NOT_FOUND, Message: "VIRTUAL_CARD_NOT_FOUND"})
@@ -279,7 +278,7 @@ func (handler *UserVirtualCardHandlers) getVirtualCardOfUser(c *gin.Context,
 		return nil
 	}
 
-	return cardTmp.(*database.VirtualCard)
+	return cardTmp
 }
 
 // Handles add virtual card request
@@ -354,10 +353,7 @@ func (handler *UserVirtualCardHandlers) getCard(c *gin.Context) {
 
 	// Get virtual card, handle errors
 	// TODO replace with GetOwnedItems
-	cardTmp, err := handler.userAuthorizedAcessor.GetAll(user,
-		&database.VirtualCard{Business: &database.Business{PublicId: businessId}},
-		[]string{"Business", "Business.ItemDefinitions", "Business.MenuImages",
-			"OwnedItems", "OwnedItems.ItemDefinition"})
+	virtualCard, err := handler.virtualCardManager.GetForUser(user, businessId)
 
 	if err != nil && err != ErrNotFound {
 		handler.logger.Printf("%s unknown error after userAuthorizedAcessor.Get: %+v", CallerFilename(), err)
@@ -367,8 +363,6 @@ func (handler *UserVirtualCardHandlers) getCard(c *gin.Context) {
 		c.JSON(404, api.DefaultResponse{Status: api.NOT_FOUND, Message: "VIRTUAL_CARD_NOT_FOUND"})
 		return
 	}
-
-	virtualCard := cardTmp[0].(*database.VirtualCard)
 
 	// Convert data, return response
 	var ownedItems []api.OwnedItemApiModel
@@ -410,7 +404,10 @@ func (handler *UserVirtualCardHandlers) postItemDefinition(c *gin.Context) {
 
 	// Pass to manager, handle errors
 	ownedItem, err := handler.virtualCardManager.BuyItem(virtualCard, itemDefinitionId)
-	if err == ErrNoSuchItemDefinition {
+	if err == ErrNotEnoughPoints {
+		c.JSON(401, api.DefaultResponse{Status: api.INVALID_REQUEST, Message: "NOT_ENOUGH_POINTS"})
+		return
+	} else if err == ErrNoSuchItemDefinition {
 		c.JSON(404, api.DefaultResponse{Status: api.NOT_FOUND})
 		return
 	} else if err == ErrWithdrawnItem {
