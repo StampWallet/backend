@@ -20,6 +20,7 @@ var (
 	ErrInvalidTransaction = errors.New("Invalid transaction") // transaction finished
 	ErrItemBadCardId      = errors.New("Owned item vcard id does not match that of provided vcard")
 	ErrInvalidAction      = errors.New("NoActionType is not a valid action when finalizing transaction")
+	ErrInvalidActionSet   = errors.New("Invalid action set - does not match started transaction details")
 )
 
 // TODO
@@ -100,8 +101,9 @@ func (manager *TransactionManagerImpl) Start(card *VirtualCard, items []OwnedIte
 	return transaction, nil
 }
 
-func (manager *TransactionManagerImpl) Finalize(transaction *Transaction, items []ItemWithAction, points uint64) (*Transaction, error) {
-	for _, chosenItem := range items {
+func (manager *TransactionManagerImpl) Finalize(transaction *Transaction, actions []ItemWithAction, points uint64) (*Transaction, error) {
+	failTransaction := false
+	for _, chosenItem := range actions {
 		if chosenItem.Item.VirtualCardId != transaction.VirtualCardId {
 			return nil, ErrItemBadCardId
 		}
@@ -111,7 +113,7 @@ func (manager *TransactionManagerImpl) Finalize(transaction *Transaction, items 
 	}
 
 	itemIdToAction := make(map[uint]ActionTypeEnum)
-	for _, itemWithAction := range items {
+	for _, itemWithAction := range actions {
 		item := itemWithAction.Item
 		action := itemWithAction.Action
 		itemIdToAction[item.ID] = action
@@ -129,13 +131,19 @@ func (manager *TransactionManagerImpl) Finalize(transaction *Transaction, items 
 		}
 
 		tds := transaction.TransactionDetails
-		if len(items) != len(tds) {
+		if len(actions) != len(tds) {
 			// TODO: log diff between item sets
-			return ErrInvalidItem
+			return ErrInvalidActionSet
 		}
 
 		for i := range tds {
 			td := &tds[i] // need to modify tds slice to save after loop
+			// item changed between transactions
+			if td.OwnedItem.Status != OwnedItemStatusOwned {
+				failTransaction = true
+				return ErrInvalidItem
+			}
+
 			action, ok := itemIdToAction[td.OwnedItem.ID]
 			if !ok {
 				return ErrInvalidItem
@@ -179,5 +187,14 @@ func (manager *TransactionManagerImpl) Finalize(transaction *Transaction, items 
 
 		return nil
 	})
+
+	if failTransaction {
+		transaction.State = TransactionStateFailed
+		result := manager.baseServices.Database.Save(&transaction)
+		if err := result.GetError(); err != nil {
+			return nil, err
+		}
+	}
+
 	return transaction, err
 }

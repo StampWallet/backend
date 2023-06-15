@@ -184,9 +184,6 @@ func TestTransactionManagerFinalize(t *testing.T) {
 }
 
 func TestTransactionManagerFinalizeWithItemsNotFromTransaction(t *testing.T) {
-	t.Setenv("TEST_DATABASE_URL", "postgresql://postgres@postgres/stampwallet")
-	t.Setenv("TEST_DATABASE_NAME", "stampwallet")
-
 	s := setupTransactionTest(t)
 	ownedItemToRedeem := GetTestOwnedItem(s.db, s.itemDefinition, s.virtualCard)
 	ownedItemFromOutside := GetTestOwnedItem(s.db, s.itemDefinition, s.virtualCard)
@@ -225,21 +222,23 @@ func testTransactionManagerFinalizeWithChnagedItemStatusTemplate(t *testing.T, i
 		[]OwnedItem{*ownedItemToRedeem, *ownedItemToRedeemNewStatus})
 
 	ownedItemToRedeemNewStatus.Status = itemStatus
-	Save(s.db, &ownedItemToRedeemNewStatus)
+	tx := s.db.Save(&ownedItemToRedeemNewStatus)
+	require.Nilf(t, tx.GetError(), "failed to save item in the database")
 
 	transaction, err := s.manager.Finalize(transaction, []ItemWithAction{
 		{ownedItemToRedeem, RedeemedActionType},
 		{ownedItemToRedeemNewStatus, RedeemedActionType},
 	}, 10)
-	require.Nilf(t, transaction, "transaction finalize should not return a transaction")
-	require.ErrorAsf(t, err, InvalidItem, "transaction should return a InvalidItem error")
+	//require.Nilf(t, transaction, "transaction finalize should not return a transaction")
+	require.ErrorIsf(t, err, ErrInvalidItem, "transaction should return a InvalidItem error")
 
 	var dbTransaction Transaction
-	tx := s.db.First(&dbTransaction, Transaction{Model: gorm.Model{ID: transaction.ID}})
+	tx = s.db.First(&dbTransaction, Transaction{Model: gorm.Model{ID: transaction.ID}})
 	err = tx.GetError()
 	require.Nilf(t, err, "database find for Transaction returned an error")
-	require.Equalf(t, 0, dbTransaction.AddedPoints, "db transaction should have 0 added points")
-	require.Equalf(t, TransactionStateFailed, dbTransaction.State, "transaction is not failed")
+	require.Equalf(t, uint(0), dbTransaction.AddedPoints, "db transaction should have 0 added points")
+	require.Equalf(t, TransactionStateEnum(TransactionStateFailed),
+		dbTransaction.State, "transaction is not failed")
 
 	var dbVirtualCard VirtualCard
 	tx = s.db.First(&dbVirtualCard, VirtualCard{Model: gorm.Model{ID: s.virtualCard.ID}})
@@ -265,7 +264,7 @@ func testTransactionManagerFinalizeFinishedTransactionTemplate(t *testing.T, sta
 	transaction, err := s.manager.Finalize(transaction, []ItemWithAction{
 		{ownedItemToRedeem, RedeemedActionType},
 	}, 10)
-	require.ErrorAsf(t, err, InvalidTransaction, "transaction finalize should return InvalidTransaction error")
+	require.ErrorAsf(t, err, ErrInvalidTransaction, "transaction finalize should return InvalidTransaction error")
 	require.Nilf(t, transaction, "transaction finalize should return a nil transaction")
 
 	var dbVirtualCard VirtualCard

@@ -17,7 +17,7 @@ func CallerFilename() string {
 func RandomSlice[T any](size int, values []T) []T {
 	result := make([]T, size)
 	for i := range result {
-		result[i] = values[rand.Intn(size)]
+		result[i] = values[rand.Intn(len(values))]
 	}
 	return result
 }
