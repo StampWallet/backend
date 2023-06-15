@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http/httptest"
 	"reflect"
@@ -299,6 +300,7 @@ func TestUserHandlersGetBusinessesOk(t *testing.T) {
 
 	require.Nilf(t, respParseErr, "Failed to parse JSON response")
 	require.Equalf(t, respCode, int(200), "Response returned unexpected status code")
+	fmt.Printf("%+v %+v", respBodyExpected, *respBody)
 	require.Truef(t, reflect.DeepEqual(respBodyExpected, *respBody), "Response returned unexpected body contents")
 }
 
@@ -487,7 +489,8 @@ func TestUserVirtualCardHandlersGetCardOk(t *testing.T) {
 
 	require.Nilf(t, respParseErr, "Failed to parse JSON response")
 	require.Equalf(t, respCode, int(200), "Response returned unexpected status code")
-	require.Truef(t, reflect.DeepEqual(respBodyExpected, respBody), "Response returned unexpected body contents")
+	fmt.Printf("%+v %+v", respBodyExpected, *respBody)
+	require.Truef(t, reflect.DeepEqual(*respBodyExpected, *respBody), "Response returned unexpected body contents")
 }
 
 func TestUserVirtualCardHandlersPostItemOk(t *testing.T) {
