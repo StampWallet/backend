@@ -58,11 +58,12 @@ jobs:
         env: 
           TEST_DATABASE_URL: "postgres://postgres@localhost/stampwallet"
           TEST_DATABASE_NAME: "stampwallet"
-        with:
-          report: 'true'
-          chart: 'true'
-          amend: 'true'
-        uses: ncruces/go-coverage-report@v0
+          GOMAXPROCS: 1
+        #with:
+        #  report: 'true'
+        #  chart: 'true'
+        #  amend: 'true'
+        uses: ncruces/go-coverage-report@main
         continue-on-error: true
 
   docker:
