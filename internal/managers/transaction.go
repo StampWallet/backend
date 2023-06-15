@@ -13,7 +13,7 @@ import (
 	"github.com/lithammer/shortuuid/v4"
 )
 
-const transactionCodeLength = 6
+const transactionCodeLength = 12
 
 var (
 	ErrInvalidItem        = errors.New("Invalid item")        // no such item or item already used
