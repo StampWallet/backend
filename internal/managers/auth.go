@@ -103,6 +103,7 @@ func (manager *AuthManagerImpl) Create(userDetails UserDetails) (*User, *Token, 
 	// Check if email is valid
 	_, emailErr := mail.ParseAddress(userDetails.Email)
 	if emailErr != nil {
+		tx.Rollback()
 		return nil, nil, "", ErrInvalidEmail
 	}
 
@@ -120,6 +121,7 @@ func (manager *AuthManagerImpl) Create(userDetails UserDetails) (*User, *Token, 
 	}
 
 	if !checkPassword(userDetails.Password) {
+		tx.Rollback()
 		return nil, nil, "", ErrPasswordTooWeak
 	}
 
@@ -189,6 +191,7 @@ func (manager *AuthManagerImpl) Create(userDetails UserDetails) (*User, *Token, 
 
 	// Commit transaction
 	if err := tx.Commit().GetError(); err != nil {
+		tx.Rollback()
 		return nil, nil, "", fmt.Errorf("%s failed to commit, database error: %+v", CallerFilename(), err)
 	}
 
@@ -284,6 +287,7 @@ func (manager *AuthManagerImpl) ConfirmEmail(tokenId string, tokenSecret string)
 
 	// Commit transaction
 	if err := tx.Commit().GetError(); err != nil {
+		tx.Rollback()
 		// TODO make sure that user cannot get locked up here if transaction fails and token is invalidated
 		return nil, err
 	}
@@ -367,6 +371,7 @@ func (manager *AuthManagerImpl) ChangeEmail(user *User, newEmail string) (*User,
 
 	// Commit transaction
 	if err = tx.Commit().GetError(); err != nil {
+		tx.Rollback()
 		return nil, err
 	}
 

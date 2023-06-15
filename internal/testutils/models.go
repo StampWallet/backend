@@ -17,13 +17,14 @@ import (
 	//. "github.com/StampWallet/backend/internal/services/mocks"
 )
 
-func Save[T any](db GormDB, item *T) {
+func Save(db GormDB, item any) {
 	if db == nil {
 		return
 	}
-	tx := db.Create(item)
+	tx := db.Session(&gorm.Session{FullSaveAssociations: true}).Save(item)
+	//fmt.Printf("after save: %v\n", item)
 	if err := tx.GetError(); err != nil {
-		panic(fmt.Errorf("failed to create item of type %T: %w", *new(T), err))
+		panic(fmt.Errorf("failed to create item of type %T: %w", item, err))
 	}
 }
 
@@ -45,6 +46,8 @@ func GetDefaultUser() *User {
 }
 
 func GetTestBusiness(db GormDB, user *User) *Business {
+	a := GetTestFileMetadata(db, user).PublicId
+	b := GetTestFileMetadata(db, user).PublicId
 	business := Business{
 		PublicId:       shortuuid.New(),
 		OwnerId:        user.ID,
@@ -56,12 +59,13 @@ func GetTestBusiness(db GormDB, user *User) *Business {
 		KRS:            strconv.Itoa(rand.Intn(math.MaxInt)),
 		REGON:          strconv.Itoa(rand.Intn(math.MaxInt)),
 		OwnerName:      "test owner",
-		BannerImageId:  GetTestFileMetadata(db, user).PublicId,
-		IconImageId:    GetTestFileMetadata(db, user).PublicId,
+		BannerImageId:  a,
+		IconImageId:    b,
 		User:           user,
 	}
 	Save(db, &business)
 	user.Business = &business
+	business.User = user
 	return &business
 }
 
@@ -71,13 +75,13 @@ func GetDefaultBusiness(user *User) *Business {
 
 func GetTestFileMetadata(db GormDB, user *User) *FileMetadata {
 	file := FileMetadata{
-		Model: gorm.Model{
-			ID: uint(rand.Uint32()),
-		},
 		PublicId: shortuuid.New(),
 		OwnerId:  user.ID,
+		User:     user,
 	}
+	Save(db, &user)
 	Save(db, &file)
+	file.User = user
 	return &file
 }
 
@@ -93,8 +97,10 @@ func GetTestItemDefinition(db GormDB, business *Business, metadata FileMetadata)
 		EndDate:     sql.NullTime{Time: time.Now().Add(time.Hour * 24), Valid: true},
 		MaxAmount:   10,
 		Available:   true,
+		Business:    business,
 	}
 	Save(db, &definition)
+	definition.Business = business
 	return &definition
 }
 
@@ -110,6 +116,7 @@ func GetTestItemDefinitionWithPrice(db GormDB, business *Business, metadata File
 		EndDate:     sql.NullTime{Time: time.Now().Add(time.Hour * 24), Valid: true},
 		MaxAmount:   10,
 		Available:   true,
+		Business:    business,
 	}
 	Save(db, &definition)
 	return &definition
@@ -121,6 +128,8 @@ func GetTestVirtualCard(db GormDB, user *User, business *Business) *VirtualCard 
 		OwnerId:    user.ID,
 		BusinessId: business.ID,
 		Points:     40,
+		User:       user,
+		Business:   business,
 	}
 	Save(db, &virtualCard)
 	return &virtualCard
@@ -132,6 +141,8 @@ func GetTestVirtualCardWithPoints(db GormDB, user *User, business *Business, poi
 		OwnerId:    user.ID,
 		BusinessId: business.ID,
 		Points:     points,
+		User:       user,
+		Business:   business,
 	}
 	Save(db, &virtualCard)
 	return &virtualCard
@@ -145,6 +156,7 @@ func GetTestOwnedItem(db GormDB, itemDefinition *ItemDefinition, card *VirtualCa
 		Used:           sql.NullTime{Valid: false},
 		Status:         OwnedItemStatusOwned,
 		ItemDefinition: itemDefinition,
+		VirtualCard:    card,
 	}
 	Save(db, &ownedItem)
 	return &ownedItem
@@ -152,11 +164,13 @@ func GetTestOwnedItem(db GormDB, itemDefinition *ItemDefinition, card *VirtualCa
 
 func GetTestOwnedItemUsed(db GormDB, itemDefinition *ItemDefinition, card *VirtualCard) *OwnedItem {
 	ownedItem := OwnedItem{
-		PublicId:      shortuuid.New(),
-		DefinitionId:  itemDefinition.ID,
-		VirtualCardId: card.ID,
-		Used:          sql.NullTime{Valid: true, Time: time.Now()},
-		Status:        OwnedItemStatusUsed,
+		PublicId:       shortuuid.New(),
+		DefinitionId:   itemDefinition.ID,
+		VirtualCardId:  card.ID,
+		Used:           sql.NullTime{Valid: true, Time: time.Now()},
+		Status:         OwnedItemStatusUsed,
+		VirtualCard:    card,
+		ItemDefinition: itemDefinition,
 	}
 	Save(db, &ownedItem)
 	return &ownedItem
@@ -214,8 +228,8 @@ func GetDefaultItem(business *Business) *ItemDefinition {
 		EndDate:     sql.NullTime{Time: time.Now().Add(time.Hour * 24), Valid: true},
 		MaxAmount:   10,
 		Available:   true,
+		Business:    business,
 	}
-	business.ItemDefinitions = append(business.ItemDefinitions, *itemDefinition)
 	return itemDefinition
 }
 
@@ -232,9 +246,11 @@ func GetTestToken(db GormDB, user *User) (*Token, string) {
 		TokenPurpose: TokenPurposeEmail,
 		Used:         false,
 		Recalled:     false,
+		OwnerId:      user.ID,
 		User:         user,
 	}
 	Save(db, &token)
+	token.User = user
 	return &token, secret
 }
 
@@ -254,6 +270,7 @@ func GetTestSessionToken(db GormDB, user *User, expires time.Time) (*Token, stri
 		User:         user,
 	}
 	Save(db, &token)
+	token.User = user
 	return &token, secret
 }
 

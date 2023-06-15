@@ -22,9 +22,10 @@ func RecreateDatabase(db GormDB, databaseName string) error {
 		},
 	)
 
-	for i := 0; i <= 5; i++ {
+	for i := 0; i <= 30; i++ {
 		// Truncates all tables
 		//https://dba.stackexchange.com/a/154075
+		println("truncating")
 		tx := db.Session(&gorm.Session{Logger: newLogger}).Exec(`
 	do
 	$$
@@ -43,11 +44,14 @@ func RecreateDatabase(db GormDB, databaseName string) error {
 	$$
 		`)
 		if err := tx.GetError(); err != nil {
+			println("err")
 			if i == 5 {
 				return err
 			} else {
-				time.Sleep(time.Second * 10)
+				time.Sleep(time.Second * 1)
 			}
+		} else {
+			break
 		}
 	}
 

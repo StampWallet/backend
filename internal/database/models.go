@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"database/sql"
+	"database/sql/driver"
 	"errors"
 	"strconv"
 	"strings"
@@ -170,17 +171,17 @@ func GPSCoordinatesFromString(coords string) (GPSCoordinates, error) {
 	return GPSCoordinates(*geom.NewPointFlat(geom.XY, []float64{long, lat})), nil
 }
 
-//// TODO probably does not work
-//func (g GPSCoordinates) Value() (driver.Value, error) {
-//	b := geom.Point(g)
-//	//return ewkbhex.Encode(&b, ewkb.NDR)
-//	//fmt.Printf("%f %f\n", b.X(), b.Y())
-//	if b.Empty() {
-//		return "SRID=3857;POINT(0 0)", nil
-//	} else {
-//		return fmt.Sprintf("SRID=3857;POINT(%f %f)", b.X(), b.Y()), nil
-//	}
-//}
+// // TODO probably does not work
+func (g GPSCoordinates) Value() (driver.Value, error) {
+	b := geom.Point(g)
+	//return ewkbhex.Encode(&b, ewkb.NDR)
+	//fmt.Printf("%f %f\n", b.X(), b.Y())
+	if b.Empty() {
+		return "SRID=3857;POINT(0 0)", nil
+	} else {
+		return fmt.Sprintf("SRID=3857;POINT(%f %f)", b.X(), b.Y()), nil
+	}
+}
 
 func (g GPSCoordinates) GormDataType() string {
 	return "geometry"

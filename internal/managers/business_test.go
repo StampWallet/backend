@@ -1,6 +1,7 @@
 package managers
 
 import (
+	"fmt"
 	"log"
 	"testing"
 
@@ -11,6 +12,7 @@ import (
 
 	"github.com/StampWallet/backend/internal/database"
 	. "github.com/StampWallet/backend/internal/database"
+
 	//. "github.com/StampWallet/backend/internal/database/mocks"
 	. "github.com/StampWallet/backend/internal/services"
 	. "github.com/StampWallet/backend/internal/services/mocks"
@@ -21,7 +23,7 @@ func GetBusinessManager(ctrl *gomock.Controller) *BusinessManagerImpl {
 	return &BusinessManagerImpl{
 		BaseServices{
 			Logger:   log.Default(),
-			Database: GetTestDatabase(),
+			Database: GetTestDatabase().Session(&gorm.Session{FullSaveAssociations: true}),
 		},
 		NewMockFileStorageService(ctrl),
 	}
@@ -43,6 +45,7 @@ func TestBusinessManagerCreate(t *testing.T) {
 	defer ctrl.Finish()
 	manager := GetBusinessManager(ctrl)
 	user := GetTestUser(manager.baseServices.Database)
+	Save(manager.baseServices.Database, user)
 	bannerImage := GetTestFileMetadata(manager.baseServices.Database, user)
 	manager.fileStorageService.(*MockFileStorageService).
 		EXPECT().
@@ -81,7 +84,9 @@ func TestBusinessManagerCreateAccountAlreadyExists(t *testing.T) {
 	defer ctrl.Finish()
 	manager := GetBusinessManager(ctrl)
 	user := GetTestUser(manager.baseServices.Database)
+	fmt.Printf("user: %+v\n", user)
 	business := GetTestBusiness(manager.baseServices.Database, user)
+	fmt.Printf("business: %+v\n", business)
 	details := BusinessDetails{
 		Name:           "test business",
 		Description:    "Description",

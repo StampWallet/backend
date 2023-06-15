@@ -191,6 +191,7 @@ func TestVirtualCardManagerBuyItem(t *testing.T) {
 	virtualCard := GetTestVirtualCard(s.db, s.user, s.business)
 	itemDefinition := GetDefaultItem(s.business)
 	Save(s.db, itemDefinition)
+	s.business.ItemDefinitions = append(s.business.ItemDefinitions, *itemDefinition)
 	oldPoints := virtualCard.Points
 
 	ownedItem, err := s.manager.BuyItem(virtualCard, itemDefinition.PublicId)
