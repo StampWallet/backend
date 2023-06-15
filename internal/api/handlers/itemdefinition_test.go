@@ -82,6 +82,11 @@ func setupItemDefinitionHandlersPostItemDefinition() (
 		Available:   &testItemDef.Available,
 	}
 
+	sd := testItemDetails.StartDate.Round(time.Duration(0))
+	testItemDetails.StartDate = &sd
+	ed := testItemDetails.EndDate.Truncate(time.Duration(0))
+	testItemDetails.EndDate = &ed
+
 	payload := api.PostBusinessItemDefinitionRequest{
 		Name:        testItemDef.Name,
 		Price:       Ptr(int32(testItemDef.Price)),
@@ -120,11 +125,6 @@ func TestItemDefinitionHandlersPostItemDefinitionOk(t *testing.T) {
 		EXPECT().
 		Get(gomock.Eq(testBusinessUser), gomock.Eq(&database.Business{})).
 		Return(testBusiness, nil)
-
-	sd := testItemDetails.StartDate.Round(time.Duration(0))
-	testItemDetails.StartDate = &sd
-	ed := testItemDetails.EndDate.Truncate(time.Duration(0))
-	testItemDetails.EndDate = &ed
 
 	handler.itemDefinitionManager.(*MockItemDefinitionManager).
 		EXPECT().
@@ -208,6 +208,11 @@ func setupItemDefinitionHandlersPutItemDefinition() (
 		MaxAmount:   Ptr(uint(20)),
 		Available:   Ptr(true),
 	}
+
+	sd := newItemDetails.StartDate.Round(time.Duration(0))
+	newItemDetails.StartDate = &sd
+	ed := newItemDetails.EndDate.Truncate(time.Duration(0))
+	newItemDetails.EndDate = &ed
 
 	newItemDef = &database.ItemDefinition{
 		PublicId:    testItemDef.PublicId,
@@ -356,11 +361,6 @@ func TestItemDefinitionHandlersPutItemDefinitionNok_BadDef(t *testing.T) {
 			nil,
 		)
 
-	sd := newItemDetails.StartDate.Round(time.Duration(0))
-	newItemDetails.StartDate = &sd
-	ed := newItemDetails.EndDate.Truncate(time.Duration(0))
-	newItemDetails.EndDate = &ed
-
 	handler.itemDefinitionManager.(*MockItemDefinitionManager).
 		EXPECT().
 		ChangeItemDetails(
@@ -386,6 +386,7 @@ func TestItemDefinitionHandlersDeleteItemDefinitionOk(t *testing.T) {
 	testBusinessUser := GetDefaultUser()
 	testBusiness := GetDefaultBusiness(testBusinessUser)
 	testItemDef := GetDefaultItem(testBusiness)
+	testBusiness.ItemDefinitions = append(testBusiness.ItemDefinitions, *testItemDef)
 
 	gin.SetMode(gin.TestMode)
 	w := httptest.NewRecorder()

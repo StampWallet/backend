@@ -62,6 +62,8 @@ func RecreateDatabase(db GormDB, databaseName string) error {
 	return nil
 }
 
+var globalDb *GormDBImpl = nil
+
 // Creates a new database connection from environment variables. Wipes the database.
 // TEST_DATABASE_URL - database URL, ex. 'postgres://postgres@localhost/stampwallet'
 // TEST_DATABASE_NAME - database name, ex. 'stampwallet'
@@ -76,6 +78,17 @@ func GetTestDatabase() *GormDBImpl {
 		panic("no database name in TEST_DATABASE_NAME env var")
 	}
 
+	if globalDb != nil {
+		sqldb, err := globalDb.DB()
+		if err != nil {
+			panic(fmt.Errorf("failed to get database connection %w", err))
+		}
+		closeErr := sqldb.Close()
+		if closeErr != nil {
+			panic(fmt.Errorf("failed to close database connection %w", closeErr))
+		}
+	}
+
 	// Create db connection
 	db, err := gorm.Open(postgres.New(postgres.Config{
 		DSN: url,
@@ -83,11 +96,12 @@ func GetTestDatabase() *GormDBImpl {
 	if err != nil {
 		panic(fmt.Errorf("Failed to open database connection %w", err))
 	}
+	globalDb = &GormDBImpl{Db: db}
 
 	// Recreate database
-	if err := RecreateDatabase(&GormDBImpl{Db: db}, os.Getenv("TEST_DATABASE_NAME")); err != nil {
+	if err := RecreateDatabase(globalDb, os.Getenv("TEST_DATABASE_NAME")); err != nil {
 		panic(fmt.Errorf("failed to drop and recreate database %w", err))
 	}
-	db.Exec("SELECT 'Migration finished'")
-	return &GormDBImpl{Db: db}
+	globalDb.Exec("SELECT 'Migration finished'")
+	return globalDb
 }
