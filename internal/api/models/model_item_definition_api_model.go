@@ -19,7 +19,7 @@ type ItemDefinitionApiModel struct {
 
 	Name string `json:"name,omitempty"`
 
-	Price int32 `json:"price,omitempty"`
+	Price *int32 `json:"price,omitempty"`
 
 	Description string `json:"description,omitempty"`
 
@@ -29,7 +29,7 @@ type ItemDefinitionApiModel struct {
 
 	EndDate *time.Time `json:"endDate,omitempty"`
 
-	MaxAmount int32 `json:"maxAmount,omitempty"`
+	MaxAmount *int32 `json:"maxAmount,omitempty"`
 
 	Available bool `json:"available,omitempty"`
 }

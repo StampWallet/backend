@@ -63,7 +63,7 @@ This endpoint can be used to change password of currently logged in user. Requir
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **defaultResponse** | [**DefaultResponse**](DefaultResponse.md) |  |
+ **postAccountPasswordRequest** | [**PostAccountPasswordRequest**](PostAccountPasswordRequest.md) |  |
 
 ### Return type
 

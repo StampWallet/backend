@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http/httptest"
 	"reflect"
@@ -371,12 +372,12 @@ func setupBusinessHandlersGetAccountInfo() (
 			{
 				PublicId:    testItemDef.PublicId,
 				Name:        testItemDef.Name,
-				Price:       int32(testItemDef.Price),
+				Price:       Ptr(int32(testItemDef.Price)),
 				Description: testItemDef.Description,
 				ImageId:     testItemDef.ImageId,
 				StartDate:   &sd,
 				EndDate:     &ed, // TODO: Should be ptr?
-				MaxAmount:   int32(testItemDef.MaxAmount),
+				MaxAmount:   Ptr(int32(testItemDef.MaxAmount)),
 				Available:   testItemDef.Available,
 			},
 		},
@@ -431,7 +432,8 @@ func TestBusinessHandlersGetAccountInfoOk(t *testing.T) {
 
 	require.Nilf(t, respParseErr, "Failed to parse JSON response")
 	require.Equalf(t, int(200), respCode, "Response returned unexpected status code")
-	require.Truef(t, reflect.DeepEqual(respBodyExpected, respBody), "Response returned unexpected body contents")
+	fmt.Printf("%+v\n%+v\n", *respBodyExpected, *respBody)
+	require.Truef(t, reflect.DeepEqual(*respBodyExpected, *respBody), "Response returned unexpected body contents")
 	// TODO: test MatchEntities and gomock.Eq
 }
 

@@ -155,13 +155,13 @@ func (a *AccountApiService) ChangeEmailExecute(r ApiChangeEmailRequest) (*Defaul
 }
 
 type ApiChangePasswordRequest struct {
-	ctx             context.Context
-	ApiService      *AccountApiService
-	defaultResponse *DefaultResponse
+	ctx                        context.Context
+	ApiService                 *AccountApiService
+	postAccountPasswordRequest *PostAccountPasswordRequest
 }
 
-func (r ApiChangePasswordRequest) DefaultResponse(defaultResponse DefaultResponse) ApiChangePasswordRequest {
-	r.defaultResponse = &defaultResponse
+func (r ApiChangePasswordRequest) PostAccountPasswordRequest(postAccountPasswordRequest PostAccountPasswordRequest) ApiChangePasswordRequest {
+	r.postAccountPasswordRequest = &postAccountPasswordRequest
 	return r
 }
 
@@ -205,8 +205,8 @@ func (a *AccountApiService) ChangePasswordExecute(r ApiChangePasswordRequest) (*
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}
 	localVarFormParams := url.Values{}
-	if r.defaultResponse == nil {
-		return localVarReturnValue, nil, reportError("defaultResponse is required and must be specified")
+	if r.postAccountPasswordRequest == nil {
+		return localVarReturnValue, nil, reportError("postAccountPasswordRequest is required and must be specified")
 	}
 
 	// to determine the Content-Type header
@@ -227,7 +227,7 @@ func (a *AccountApiService) ChangePasswordExecute(r ApiChangePasswordRequest) (*
 		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
 	}
 	// body params
-	localVarPostBody = r.defaultResponse
+	localVarPostBody = r.postAccountPasswordRequest
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, formFiles)
 	if err != nil {
 		return localVarReturnValue, nil, err

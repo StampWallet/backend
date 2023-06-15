@@ -162,7 +162,7 @@ func (handler *BusinessHandlers) getAccountInfo(c *gin.Context) {
 	}
 
 	// Get ItemDefinitions of business
-	itemDefinitionsTmp, err := handler.businessAuthorizedAccessor.GetAll(business, &ItemDefinition{})
+	itemDefinitionsTmp, err := handler.businessAuthorizedAccessor.GetAll(business, &ItemDefinition{Withdrawn: false})
 	if err != nil {
 		handler.logger.Printf("failed to handler.businessAuthorizedAccessor.Get ItemDefinition in getAccountInfo %+v", err)
 		c.JSON(500, api.DefaultResponse{Status: api.UNKNOWN_ERROR})
@@ -446,6 +446,8 @@ func (handler *BusinessHandlers) Connect(rg *gin.RouterGroup) {
 	handler.itemDefinitionHandlers.Connect(rg.Group("/itemDefinitions"))
 }
 
+// ItemDefinitionHandlers
+
 type ItemDefinitionHandlers struct {
 	itemDefinitionManager      ItemDefinitionManager
 	userAuthorizedAcessor      UserAuthorizedAccessor
@@ -453,25 +455,212 @@ type ItemDefinitionHandlers struct {
 	logger                     *log.Logger
 }
 
-func (handler *ItemDefinitionHandlers) getItemDefinition(c *gin.Context) {
+// Gets business owned by user
+// TODO refactor - duplicated from BusinessHandlers
+func (handler *ItemDefinitionHandlers) getBusinessOfUser(user *User, c *gin.Context) *Business {
+	// Get user's business
+	businessTmp, err := handler.userAuthorizedAcessor.Get(user, &Business{})
 
+	if err != nil && err != ErrNotFound {
+		handler.logger.Printf("failed to handler.userAuthorizedAcessor.Get in getAccountInfo %+v", err)
+		c.JSON(500, api.DefaultResponse{Status: api.UNKNOWN_ERROR})
+		return nil
+	} else if businessTmp == nil || err == ErrNotFound {
+		c.JSON(404, api.DefaultResponse{Status: api.NOT_FOUND})
+		return nil
+	}
+
+	return businessTmp.(*Business)
+}
+
+// Gets user (usually inserted into the context by AuthMiddleware)
+// and business owned by user from request context.
+// TODO refactor - duplicated from BusinessHandlers
+func (handler *ItemDefinitionHandlers) getUserAndBusiness(c *gin.Context) (*User, *Business) {
+	// Get user from context
+	user := getUserFromContext(handler.logger, c)
+	if user == nil {
+		return nil, nil
+	}
+
+	// Get user's business
+	business := handler.getBusinessOfUser(user, c)
+	if business == nil {
+		return nil, nil
+	}
+
+	return user, business
+}
+
+func (handler *ItemDefinitionHandlers) getItemDefinition(c *gin.Context) {
+	// Get user and business of user. getUserAndBusiness sends HTTP errors, so we can just quit
+	// if business or user is not available
+	user, business := handler.getUserAndBusiness(c)
+	if user == nil || business == nil {
+		return
+	}
+
+	itemDefinitionsTmp, err := handler.businessAuthorizedAccessor.GetAll(business, &ItemDefinition{BusinessId: business.ID, Withdrawn: false})
+	if err != nil {
+		handler.logger.Printf("failed to handler.businessAuthorizedAccessor.GetAll in getItemDefinition%+v", err)
+		c.JSON(500, api.DefaultResponse{Status: api.UNKNOWN_ERROR})
+		return
+	}
+
+	var itemDefinitions []api.ItemDefinitionApiModel
+	for _, v := range itemDefinitionsTmp {
+		itemDefinitions = append(itemDefinitions, apiUtils.ConvertItemDefinitionToApiModel(v.(*ItemDefinition)))
+	}
+
+	c.JSON(200, api.GetBusinessItemDefinitionsResponse{
+		ItemDefinitions: itemDefinitions,
+	})
 }
 
 func (handler *ItemDefinitionHandlers) postItemDefinition(c *gin.Context) {
+	user, business := handler.getUserAndBusiness(c)
+	if user == nil || business == nil {
+		return
+	}
 
+	// Parse request body
+	req := api.PostBusinessItemDefinitionRequest{}
+	if err := c.BindJSON(&req); err != nil {
+		handler.logger.Printf("failed to parse in postItemDefinition %+v", err)
+		c.JSON(400, api.DefaultResponse{Status: api.INVALID_REQUEST})
+		return
+	}
+
+	var price *uint
+	var maxAmount *uint
+
+	if req.Price != nil {
+		tmp := uint(*req.Price)
+		price = &tmp
+	}
+
+	if req.MaxAmount != nil {
+		tmp := uint(*req.MaxAmount)
+		maxAmount = &tmp
+	}
+
+	itemDefinition, err := handler.itemDefinitionManager.AddItem(user, business, &ItemDetails{
+		Name:        req.Name,
+		Price:       price,
+		Description: req.Description,
+		StartDate:   req.StartDate,
+		EndDate:     req.EndDate,
+		MaxAmount:   maxAmount,
+		Available:   &req.Available,
+	})
+
+	if err == ErrInvalidItemDetails {
+		c.JSON(400, api.DefaultResponse{Status: api.INVALID_REQUEST})
+		return
+	} else if err != nil {
+		handler.logger.Printf("unknown error returned from itemDefinitionManager.AddItem: %+v", err)
+		c.JSON(500, api.DefaultResponse{Status: api.UNKNOWN_ERROR})
+		return
+	}
+
+	c.JSON(201, api.PostBusinessItemDefinitionResponse{PublicId: itemDefinition.PublicId})
 }
 
-func (handler *ItemDefinitionHandlers) patchItemDefinition(c *gin.Context) {
+// Requires {definitionId} URL path parameter
+func (handler *ItemDefinitionHandlers) putItemDefinition(c *gin.Context) {
+	definitionId := c.Param("definitionId")
 
+	user, business := handler.getUserAndBusiness(c)
+	if user == nil || business == nil {
+		return
+	}
+
+	// Parse request body
+	req := api.PutBusinessItemDefinitionRequest{}
+	if err := c.BindJSON(&req); err != nil {
+		handler.logger.Printf("failed to parse in putItemDefinition %+v", err)
+		c.JSON(400, api.DefaultResponse{Status: api.INVALID_REQUEST})
+		return
+	}
+
+	itemDefinitionTmp, err := handler.businessAuthorizedAccessor.Get(business, &ItemDefinition{PublicId: definitionId})
+	if err == ErrNoAccess || err == ErrNotFound {
+		c.JSON(404, api.DefaultResponse{Status: api.NOT_FOUND})
+		return
+	} else if err != nil {
+		handler.logger.Printf("failed to handler.businessAuthorizedAccessor.Get in putItemDefinition: %+v", err)
+		c.JSON(500, api.DefaultResponse{Status: api.UNKNOWN_ERROR})
+		return
+	}
+
+	var price *uint
+	var maxAmount *uint
+
+	if req.Price != nil {
+		tmp := uint(*req.Price)
+		price = &tmp
+	}
+
+	if req.MaxAmount != nil {
+		tmp := uint(*req.MaxAmount)
+		maxAmount = &tmp
+	}
+
+	_, err = handler.itemDefinitionManager.ChangeItemDetails(itemDefinitionTmp.(*ItemDefinition),
+		&ItemDetails{
+			Name:        req.Name,
+			Price:       price,
+			Description: req.Description,
+			StartDate:   req.StartDate,
+			EndDate:     req.EndDate,
+			MaxAmount:   maxAmount,
+			Available:   &req.Available,
+		})
+
+	if err == ErrInvalidItemDetails {
+		c.JSON(400, api.DefaultResponse{Status: api.INVALID_REQUEST})
+		return
+	} else if err != nil {
+		handler.logger.Printf("unknown error returned from itemDefinitionManager.AddItem: %+v", err)
+		c.JSON(500, api.DefaultResponse{Status: api.UNKNOWN_ERROR})
+		return
+	}
+
+	c.JSON(200, api.DefaultResponse{Status: api.OK})
 }
 
+// Requires {definitionId} URL path parameter
 func (handler *ItemDefinitionHandlers) deleteItemDefinition(c *gin.Context) {
+	definitionId := c.Param("definitionId")
 
+	user, business := handler.getUserAndBusiness(c)
+	if user == nil || business == nil {
+		return
+	}
+
+	itemDefinitionTmp, err := handler.businessAuthorizedAccessor.Get(business, &ItemDefinition{PublicId: definitionId})
+	if err == ErrNoAccess || err == ErrNotFound {
+		c.JSON(404, api.DefaultResponse{Status: api.NOT_FOUND})
+		return
+	} else if err != nil {
+		handler.logger.Printf("failed to handler.businessAuthorizedAccessor.Get in deleteItemDefinition: %+v", err)
+		c.JSON(500, api.DefaultResponse{Status: api.UNKNOWN_ERROR})
+		return
+	}
+
+	_, err = handler.itemDefinitionManager.WithdrawItem(itemDefinitionTmp.(*ItemDefinition))
+	if err != nil {
+		handler.logger.Printf("failed to itemDefinitionManager.WithdrawItem in deleteItemDefinition: %+v", err)
+		c.JSON(500, api.DefaultResponse{Status: api.UNKNOWN_ERROR})
+		return
+	}
+
+	c.JSON(200, api.DefaultResponse{Status: api.OK})
 }
 
 func (handler *ItemDefinitionHandlers) Connect(rg *gin.RouterGroup) {
 	rg.GET("", handler.getItemDefinition)
 	rg.POST("", handler.postItemDefinition)
-	rg.PATCH("/:definitionId", handler.patchItemDefinition)
+	rg.PUT("/:definitionId", handler.putItemDefinition)
 	rg.DELETE("/:definitionId", handler.deleteItemDefinition)
 }

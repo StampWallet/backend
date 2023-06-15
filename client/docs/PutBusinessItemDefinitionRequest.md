@@ -1,4 +1,4 @@
-# PostBusinessItemDefinitionRequest
+# PutBusinessItemDefinitionRequest
 
 ## Properties
 Name | Type | Description | Notes

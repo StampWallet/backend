@@ -242,7 +242,7 @@ func (manager *VirtualCardManagerImpl) BuyItem(virtualCard *VirtualCard, itemDef
 		}
 
 		// Updates itemDefinition
-		result := db.First(itemDefinition, "id = ?", itemDefinition.ID)
+		result := db.First(&itemDefinition, "id = ?", itemDefinition.ID)
 		if err := result.GetError(); err != nil {
 			return fmt.Errorf("db.First(itemDefinition) returned an error %+v", err)
 		}

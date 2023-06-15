@@ -227,7 +227,7 @@ font-style: italic;
   <li><a href="#addItemDefinition"><code><span class="http-method">post</span> /business/itemDefinitions</code></a></li>
   <li><a href="#deleteItemDefinition"><code><span class="http-method">delete</span> /business/itemDefinitions/{definitionId}</code></a></li>
   <li><a href="#getItemDefinitions"><code><span class="http-method">get</span> /business/itemDefinitions</code></a></li>
-  <li><a href="#updateItemDefinition"><code><span class="http-method">patch</span> /business/itemDefinitions/{definitionId}</code></a></li>
+  <li><a href="#updateItemDefinition"><code><span class="http-method">put</span> /business/itemDefinitions/{definitionId}</code></a></li>
   </ul>
   <h4><a href="#LocalCards">LocalCards</a></h4>
   <ul>
@@ -240,15 +240,12 @@ font-style: italic;
   <li><a href="#login"><code><span class="http-method">post</span> /auth/sessions</code></a></li>
   <li><a href="#logout"><code><span class="http-method">delete</span> /auth/sessions</code></a></li>
   </ul>
-  <h4><a href="#Transaction">Transaction</a></h4>
-  <ul>
-  <li><a href="#getTransactionStatus"><code><span class="http-method">get</span> /user/cards/virtual/{businessId}/transactions/{transactionCode}</code></a></li>
-  <li><a href="#startTransaction"><code><span class="http-method">post</span> /user/cards/virtual/{businessId}/transactions</code></a></li>
-  </ul>
   <h4><a href="#Transactions">Transactions</a></h4>
   <ul>
   <li><a href="#finishTransaction"><code><span class="http-method">post</span> /business/transactions/{transactionCode}</code></a></li>
   <li><a href="#getTransactionDetails"><code><span class="http-method">get</span> /business/transactions/{transactionCode}</code></a></li>
+  <li><a href="#getTransactionStatus"><code><span class="http-method">get</span> /user/cards/virtual/{businessId}/transactions/{transactionCode}</code></a></li>
+  <li><a href="#startTransaction"><code><span class="http-method">post</span> /user/cards/virtual/{businessId}/transactions</code></a></li>
   </ul>
   <h4><a href="#User">User</a></h4>
   <ul>
@@ -339,7 +336,7 @@ font-style: italic;
 
     <h3 class="field-label">Request body</h3>
     <div class="field-items">
-      <div class="param">DefaultResponse <a href="#DefaultResponse">DefaultResponse</a> (required)</div>
+      <div class="param">PostAccountPasswordRequest <a href="#PostAccountPasswordRequest">PostAccountPasswordRequest</a> (required)</div>
 
       <div class="param-desc"><span class="param-type">Body Parameter</span> &mdash;  </div>
 
@@ -1156,9 +1153,9 @@ font-style: italic;
   <div class="method"><a name="updateItemDefinition"/>
     <div class="method-path">
     <a class="up" href="#__Methods">Up</a>
-    <pre class="patch"><code class="huge"><span class="http-method">patch</span> /business/itemDefinitions/{definitionId}</code></pre></div>
+    <pre class="put"><code class="huge"><span class="http-method">put</span> /business/itemDefinitions/{definitionId}</code></pre></div>
     <div class="method-summary">Update an exiting item definition (<span class="nickname">updateItemDefinition</span>)</div>
-    <div class="method-notes">This endpoint is used to change details of existing item definitions (benefits).</div>
+    <div class="method-notes">This endpoint is used to change details of existing item definitions (benefits). Client has to provide all values, even if values do not change</div>
 
     <h3 class="field-label">Path parameters</h3>
     <div class="field-items">
@@ -1175,7 +1172,7 @@ font-style: italic;
 
     <h3 class="field-label">Request body</h3>
     <div class="field-items">
-      <div class="param">PatchBusinessItemDefinitionRequest <a href="#PatchBusinessItemDefinitionRequest">PatchBusinessItemDefinitionRequest</a> (required)</div>
+      <div class="param">PutBusinessItemDefinitionRequest <a href="#PutBusinessItemDefinitionRequest">PutBusinessItemDefinitionRequest</a> (required)</div>
 
       <div class="param-desc"><span class="param-type">Body Parameter</span> &mdash;  </div>
 
@@ -1474,7 +1471,126 @@ font-style: italic;
         <a href="#DefaultResponse">DefaultResponse</a>
   </div> <!-- method -->
   <hr/>
-  <h1><a name="Transaction">Transaction</a></h1>
+  <h1><a name="Transactions">Transactions</a></h1>
+  <div class="method"><a name="finishTransaction"/>
+    <div class="method-path">
+    <a class="up" href="#__Methods">Up</a>
+    <pre class="post"><code class="huge"><span class="http-method">post</span> /business/transactions/{transactionCode}</code></pre></div>
+    <div class="method-summary">Finish a transaction (<span class="nickname">finishTransaction</span>)</div>
+    <div class="method-notes">This endpoint is used in the third step of transaction processing, the app should use it to update transaction details with data about points added to user's account and actions that were taken on items included in the transaction.</div>
+
+    <h3 class="field-label">Path parameters</h3>
+    <div class="field-items">
+      <div class="param">transactionCode (required)</div>
+
+      <div class="param-desc"><span class="param-type">Path Parameter</span> &mdash; Transaction code (scanned or typed in) default: null </div>
+    </div>  <!-- field-items -->
+
+    <h3 class="field-label">Consumes</h3>
+    This API call consumes the following media types via the <span class="header">Content-Type</span> request header:
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Request body</h3>
+    <div class="field-items">
+      <div class="param">PostBusinessTransactionRequest <a href="#PostBusinessTransactionRequest">PostBusinessTransactionRequest</a> (required)</div>
+
+      <div class="param-desc"><span class="param-type">Body Parameter</span> &mdash;  </div>
+
+    </div>  <!-- field-items -->
+
+
+
+
+    <h3 class="field-label">Return type</h3>
+    <div class="return-type">
+      <a href="#DefaultResponse">DefaultResponse</a>
+      
+    </div>
+
+    <!--Todo: process Response Object and its headers, schema, examples -->
+
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>{
+  "message" : "message"
+}</code></pre>
+
+    <h3 class="field-label">Produces</h3>
+    This API call produces the following media types according to the <span class="header">Accept</span> request header;
+    the media type will be conveyed by the <span class="header">Content-Type</span> response header.
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Responses</h3>
+    <h4 class="field-label">200</h4>
+    Successful operation
+        <a href="#DefaultResponse">DefaultResponse</a>
+    <h4 class="field-label">400</h4>
+    Invalid request
+        <a href="#DefaultResponse">DefaultResponse</a>
+    <h4 class="field-label">404</h4>
+    Does not exist or forbidden
+        <a href="#DefaultResponse">DefaultResponse</a>
+  </div> <!-- method -->
+  <hr/>
+  <div class="method"><a name="getTransactionDetails"/>
+    <div class="method-path">
+    <a class="up" href="#__Methods">Up</a>
+    <pre class="get"><code class="huge"><span class="http-method">get</span> /business/transactions/{transactionCode}</code></pre></div>
+    <div class="method-summary">Get info about a started transaction (<span class="nickname">getTransactionDetails</span>)</div>
+    <div class="method-notes">This endpoint is used in the second step of transaction processing, the app should use it to retrieve details about a transaction started by a user, after scanning user's transaction code.</div>
+
+    <h3 class="field-label">Path parameters</h3>
+    <div class="field-items">
+      <div class="param">transactionCode (required)</div>
+
+      <div class="param-desc"><span class="param-type">Path Parameter</span> &mdash; Transaction code (scanned or typed in) default: null </div>
+    </div>  <!-- field-items -->
+
+
+
+
+
+
+    <h3 class="field-label">Return type</h3>
+    <div class="return-type">
+      <a href="#GetBusinessTransactionResponse">GetBusinessTransactionResponse</a>
+      
+    </div>
+
+    <!--Todo: process Response Object and its headers, schema, examples -->
+
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>{
+  "publicId" : "aWtlaXY5QWl0aDllCg",
+  "virtualCardId" : "YXBpMWhhZXhhaUhvCg",
+  "state" : "STARTED",
+  "items" : [ {
+    "publicId" : "SW9zMmxhaHBoZXF1Cg",
+    "itemDefinitionId" : "SW9zMmxhaHBoZXF1Cg"
+  } ]
+}</code></pre>
+
+    <h3 class="field-label">Produces</h3>
+    This API call produces the following media types according to the <span class="header">Accept</span> request header;
+    the media type will be conveyed by the <span class="header">Content-Type</span> response header.
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Responses</h3>
+    <h4 class="field-label">200</h4>
+    Successful operation
+        <a href="#GetBusinessTransactionResponse">GetBusinessTransactionResponse</a>
+    <h4 class="field-label">404</h4>
+    Does not exist or forbidden
+        <a href="#DefaultResponse">DefaultResponse</a>
+  </div> <!-- method -->
+  <hr/>
   <div class="method"><a name="getTransactionStatus"/>
     <div class="method-path">
     <a class="up" href="#__Methods">Up</a>
@@ -1594,126 +1710,6 @@ font-style: italic;
         <a href="#DefaultResponse">DefaultResponse</a>
     <h4 class="field-label">404</h4>
     No such item
-        <a href="#DefaultResponse">DefaultResponse</a>
-  </div> <!-- method -->
-  <hr/>
-  <h1><a name="Transactions">Transactions</a></h1>
-  <div class="method"><a name="finishTransaction"/>
-    <div class="method-path">
-    <a class="up" href="#__Methods">Up</a>
-    <pre class="post"><code class="huge"><span class="http-method">post</span> /business/transactions/{transactionCode}</code></pre></div>
-    <div class="method-summary">Finish a transaction (<span class="nickname">finishTransaction</span>)</div>
-    <div class="method-notes">This endpoint is used in the third step of transaction processing, the app should use it to update transaction details with data about points added to user's account and actions that were taken on items included in the transaction.</div>
-
-    <h3 class="field-label">Path parameters</h3>
-    <div class="field-items">
-      <div class="param">transactionCode (required)</div>
-
-      <div class="param-desc"><span class="param-type">Path Parameter</span> &mdash; Transaction code (scanned or typed in) default: null </div>
-    </div>  <!-- field-items -->
-
-    <h3 class="field-label">Consumes</h3>
-    This API call consumes the following media types via the <span class="header">Content-Type</span> request header:
-    <ul>
-      <li><code>application/json</code></li>
-    </ul>
-
-    <h3 class="field-label">Request body</h3>
-    <div class="field-items">
-      <div class="param">PostBusinessTransactionRequest <a href="#PostBusinessTransactionRequest">PostBusinessTransactionRequest</a> (required)</div>
-
-      <div class="param-desc"><span class="param-type">Body Parameter</span> &mdash;  </div>
-
-    </div>  <!-- field-items -->
-
-
-
-
-    <h3 class="field-label">Return type</h3>
-    <div class="return-type">
-      <a href="#DefaultResponse">DefaultResponse</a>
-      
-    </div>
-
-    <!--Todo: process Response Object and its headers, schema, examples -->
-
-    <h3 class="field-label">Example data</h3>
-    <div class="example-data-content-type">Content-Type: application/json</div>
-    <pre class="example"><code>{
-  "message" : "message"
-}</code></pre>
-
-    <h3 class="field-label">Produces</h3>
-    This API call produces the following media types according to the <span class="header">Accept</span> request header;
-    the media type will be conveyed by the <span class="header">Content-Type</span> response header.
-    <ul>
-      <li><code>application/json</code></li>
-    </ul>
-
-    <h3 class="field-label">Responses</h3>
-    <h4 class="field-label">200</h4>
-    Successful operation
-        <a href="#DefaultResponse">DefaultResponse</a>
-    <h4 class="field-label">400</h4>
-    Invalid request
-        <a href="#DefaultResponse">DefaultResponse</a>
-    <h4 class="field-label">404</h4>
-    Does not exist or forbidden
-        <a href="#DefaultResponse">DefaultResponse</a>
-  </div> <!-- method -->
-  <hr/>
-  <div class="method"><a name="getTransactionDetails"/>
-    <div class="method-path">
-    <a class="up" href="#__Methods">Up</a>
-    <pre class="get"><code class="huge"><span class="http-method">get</span> /business/transactions/{transactionCode}</code></pre></div>
-    <div class="method-summary">Get info about a started transaction (<span class="nickname">getTransactionDetails</span>)</div>
-    <div class="method-notes">This endpoint is used in the second step of transaction processing, the app should use it to retrieve details about a transaction started by a user, after scanning user's transaction code.</div>
-
-    <h3 class="field-label">Path parameters</h3>
-    <div class="field-items">
-      <div class="param">transactionCode (required)</div>
-
-      <div class="param-desc"><span class="param-type">Path Parameter</span> &mdash; Transaction code (scanned or typed in) default: null </div>
-    </div>  <!-- field-items -->
-
-
-
-
-
-
-    <h3 class="field-label">Return type</h3>
-    <div class="return-type">
-      <a href="#GetBusinessTransactionResponse">GetBusinessTransactionResponse</a>
-      
-    </div>
-
-    <!--Todo: process Response Object and its headers, schema, examples -->
-
-    <h3 class="field-label">Example data</h3>
-    <div class="example-data-content-type">Content-Type: application/json</div>
-    <pre class="example"><code>{
-  "publicId" : "aWtlaXY5QWl0aDllCg",
-  "virtualCardId" : "YXBpMWhhZXhhaUhvCg",
-  "state" : "STARTED",
-  "items" : [ {
-    "publicId" : "SW9zMmxhaHBoZXF1Cg",
-    "itemDefinitionId" : "SW9zMmxhaHBoZXF1Cg"
-  } ]
-}</code></pre>
-
-    <h3 class="field-label">Produces</h3>
-    This API call produces the following media types according to the <span class="header">Accept</span> request header;
-    the media type will be conveyed by the <span class="header">Content-Type</span> response header.
-    <ul>
-      <li><code>application/json</code></li>
-    </ul>
-
-    <h3 class="field-label">Responses</h3>
-    <h4 class="field-label">200</h4>
-    Successful operation
-        <a href="#GetBusinessTransactionResponse">GetBusinessTransactionResponse</a>
-    <h4 class="field-label">404</h4>
-    Does not exist or forbidden
         <a href="#DefaultResponse">DefaultResponse</a>
   </div> <!-- method -->
   <hr/>
@@ -2154,7 +2150,6 @@ font-style: italic;
     <li><a href="#LocalCardAPIModel"><code>LocalCardAPIModel</code> - </a></li>
     <li><a href="#OwnedItemAPIModel"><code>OwnedItemAPIModel</code> - </a></li>
     <li><a href="#PatchBusinessAccountRequest"><code>PatchBusinessAccountRequest</code> - </a></li>
-    <li><a href="#PatchBusinessItemDefinitionRequest"><code>PatchBusinessItemDefinitionRequest</code> - </a></li>
     <li><a href="#PostAccountEmailConfirmationRequest"><code>PostAccountEmailConfirmationRequest</code> - </a></li>
     <li><a href="#PostAccountEmailRequest"><code>PostAccountEmailRequest</code> - </a></li>
     <li><a href="#PostAccountPasswordRequest"><code>PostAccountPasswordRequest</code> - </a></li>
@@ -2174,6 +2169,7 @@ font-style: italic;
     <li><a href="#PostUserVirtualCardTransactionRequest"><code>PostUserVirtualCardTransactionRequest</code> - </a></li>
     <li><a href="#PostUserVirtualCardTransactionResponse"><code>PostUserVirtualCardTransactionResponse</code> - </a></li>
     <li><a href="#PublicBusinessDetailsAPIModel"><code>PublicBusinessDetailsAPIModel</code> - </a></li>
+    <li><a href="#PutBusinessItemDefinitionRequest"><code>PutBusinessItemDefinitionRequest</code> - </a></li>
     <li><a href="#ShortBusinessDetailsAPIModel"><code>ShortBusinessDetailsAPIModel</code> - </a></li>
     <li><a href="#ShortVirtualCardAPIModel"><code>ShortVirtualCardAPIModel</code> - </a></li>
     <li><a href="#TransactionItemDetailAPIModel"><code>TransactionItemDetailAPIModel</code> - </a></li>
@@ -2347,21 +2343,6 @@ font-style: italic;
     </div>  <!-- field-items -->
   </div>
   <div class="model">
-    <h3><a name="PatchBusinessItemDefinitionRequest"><code>PatchBusinessItemDefinitionRequest</code> - </a> <a class="up" href="#__Models">Up</a></h3>
-    <div class='model-description'></div>
-    <div class="field-items">
-      <div class="param">publicId (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
-<div class="param">name (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
-<div class="param">price (optional)</div><div class="param-desc"><span class="param-type"><a href="#integer">Integer</a></span>  </div>
-<div class="param">description (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
-<div class="param">imageId (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
-<div class="param">startDate (optional)</div><div class="param-desc"><span class="param-type"><a href="#DateTime">Date</a></span>  format: date-time</div>
-<div class="param">endDate (optional)</div><div class="param-desc"><span class="param-type"><a href="#DateTime">Date</a></span>  format: date-time</div>
-<div class="param">maxAmount (optional)</div><div class="param-desc"><span class="param-type"><a href="#integer">Integer</a></span>  </div>
-<div class="param">available (optional)</div><div class="param-desc"><span class="param-type"><a href="#boolean">Boolean</a></span>  </div>
-    </div>  <!-- field-items -->
-  </div>
-  <div class="model">
     <h3><a name="PostAccountEmailConfirmationRequest"><code>PostAccountEmailConfirmationRequest</code> - </a> <a class="up" href="#__Models">Up</a></h3>
     <div class='model-description'></div>
     <div class="field-items">
@@ -2447,11 +2428,9 @@ font-style: italic;
     <h3><a name="PostBusinessItemDefinitionRequest"><code>PostBusinessItemDefinitionRequest</code> - </a> <a class="up" href="#__Models">Up</a></h3>
     <div class='model-description'></div>
     <div class="field-items">
-      <div class="param">publicId (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
-<div class="param">name (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+      <div class="param">name (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
 <div class="param">price (optional)</div><div class="param-desc"><span class="param-type"><a href="#integer">Integer</a></span>  </div>
 <div class="param">description (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
-<div class="param">imageId (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
 <div class="param">startDate (optional)</div><div class="param-desc"><span class="param-type"><a href="#DateTime">Date</a></span>  format: date-time</div>
 <div class="param">endDate (optional)</div><div class="param-desc"><span class="param-type"><a href="#DateTime">Date</a></span>  format: date-time</div>
 <div class="param">maxAmount (optional)</div><div class="param-desc"><span class="param-type"><a href="#integer">Integer</a></span>  </div>
@@ -2524,6 +2503,19 @@ font-style: italic;
 <div class="param">iconImageId (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
 <div class="param">menuImageIds (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">array[String]</a></span>  </div>
 <div class="param">itemDefinitions (optional)</div><div class="param-desc"><span class="param-type"><a href="#ItemDefinitionAPIModel">array[ItemDefinitionAPIModel]</a></span>  </div>
+    </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="PutBusinessItemDefinitionRequest"><code>PutBusinessItemDefinitionRequest</code> - </a> <a class="up" href="#__Models">Up</a></h3>
+    <div class='model-description'></div>
+    <div class="field-items">
+      <div class="param">name (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">price (optional)</div><div class="param-desc"><span class="param-type"><a href="#integer">Integer</a></span>  </div>
+<div class="param">description (optional)</div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">startDate (optional)</div><div class="param-desc"><span class="param-type"><a href="#DateTime">Date</a></span>  format: date-time</div>
+<div class="param">endDate (optional)</div><div class="param-desc"><span class="param-type"><a href="#DateTime">Date</a></span>  format: date-time</div>
+<div class="param">maxAmount (optional)</div><div class="param-desc"><span class="param-type"><a href="#integer">Integer</a></span>  </div>
+<div class="param">available (optional)</div><div class="param-desc"><span class="param-type"><a href="#boolean">Boolean</a></span>  </div>
     </div>  <!-- field-items -->
   </div>
   <div class="model">

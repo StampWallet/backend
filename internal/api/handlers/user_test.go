@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http/httptest"
 	"reflect"
@@ -258,23 +259,23 @@ func TestUserHandlersGetBusinessesOk(t *testing.T) {
 			{
 				PublicId:    testItemDef.PublicId,
 				Name:        testItemDef.Name,
-				Price:       int32(testItemDef.Price),
+				Price:       Ptr(int32(testItemDef.Price)),
 				Description: testItemDef.Description,
 				ImageId:     testItemDef.ImageId,
 				StartDate:   &sd,
 				EndDate:     &ed,
-				MaxAmount:   int32(testItemDef.MaxAmount),
+				MaxAmount:   Ptr(int32(testItemDef.MaxAmount)),
 				Available:   testItemDef.Available,
 			},
 			{
 				PublicId:    testItemDef2.PublicId,
 				Name:        testItemDef2.Name,
-				Price:       int32(testItemDef2.Price),
+				Price:       Ptr(int32(testItemDef2.Price)),
 				Description: testItemDef2.Description,
 				ImageId:     testItemDef2.ImageId,
 				StartDate:   &sd2,
 				EndDate:     &ed2,
-				MaxAmount:   int32(testItemDef2.MaxAmount),
+				MaxAmount:   Ptr(int32(testItemDef2.MaxAmount)),
 				Available:   testItemDef2.Available,
 			},
 		},
@@ -299,6 +300,7 @@ func TestUserHandlersGetBusinessesOk(t *testing.T) {
 
 	require.Nilf(t, respParseErr, "Failed to parse JSON response")
 	require.Equalf(t, respCode, int(200), "Response returned unexpected status code")
+	fmt.Printf("%+v %+v", respBodyExpected, *respBody)
 	require.Truef(t, reflect.DeepEqual(respBodyExpected, *respBody), "Response returned unexpected body contents")
 }
 
@@ -447,12 +449,12 @@ func TestUserVirtualCardHandlersGetCardOk(t *testing.T) {
 				{
 					PublicId:    testItemDef.PublicId,
 					Name:        testItemDef.Name,
-					Price:       int32(testItemDef.Price),
+					Price:       Ptr(int32(testItemDef.Price)),
 					Description: testItemDef.Description,
 					ImageId:     testItemDef.ImageId,
 					StartDate:   &sd,
 					EndDate:     &ed,
-					MaxAmount:   int32(testItemDef.MaxAmount),
+					MaxAmount:   Ptr(int32(testItemDef.MaxAmount)),
 					Available:   testItemDef.Available,
 				},
 			},
@@ -487,7 +489,8 @@ func TestUserVirtualCardHandlersGetCardOk(t *testing.T) {
 
 	require.Nilf(t, respParseErr, "Failed to parse JSON response")
 	require.Equalf(t, respCode, int(200), "Response returned unexpected status code")
-	require.Truef(t, reflect.DeepEqual(respBodyExpected, respBody), "Response returned unexpected body contents")
+	fmt.Printf("%+v %+v", respBodyExpected, *respBody)
+	require.Truef(t, reflect.DeepEqual(*respBodyExpected, *respBody), "Response returned unexpected body contents")
 }
 
 func TestUserVirtualCardHandlersPostItemOk(t *testing.T) {
