@@ -433,7 +433,8 @@ func TestBusinessHandlersGetAccountInfoOk(t *testing.T) {
 	require.Nilf(t, respParseErr, "Failed to parse JSON response")
 	require.Equalf(t, int(200), respCode, "Response returned unexpected status code")
 	fmt.Printf("%+v\n%+v\n", *respBodyExpected, *respBody)
-	require.Truef(t, reflect.DeepEqual(*respBodyExpected, *respBody), "Response returned unexpected body contents")
+
+	require.Truef(t, EqualStructs(*respBodyExpected, *respBody), "Response returned unexpected body contents")
 	// TODO: test MatchEntities and gomock.Eq
 }
 

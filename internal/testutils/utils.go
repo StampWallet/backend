@@ -3,9 +3,11 @@ package testutils
 import (
 	"bytes"
 	"io"
+	"math"
 	"os"
 	"path"
 	"reflect"
+	"sort"
 	"time"
 
 	"database/sql/driver"
@@ -16,6 +18,7 @@ import (
 
 	"github.com/StampWallet/backend/internal/database"
 	"github.com/gin-gonic/gin"
+	"github.com/google/go-cmp/cmp"
 )
 
 // Recursively compares matcher with obj. Only keys present in matcher are compared
@@ -218,4 +221,38 @@ func ExtractResponse[T any](w *httptest.ResponseRecorder) (*T, int, error) {
 
 func TimeJustAroundNow(x time.Time) bool {
 	return time.Now().After(x) && time.Now().Add(-5*time.Minute).Before(x)
+}
+
+func EqualStructs(a interface{}, b interface{}) bool {
+	// from https://pkg.go.dev/github.com/google/go-cmp/cmp#Option
+	alwaysEqual := cmp.Comparer(func(_, _ interface{}) bool { return true })
+	opts := cmp.Options{
+		// This option declares that a float64 comparison is equal only if
+		// both inputs are NaN.
+		cmp.FilterValues(func(x, y float64) bool {
+			return math.IsNaN(x) && math.IsNaN(y)
+		}, alwaysEqual),
+
+		// This option declares approximate equality on float64s only if
+		// both inputs are not NaN.
+		cmp.FilterValues(func(x, y float64) bool {
+			return !math.IsNaN(x) && !math.IsNaN(y)
+		}, cmp.Comparer(func(x, y float64) bool {
+			delta := math.Abs(x - y)
+			mean := math.Abs(x+y) / 2.0
+			return delta/mean < 0.00001
+		})),
+		cmp.Transformer("Sort", func(in []int) []int {
+			out := append([]int(nil), in...) // Copy input to avoid mutating it
+			sort.Ints(out)
+			return out
+		}),
+		cmp.FilterValues(func(x, y interface{}) bool {
+			vx, vy := reflect.ValueOf(x), reflect.ValueOf(y)
+			return (vx.IsValid() && vy.IsValid() && vx.Type() == vy.Type()) &&
+				(vx.Kind() == reflect.Slice || vx.Kind() == reflect.Map) &&
+				(vx.Len() == 0 && vy.Len() == 0)
+		}, alwaysEqual),
+	}
+	return cmp.Equal(a, b, opts)
 }
