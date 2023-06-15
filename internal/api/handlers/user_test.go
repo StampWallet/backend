@@ -6,12 +6,14 @@ import (
 	"net/http/httptest"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 
 	api "github.com/StampWallet/backend/internal/api/models"
+	apiUtils "github.com/StampWallet/backend/internal/api/utils"
 	"github.com/StampWallet/backend/internal/database"
 	accessors "github.com/StampWallet/backend/internal/database/accessors"
 	. "github.com/StampWallet/backend/internal/database/accessors/mocks"
@@ -50,11 +52,12 @@ func getUserHandlers(ctrl *gomock.Controller) *UserHandlers {
 
 func getVirtualCardHandlers(ctrl *gomock.Controller) *UserVirtualCardHandlers {
 	return &UserVirtualCardHandlers{
-		virtualCardManager:    NewMockVirtualCardManager(ctrl),
-		transactionManager:    NewMockTransactionManager(ctrl),
-		itemDefinitionManager: NewMockItemDefinitionManager(ctrl),
-		userAuthorizedAcessor: NewMockUserAuthorizedAccessor(ctrl),
-		logger:                log.Default(),
+		virtualCardManager:            NewMockVirtualCardManager(ctrl),
+		transactionManager:            NewMockTransactionManager(ctrl),
+		itemDefinitionManager:         NewMockItemDefinitionManager(ctrl),
+		userAuthorizedAcessor:         NewMockUserAuthorizedAccessor(ctrl),
+		authorizedTransactionAccessor: NewMockAuthorizedTransactionAccessor(ctrl),
+		logger:                        log.Default(),
 	}
 }
 
@@ -116,12 +119,12 @@ func TestUserHandlersGetUserCardsOk(t *testing.T) {
 		VirtualCards: []api.ShortVirtualCardApiModel{
 			{
 				BusinessDetails: api.ShortBusinessDetailsApiModel{
-					PublicId:    testBusiness.PublicId,
-					Name:        testBusiness.Name,
-					Description: testBusiness.Description,
-					// GpsCoordinates: testBusiness.GPSCoordinates, TODO GPSCoordinates to string
-					BannerImageId: testBusiness.BannerImageId,
-					IconImageId:   testBusiness.IconImageId,
+					PublicId:       testBusiness.PublicId,
+					Name:           testBusiness.Name,
+					Description:    testBusiness.Description,
+					GpsCoordinates: testBusiness.GPSCoordinates.ToString(),
+					BannerImageId:  testBusiness.BannerImageId,
+					IconImageId:    testBusiness.IconImageId,
 				},
 				Points: int32(testVirtualCard.Points),
 			},
@@ -149,7 +152,6 @@ func TestUserHandlersGetUserCardsOk(t *testing.T) {
 	require.Nilf(t, respParseErr, "Failed to parse JSON response")
 	require.Equalf(t, int(200), respCode, "Response returned unexpected status code")
 	require.Truef(t, reflect.DeepEqual(*respBodyExpected, *respBody), "Response returned unexpected body contents")
-	// TODO: test MatchEntities and gomock.Eq
 }
 
 func TestUserHandlersGetSearchBusinessesOk(t *testing.T) {
@@ -174,12 +176,12 @@ func TestUserHandlersGetSearchBusinessesOk(t *testing.T) {
 	respBodyExpected := api.GetUserBusinessesSearchResponse{
 		Businesses: []api.ShortBusinessDetailsApiModel{
 			{
-				PublicId:    testBusiness.PublicId,
-				Name:        testBusiness.Name,
-				Description: testBusiness.Description,
-				// GpsCoordinates: testBusiness.GPSCoordinates, TODO GpsCoordinates to string
-				BannerImageId: testBusiness.BannerImageId,
-				IconImageId:   testBusiness.IconImageId,
+				PublicId:       testBusiness.PublicId,
+				Name:           testBusiness.Name,
+				Description:    testBusiness.Description,
+				GpsCoordinates: testBusiness.GPSCoordinates.ToString(),
+				BannerImageId:  testBusiness.BannerImageId,
+				IconImageId:    testBusiness.IconImageId,
 			},
 		},
 	}
@@ -207,8 +209,100 @@ func TestUserHandlersGetSearchBusinessesOk(t *testing.T) {
 	require.Nilf(t, respParseErr, "Failed to parse JSON response")
 	require.Equalf(t, respCode, int(200), "Response returned unexpected status code")
 	require.Truef(t, reflect.DeepEqual(respBodyExpected, *respBody), "Response returned unexpected body contents")
-	// TODO: test MatchEntities and gomock.Eq
 }
+
+func TestUserHandlersGetBusinessesOk(t *testing.T) {
+	testUser := GetDefaultUser()
+	testBusinessUser := GetDefaultUser()
+	testBusiness := GetDefaultBusiness(testBusinessUser)
+	testMenuImage := GetTestMenuImage(nil, testBusinessUser.Business)
+	testMenuImage2 := GetTestMenuImage(nil, testBusinessUser.Business)
+	testItemDef := GetTestItemDefinition(nil, testBusinessUser.Business, *GetTestFileMetadata(nil, testBusinessUser))
+	testItemDef2 := GetTestItemDefinition(nil, testBusinessUser.Business, *GetTestFileMetadata(nil, testBusinessUser))
+
+	gin.SetMode(gin.TestMode)
+	w := httptest.NewRecorder()
+
+	context := NewTestContextBuilder(w).
+		SetDefaultUrl().
+		SetEndpoint("/user/businesses/"+testBusiness.PublicId).
+		SetUser(testUser).
+		SetMethod("GET").
+		SetDefaultToken().
+		SetParam("businessId", testBusiness.PublicId).
+		Context
+
+	sd := testItemDef.StartDate.Time.Truncate(time.Millisecond)
+	ed := testItemDef.EndDate.Time.Truncate(time.Millisecond)
+	sd2 := testItemDef2.StartDate.Time.Truncate(time.Millisecond)
+	ed2 := testItemDef2.EndDate.Time.Truncate(time.Millisecond)
+
+	testItemDef.StartDate.Time = sd
+	testItemDef.EndDate.Time = ed
+	testItemDef2.StartDate.Time = sd2
+	testItemDef2.EndDate.Time = ed2
+
+	testBusiness.MenuImages = []database.MenuImage{*testMenuImage, *testMenuImage2}
+	testBusiness.ItemDefinitions = []database.ItemDefinition{*testItemDef, *testItemDef2}
+
+	respBodyExpected := api.PublicBusinessDetailsApiModel{
+		PublicId:       testBusiness.PublicId,
+		Name:           testBusiness.Name,
+		Address:        testBusiness.Address,
+		Description:    testBusiness.Description,
+		GpsCoordinates: testBusiness.GPSCoordinates.ToString(),
+		BannerImageId:  testBusiness.BannerImageId,
+		IconImageId:    testBusiness.IconImageId,
+		MenuImageIds:   []string{testMenuImage.FileId, testMenuImage2.FileId},
+		ItemDefinitions: []api.ItemDefinitionApiModel{
+			{
+				PublicId:    testItemDef.PublicId,
+				Name:        testItemDef.Name,
+				Price:       int32(testItemDef.Price),
+				Description: testItemDef.Description,
+				ImageId:     testItemDef.ImageId,
+				StartDate:   &sd,
+				EndDate:     &ed,
+				MaxAmount:   int32(testItemDef.MaxAmount),
+				Available:   testItemDef.Available,
+			},
+			{
+				PublicId:    testItemDef2.PublicId,
+				Name:        testItemDef2.Name,
+				Price:       int32(testItemDef2.Price),
+				Description: testItemDef2.Description,
+				ImageId:     testItemDef2.ImageId,
+				StartDate:   &sd2,
+				EndDate:     &ed2,
+				MaxAmount:   int32(testItemDef2.MaxAmount),
+				Available:   testItemDef2.Available,
+			},
+		},
+	}
+
+	// test env prep
+	ctrl := gomock.NewController(t)
+	handler := getUserHandlers(ctrl)
+
+	// setup mocks
+	handler.businessManager.(*MockBusinessManager).
+		EXPECT().
+		GetById(
+			testBusiness.PublicId,
+			true,
+		).
+		Return(testBusiness, nil)
+
+	handler.getBusiness(context)
+
+	respBody, respCode, respParseErr := ExtractResponse[api.PublicBusinessDetailsApiModel](w)
+
+	require.Nilf(t, respParseErr, "Failed to parse JSON response")
+	require.Equalf(t, respCode, int(200), "Response returned unexpected status code")
+	require.Truef(t, reflect.DeepEqual(respBodyExpected, *respBody), "Response returned unexpected body contents")
+}
+
+//		VirtualCardHandlers
 
 func TestUserVirtualCardHandlersPostCardOk(t *testing.T) {
 	testUser := GetDefaultUser()
@@ -226,9 +320,10 @@ func TestUserVirtualCardHandlersPostCardOk(t *testing.T) {
 		SetMethod("POST").
 		SetHeader("Content-Type", "application/json").
 		SetDefaultToken().
+		SetParam("businessId", testBusiness.PublicId).
 		Context
 
-	respBodyExpected := &api.DefaultResponse{Status: api.OK}
+	respBodyExpected := &api.DefaultResponse{Status: api.CREATED}
 
 	// test env prep
 	ctrl := gomock.NewController(t)
@@ -238,7 +333,7 @@ func TestUserVirtualCardHandlersPostCardOk(t *testing.T) {
 		EXPECT().
 		Create(
 			gomock.Eq(testUser),
-			gomock.Eq(testBusiness),
+			gomock.Eq(testBusiness.PublicId),
 		).
 		Return(
 			testCard,
@@ -251,8 +346,7 @@ func TestUserVirtualCardHandlersPostCardOk(t *testing.T) {
 
 	require.Nilf(t, respParseErr, "Failed to parse JSON response")
 	require.Equalf(t, respCode, int(201), "Response returned unexpected status code")
-	require.Truef(t, MatchEntities(respBodyExpected, respBody), "Response returned unexpected body contents")
-	// TODO: test MatchEntities and gomock.Eq
+	require.Truef(t, reflect.DeepEqual(respBodyExpected, respBody), "Response returned unexpected body contents")
 }
 
 func TestUserVirtualCardHandlersDeleteCardOk(t *testing.T) {
@@ -271,6 +365,7 @@ func TestUserVirtualCardHandlersDeleteCardOk(t *testing.T) {
 		SetMethod("DELETE").
 		SetHeader("Content-Type", "application/json").
 		SetDefaultToken().
+		SetParam("businessId", testBusiness.PublicId).
 		Context
 
 	respBodyExpected := &api.DefaultResponse{Status: api.OK}
@@ -283,7 +378,7 @@ func TestUserVirtualCardHandlersDeleteCardOk(t *testing.T) {
 		EXPECT().
 		Get(
 			gomock.Eq(testUser),
-			gomock.Eq(database.VirtualCard{PublicId: testCard.PublicId}),
+			gomock.Eq(&database.VirtualCard{Business: &database.Business{PublicId: testBusiness.PublicId}}),
 		).
 		Return(
 			testCard,
@@ -301,8 +396,7 @@ func TestUserVirtualCardHandlersDeleteCardOk(t *testing.T) {
 
 	require.Nilf(t, respParseErr, "Failed to parse JSON response")
 	require.Equalf(t, respCode, int(200), "Response returned unexpected status code")
-	require.Truef(t, MatchEntities(respBodyExpected, respBody), "Response returned unexpected body contents")
-	// TODO: test MatchEntities and gomock.Eq
+	require.Truef(t, reflect.DeepEqual(respBodyExpected, respBody), "Response returned unexpected body contents")
 }
 
 func TestUserVirtualCardHandlersGetCardOk(t *testing.T) {
@@ -312,6 +406,7 @@ func TestUserVirtualCardHandlersGetCardOk(t *testing.T) {
 	testCard := GetTestVirtualCard(nil, testUser, testBusiness)
 	testItemDef := GetDefaultItem(testBusiness)
 	testOwnedItem := GetDefaultOwnedItem(testItemDef, testCard)
+	testMenuImage := GetTestMenuImage(nil, testBusiness)
 
 	gin.SetMode(gin.TestMode)
 	w := httptest.NewRecorder()
@@ -323,7 +418,11 @@ func TestUserVirtualCardHandlersGetCardOk(t *testing.T) {
 		SetMethod("GET").
 		SetHeader("Content-Type", "application/json").
 		SetDefaultToken().
+		SetParam("businessId", testBusiness.PublicId).
 		Context
+
+	sd := testItemDef.StartDate.Time.Truncate(time.Duration(0))
+	ed := testItemDef.EndDate.Time.Truncate(time.Duration(0))
 
 	respBodyExpected := &api.GetUserVirtualCardResponse{
 		Points: int32(testCard.Points),
@@ -334,14 +433,15 @@ func TestUserVirtualCardHandlersGetCardOk(t *testing.T) {
 			},
 		},
 		BusinessDetails: api.PublicBusinessDetailsApiModel{
-			PublicId: testBusiness.PublicId,
-			Name:     testBusiness.Name,
-			Address:  testBusiness.Address,
-			// GpsCoordinates: testBusiness.GPSCoordinates, TODO GPSCoordinates to string
-			BannerImageId: testBusiness.BannerImageId,
-			IconImageId:   testBusiness.IconImageId,
+			PublicId:       testBusiness.PublicId,
+			Name:           testBusiness.Name,
+			Address:        testBusiness.Address,
+			Description:    testBusiness.Description,
+			GpsCoordinates: testBusiness.GPSCoordinates.ToString(),
+			BannerImageId:  testBusiness.BannerImageId,
+			IconImageId:    testBusiness.IconImageId,
 			MenuImageIds: []string{
-				"bXU5YWltMm1haUdpCg",
+				testMenuImage.FileId,
 			},
 			ItemDefinitions: []api.ItemDefinitionApiModel{
 				{
@@ -350,8 +450,8 @@ func TestUserVirtualCardHandlersGetCardOk(t *testing.T) {
 					Price:       int32(testItemDef.Price),
 					Description: testItemDef.Description,
 					ImageId:     testItemDef.ImageId,
-					StartDate:   &testItemDef.StartDate.Time,
-					EndDate:     &testItemDef.EndDate.Time,
+					StartDate:   &sd,
+					EndDate:     &ed,
 					MaxAmount:   int32(testItemDef.MaxAmount),
 					Available:   testItemDef.Available,
 				},
@@ -363,14 +463,21 @@ func TestUserVirtualCardHandlersGetCardOk(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	handler := getVirtualCardHandlers(ctrl)
 
-	handler.virtualCardManager.(*MockVirtualCardManager).
+	testCard.Business = testBusiness
+	testCard.OwnedItems = []database.OwnedItem{*testOwnedItem}
+	testBusiness.ItemDefinitions = []database.ItemDefinition{*testItemDef}
+	testBusiness.MenuImages = []database.MenuImage{*testMenuImage}
+
+	handler.userAuthorizedAcessor.(*MockUserAuthorizedAccessor).
 		EXPECT().
-		Create(
+		GetAll(
 			gomock.Eq(testUser),
-			gomock.Eq(testBusiness.PublicId),
+			gomock.Eq(&database.VirtualCard{Business: &database.Business{PublicId: testBusiness.PublicId}}),
+			gomock.Eq([]string{"Business", "Business.ItemDefinitions", "Business.MenuImages",
+				"OwnedItems", "OwnedItems.ItemDefinition"}),
 		).
 		Return(
-			testCard,
+			[]accessors.UserOwnedEntity{testCard},
 			nil,
 		)
 
@@ -380,8 +487,7 @@ func TestUserVirtualCardHandlersGetCardOk(t *testing.T) {
 
 	require.Nilf(t, respParseErr, "Failed to parse JSON response")
 	require.Equalf(t, respCode, int(200), "Response returned unexpected status code")
-	require.Truef(t, MatchEntities(respBodyExpected, respBody), "Response returned unexpected body contents")
-	// TODO: test MatchEntities and gomock.Eq
+	require.Truef(t, reflect.DeepEqual(respBodyExpected, respBody), "Response returned unexpected body contents")
 }
 
 func TestUserVirtualCardHandlersPostItemOk(t *testing.T) {
@@ -402,6 +508,8 @@ func TestUserVirtualCardHandlersPostItemOk(t *testing.T) {
 		SetMethod("POST").
 		SetHeader("Content-Type", "application/json").
 		SetDefaultToken().
+		SetParam("businessId", testBusiness.PublicId).
+		SetParam("itemDefinitionId", testItemDef.PublicId).
 		Context
 
 	respBodyExpected := &api.PostUserVirtualCardItemResponse{
@@ -416,21 +524,10 @@ func TestUserVirtualCardHandlersPostItemOk(t *testing.T) {
 		EXPECT().
 		Get(
 			gomock.Eq(testUser),
-			gomock.Eq(database.VirtualCard{PublicId: testBusiness.PublicId}), // Q: equivalence of vcard id and business id?
+			gomock.Eq(&database.VirtualCard{Business: &database.Business{PublicId: testBusiness.PublicId}}), // Q: equivalence of vcard id and business id?
 		).
 		Return(
 			testCard,
-			nil,
-		)
-
-	handler.userAuthorizedAcessor.(*MockUserAuthorizedAccessor).
-		EXPECT().
-		Get(
-			gomock.Eq(testUser),
-			gomock.Eq(database.ItemDefinition{PublicId: testItemDef.PublicId}),
-		).
-		Return(
-			testItemDef,
 			nil,
 		)
 
@@ -438,21 +535,20 @@ func TestUserVirtualCardHandlersPostItemOk(t *testing.T) {
 		EXPECT().
 		BuyItem(
 			gomock.Eq(testCard),
-			gomock.Eq(testItemDef),
+			gomock.Eq(testItemDef.PublicId),
 		).
 		Return(
 			testOwnedItem,
 			nil,
 		)
 
-	handler.postItem(context)
+	handler.postItemDefinition(context)
 
 	respBody, respCode, respParseErr := ExtractResponse[api.PostUserVirtualCardItemResponse](w)
 
 	require.Nilf(t, respParseErr, "Failed to parse JSON response")
 	require.Equalf(t, respCode, int(201), "Response returned unexpected status code")
-	require.Truef(t, MatchEntities(respBodyExpected, respBody), "Response returned unexpected body contents")
-	// TODO: test MatchEntities and gomock.Eq
+	require.Truef(t, reflect.DeepEqual(respBodyExpected, respBody), "Response returned unexpected body contents")
 }
 
 func TestUserVirtualCardHandlersDeleteItemOk(t *testing.T) {
@@ -473,6 +569,8 @@ func TestUserVirtualCardHandlersDeleteItemOk(t *testing.T) {
 		SetMethod("DELETE").
 		SetHeader("Content-Type", "application/json").
 		SetDefaultToken().
+		SetParam("businessId", testBusiness.PublicId).
+		SetParam("itemId", testOwnedItem.PublicId).
 		Context
 
 	respBodyExpected := &api.DefaultResponse{Status: api.OK}
@@ -485,7 +583,18 @@ func TestUserVirtualCardHandlersDeleteItemOk(t *testing.T) {
 		EXPECT().
 		Get(
 			gomock.Eq(testUser),
-			gomock.Eq(database.OwnedItem{PublicId: testOwnedItem.PublicId}),
+			gomock.Eq(&database.VirtualCard{Business: &database.Business{PublicId: testBusiness.PublicId}}),
+		).
+		Return(
+			testCard,
+			nil,
+		)
+
+	handler.userAuthorizedAcessor.(*MockUserAuthorizedAccessor).
+		EXPECT().
+		Get(
+			gomock.Eq(testUser),
+			gomock.Eq(&database.OwnedItem{PublicId: testOwnedItem.PublicId, VirtualCardId: testCard.ID}),
 		).
 		Return(
 			testOwnedItem,
@@ -502,9 +611,8 @@ func TestUserVirtualCardHandlersDeleteItemOk(t *testing.T) {
 	respBody, respCode, respParseErr := ExtractResponse[api.DefaultResponse](w)
 
 	require.Nilf(t, respParseErr, "Failed to parse JSON response")
-	require.Equalf(t, respCode, int(201), "Response returned unexpected status code")
-	require.Truef(t, MatchEntities(respBodyExpected, respBody), "Response returned unexpected body contents")
-	// TODO: test MatchEntities and gomock.Eq
+	require.Equalf(t, respCode, int(200), "Response returned unexpected status code")
+	require.Truef(t, reflect.DeepEqual(respBodyExpected, respBody), "Response returned unexpected body contents")
 }
 
 func TestUserVirtualCardHandlersPostTransactionOk(t *testing.T) {
@@ -539,6 +647,7 @@ func TestUserVirtualCardHandlersPostTransactionOk(t *testing.T) {
 		SetHeader("Content-Type", "application/json").
 		SetDefaultToken().
 		SetBody(payloadJson).
+		SetParam("businessId", testBusiness.PublicId).
 		Context
 
 	respBodyExpected := &api.PostUserVirtualCardTransactionResponse{
@@ -554,10 +663,22 @@ func TestUserVirtualCardHandlersPostTransactionOk(t *testing.T) {
 		EXPECT().
 		Get(
 			gomock.Eq(testUser),
-			gomock.Eq(database.VirtualCard{PublicId: testBusiness.PublicId}), // Q: vcard business id equivalence
+			gomock.Eq(&database.VirtualCard{Business: &database.Business{PublicId: testBusiness.PublicId}}),
+			// Q: vcard business id equivalence
 		).
 		Return(
 			testCard,
+			nil,
+		)
+
+	handler.virtualCardManager.(*MockVirtualCardManager).
+		EXPECT().
+		FilterOwnedItems(
+			gomock.Eq(testCard),
+			gomock.Eq([]string{testOwnedItem.PublicId}),
+		).
+		Return(
+			[]database.OwnedItem{*testOwnedItem},
 			nil,
 		)
 
@@ -577,10 +698,124 @@ func TestUserVirtualCardHandlersPostTransactionOk(t *testing.T) {
 	respBody, respCode, respParseErr := ExtractResponse[api.PostUserVirtualCardTransactionResponse](w)
 
 	require.Nilf(t, respParseErr, "Failed to parse JSON response")
-	require.Equalf(t, respCode, int(200), "Response returned unexpected status code")
-	require.Truef(t, MatchEntities(respBodyExpected, respBody), "Response returned unexpected body contents")
-	// TODO: test MatchEntities and gomock.Eq
+	require.Equalf(t, respCode, int(201), "Response returned unexpected status code")
+	require.Truef(t, reflect.DeepEqual(respBodyExpected, respBody), "Response returned unexpected body contents")
 }
+
+func TestUserVirtualCardHandlersGetTransactionOk(t *testing.T) {
+	testUser := GetDefaultUser()
+	testBusinessUser := GetDefaultUser()
+	testBusiness := GetDefaultBusiness(testBusinessUser)
+	testCard := GetTestVirtualCard(nil, testUser, testBusiness)
+	testItemDef := GetDefaultItem(testBusiness)
+	testOwnedItem := GetDefaultOwnedItem(testItemDef, testCard)
+	testTransaction, _ := GetTestTransaction(
+		nil,
+		testCard,
+		[]database.OwnedItem{*testOwnedItem},
+	)
+
+	gin.SetMode(gin.TestMode)
+	w := httptest.NewRecorder()
+
+	context := NewTestContextBuilder(w).
+		SetDefaultUrl().
+		SetEndpoint("/user/cards/virtual/"+testBusiness.PublicId+"/transaction/"+testTransaction.Code).
+		SetUser(testUser).
+		SetMethod("POST").
+		SetHeader("Accept", "application/json").
+		SetDefaultToken().
+		SetParam("businessId", testBusiness.PublicId).
+		SetParam("transactionCode", testTransaction.Code).
+		Context
+
+	respBodyExpected := &api.GetUserVirtualCardTransactionResponse{
+		PublicId:    testTransaction.PublicId,
+		State:       apiUtils.ConvertDbTransactionState(testTransaction.State),
+		AddedPoints: int32(testTransaction.AddedPoints),
+		ItemActions: []api.ItemActionApiModel{
+			{
+				ItemId: testOwnedItem.PublicId,
+				Action: apiUtils.ConvertDbItemAction(database.NoActionType),
+			},
+		},
+	}
+
+	// test env prep
+	ctrl := gomock.NewController(t)
+	handler := getVirtualCardHandlers(ctrl)
+
+	handler.authorizedTransactionAccessor.(*MockAuthorizedTransactionAccessor).
+		EXPECT().
+		GetForUser(
+			gomock.Eq(testUser),
+			gomock.Eq(testTransaction.Code),
+		).
+		Return(
+			testTransaction,
+			nil,
+		)
+
+	handler.getTransaction(context)
+
+	respBody, respCode, respParseErr := ExtractResponse[api.GetUserVirtualCardTransactionResponse](w)
+
+	require.Nilf(t, respParseErr, "Failed to parse JSON response")
+	require.Equalf(t, respCode, int(200), "Response returned unexpected status code")
+	require.Truef(t, reflect.DeepEqual(respBodyExpected, respBody), "Response returned unexpected body contents")
+}
+
+func testUserVirtualCardHandlersGetTransactionNotOk_tmpl(t *testing.T, err error) {
+	testUser := GetDefaultUser()
+	testBusinessUser := GetDefaultUser()
+	testBusiness := GetDefaultBusiness(testBusinessUser)
+
+	gin.SetMode(gin.TestMode)
+	w := httptest.NewRecorder()
+
+	context := NewTestContextBuilder(w).
+		SetDefaultUrl().
+		SetEndpoint("/user/cards/virtual/"+testBusiness.PublicId+"/transaction/"+"nothing").
+		SetUser(testUser).
+		SetMethod("POST").
+		SetHeader("Accept", "application/json").
+		SetDefaultToken().
+		SetParam("businessId", testBusiness.PublicId).
+		SetParam("transactionCode", "nothing").
+		Context
+
+	respBodyExpected := &api.DefaultResponse{Status: api.NOT_FOUND}
+
+	// test env prep
+	ctrl := gomock.NewController(t)
+	handler := getVirtualCardHandlers(ctrl)
+
+	handler.authorizedTransactionAccessor.(*MockAuthorizedTransactionAccessor).
+		EXPECT().
+		GetForUser(
+			gomock.Eq(testUser),
+			gomock.Eq("nothing"),
+		).
+		Return(
+			nil,
+			err,
+		)
+
+	handler.getTransaction(context)
+
+	respBody, respCode, respParseErr := ExtractResponse[api.DefaultResponse](w)
+
+	require.Nilf(t, respParseErr, "Failed to parse JSON response")
+	require.Equalf(t, respCode, int(404), "Response returned unexpected status code")
+	require.Truef(t, reflect.DeepEqual(respBodyExpected, respBody), "Response returned unexpected body contents")
+}
+
+func TestUserVirtualCardHandlersGetTransactionNotOk(t *testing.T) {
+	testUserVirtualCardHandlersGetTransactionNotOk_tmpl(t, accessors.ErrNoAccess)
+	testUserVirtualCardHandlersGetTransactionNotOk_tmpl(t, accessors.ErrNotFound)
+}
+
+// UserLocalCardHandlers
 
 func TestUserLocalCardHandlersPostCardOk(t *testing.T) {
 	testUser := GetDefaultUser()
@@ -636,7 +871,6 @@ func TestUserLocalCardHandlersPostCardOk(t *testing.T) {
 	require.Nilf(t, respParseErr, "Failed to parse JSON response")
 	require.Equalf(t, respCode, int(201), "Response returned unexpected status code")
 	require.Truef(t, reflect.DeepEqual(respBodyExpected, respBody), "Response returned unexpected body contents")
-	// TODO: test MatchEntities and gomock.Eq
 }
 
 func TestUserLocalCardHandlersDeleteCardOk(t *testing.T) {
@@ -685,5 +919,4 @@ func TestUserLocalCardHandlersDeleteCardOk(t *testing.T) {
 	require.Nilf(t, respParseErr, "Failed to parse JSON response")
 	require.Equalf(t, respCode, int(200), "Response returned unexpected status code")
 	require.Truef(t, reflect.DeepEqual(respBodyExpected, respBody), "Response returned unexpected body contents")
-	// TODO: test MatchEntities and gomock.Eq
 }

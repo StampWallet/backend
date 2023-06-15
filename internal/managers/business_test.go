@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
 
+	"github.com/StampWallet/backend/internal/database"
 	. "github.com/StampWallet/backend/internal/database"
 	//. "github.com/StampWallet/backend/internal/database/mocks"
 	. "github.com/StampWallet/backend/internal/services"
@@ -320,4 +321,40 @@ func TestBusinessManagerSearchExistingByNameAndLocation(t *testing.T) {
 	resultNone, errNone = manager.Search(Ptr("invalid name"), Ptr(FromCoords(27.59161, 086.56401)), 100, 0, 5)
 	require.Nilf(t, errNone, "BusinessManager.Search returned an error")
 	require.Equalf(t, 0, len(resultNone), "BusinessManager.Search returned more than one result")
+}
+
+func TestBusinessManagerGetById(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	manager := GetBusinessManager(ctrl)
+	user := GetTestUser(manager.baseServices.Database)
+	business := GetTestBusiness(manager.baseServices.Database, user)
+
+	result, err := manager.GetById(business.PublicId, false)
+	require.Nilf(t, err, "BusinessManager.GetById returned an error")
+	require.Equalf(t, business.PublicId, result.PublicId, "returned business has different public id")
+	require.Nilf(t, result.ItemDefinitions, "returned business has non empty item definition list")
+	require.Nilf(t, result.MenuImages, "returned business has non empty menu images list")
+}
+
+func TestBusinessManagerGetByIdWithDetails(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	manager := GetBusinessManager(ctrl)
+	user := GetTestUser(manager.baseServices.Database)
+	business := GetTestBusiness(manager.baseServices.Database, user)
+	itemDefinition := GetTestItemDefinition(manager.baseServices.Database, business,
+		*GetTestFileMetadata(manager.baseServices.Database, user))
+	menuImage := GetTestMenuImage(manager.baseServices.Database, business)
+
+	business.ItemDefinitions = []database.ItemDefinition{*itemDefinition}
+	business.MenuImages = []database.MenuImage{*menuImage}
+
+	result, err := manager.GetById(business.PublicId, true)
+	require.Nilf(t, err, "BusinessManager.GetById returned an error")
+	require.Equalf(t, business.PublicId, result.PublicId, "returned business has different public id")
+	require.Equalf(t, 1, len(result.ItemDefinitions), "returned business a different number of item definitions")
+	require.Equalf(t, 1, len(result.MenuImages), "returned business a different number of menu images")
+	require.Equalf(t, itemDefinition.PublicId, result.ItemDefinitions[0].PublicId, "returned business a different item definition")
+	require.Equalf(t, menuImage.FileId, result.MenuImages[0].FileId, "returned business a different menu image")
 }

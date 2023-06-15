@@ -2,7 +2,6 @@ package api
 
 import (
 	"log"
-	"time"
 
 	"github.com/gin-gonic/gin"
 
@@ -52,31 +51,6 @@ func CreateBusinessHandlers(
 		},
 
 		logger: logger,
-	}
-}
-
-// Converts ItemDefinition from database model to api model
-func convertItemDefinitionToApiModel(itd *ItemDefinition) api.ItemDefinitionApiModel {
-	var sd *time.Time
-	if itd.StartDate.Valid {
-		sd = &itd.StartDate.Time
-	}
-
-	var ed *time.Time
-	if itd.EndDate.Valid {
-		ed = &itd.EndDate.Time
-	}
-
-	return api.ItemDefinitionApiModel{
-		PublicId:    itd.PublicId,
-		Name:        itd.Name,
-		Price:       int32(itd.Price),
-		Description: itd.Description,
-		ImageId:     itd.ImageId,
-		StartDate:   sd,
-		EndDate:     ed,
-		MaxAmount:   int32(itd.MaxAmount),
-		Available:   itd.Available,
 	}
 }
 
@@ -204,7 +178,7 @@ func (handler *BusinessHandlers) getAccountInfo(c *gin.Context) {
 	// Convert ItemDefinitions
 	var itemDefinitions []api.ItemDefinitionApiModel
 	for _, v := range itemDefinitionsTmp {
-		itemDefinitions = append(itemDefinitions, convertItemDefinitionToApiModel(v.(*ItemDefinition)))
+		itemDefinitions = append(itemDefinitions, apiUtils.ConvertItemDefinitionToApiModel(v.(*ItemDefinition)))
 	}
 
 	c.JSON(200, api.GetBusinessAccountResponse{
@@ -376,7 +350,7 @@ func (handler *BusinessHandlers) postTransaction(c *gin.Context) {
 	_, err = handler.transactionManager.Finalize(transaction, itemActions, uint64(req.AddedPoints))
 	if err != nil {
 		handler.logger.Printf("failed to handler.transactionManager.Finalize in postTransaction %+v", err)
-		if err == InvalidItem {
+		if err == ErrInvalidItem {
 			c.JSON(400, api.DefaultResponse{Status: api.UNKNOWN_ERROR})
 			return
 		} else {

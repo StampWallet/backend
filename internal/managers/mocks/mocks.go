@@ -198,6 +198,21 @@ func (mr *MockBusinessManagerMockRecorder) Create(arg0, arg1 interface{}) *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockBusinessManager)(nil).Create), arg0, arg1)
 }
 
+// GetById mocks base method.
+func (m *MockBusinessManager) GetById(arg0 string, arg1 bool) (*database.Business, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetById", arg0, arg1)
+	ret0, _ := ret[0].(*database.Business)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetById indicates an expected call of GetById.
+func (mr *MockBusinessManagerMockRecorder) GetById(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetById", reflect.TypeOf((*MockBusinessManager)(nil).GetById), arg0, arg1)
+}
+
 // RemoveMenuImage mocks base method.
 func (m *MockBusinessManager) RemoveMenuImage(arg0 *database.MenuImage) error {
 	m.ctrl.T.Helper()
@@ -439,7 +454,7 @@ func (m *MockVirtualCardManager) EXPECT() *MockVirtualCardManagerMockRecorder {
 }
 
 // BuyItem mocks base method.
-func (m *MockVirtualCardManager) BuyItem(arg0 *database.VirtualCard, arg1 *database.ItemDefinition) (*database.OwnedItem, error) {
+func (m *MockVirtualCardManager) BuyItem(arg0 *database.VirtualCard, arg1 string) (*database.OwnedItem, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "BuyItem", arg0, arg1)
 	ret0, _ := ret[0].(*database.OwnedItem)
@@ -454,7 +469,7 @@ func (mr *MockVirtualCardManagerMockRecorder) BuyItem(arg0, arg1 interface{}) *g
 }
 
 // Create mocks base method.
-func (m *MockVirtualCardManager) Create(arg0 *database.User, arg1 *database.Business) (*database.VirtualCard, error) {
+func (m *MockVirtualCardManager) Create(arg0 *database.User, arg1 string) (*database.VirtualCard, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Create", arg0, arg1)
 	ret0, _ := ret[0].(*database.VirtualCard)
