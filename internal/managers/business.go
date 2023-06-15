@@ -10,8 +10,11 @@ import (
 	"gorm.io/gorm"
 )
 
-var ErrBusinessAlreadyExists = errors.New("Business already exists")
-var ErrTooManyMenuImages = errors.New("Too many menu images")
+var (
+	ErrBusinessAlreadyExists = errors.New("Business already exists")
+	ErrTooManyMenuImages     = errors.New("Too many menu images")
+	ErrNoSuchBusiness        = errors.New("Business not found")
+)
 
 type BusinessManager interface {
 	Create(user *User, businessDetails *BusinessDetails) (*Business, error)

@@ -473,8 +473,8 @@ func TestUserVirtualCardHandlersGetCardOk(t *testing.T) {
 		GetAll(
 			gomock.Eq(testUser),
 			gomock.Eq(&database.VirtualCard{Business: &database.Business{PublicId: testBusiness.PublicId}}),
-			gomock.Eq([]string{"Business", "Business.OwnedItems", "Business.MenuImages.FileId",
-				"OwnedItems", "OwnedItems.ItemDefinition.PublicId"}),
+			gomock.Eq([]string{"Business", "Business.ItemDefinitions", "Business.MenuImages",
+				"OwnedItems", "OwnedItems.ItemDefinition"}),
 		).
 		Return(
 			[]accessors.UserOwnedEntity{testCard},

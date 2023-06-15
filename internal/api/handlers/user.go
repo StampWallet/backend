@@ -241,6 +241,7 @@ func (handler *UserHandlers) Connect(rg *gin.RouterGroup) {
 	{
 		cards.GET("", handler.getUserCards)
 		handler.localCardHandlers.Connect(cards.Group("/local"))
+		handler.virtualCardHandlers.Connect(cards.Group("/virtual"))
 	}
 	businesses := rg.Group("/businesses")
 	{
@@ -355,8 +356,8 @@ func (handler *UserVirtualCardHandlers) getCard(c *gin.Context) {
 	// TODO replace with GetOwnedItems
 	cardTmp, err := handler.userAuthorizedAcessor.GetAll(user,
 		&database.VirtualCard{Business: &database.Business{PublicId: businessId}},
-		[]string{"Business", "Business.OwnedItems", "Business.MenuImages.FileId",
-			"OwnedItems", "OwnedItems.ItemDefinition.PublicId"})
+		[]string{"Business", "Business.ItemDefinitions", "Business.MenuImages",
+			"OwnedItems", "OwnedItems.ItemDefinition"})
 
 	if err != nil && err != ErrNotFound {
 		handler.logger.Printf("%s unknown error after userAuthorizedAcessor.Get: %+v", CallerFilename(), err)

@@ -15,7 +15,6 @@ import (
 var (
 	ErrVirtualCardAlreadyExists = errors.New("Virtual card already exists")
 	ErrNoSuchVirtualCard        = errors.New("Virtual card not found")
-	ErrNoSuchBusiness           = errors.New("Business not found")
 	ErrNoSuchItemDefinition     = errors.New("Item definition not found")
 	ErrAboveMaxAmount           = errors.New("Attempt to buy item above max item amount")
 	ErrNotEnoughPoints          = errors.New("Attempt to buy item with not enough points")
@@ -75,7 +74,10 @@ func (manager *VirtualCardManagerImpl) Create(user *User, businessId string) (*V
 		}
 
 		// Checks if user already has this virtual card
-		result := tx.First(&virtualCard, VirtualCard{User: user, Business: &business})
+		// top 1 gorm pitfalls: do not query by relationship objects
+		// or idk why code below just returns the first ever card
+		// result := tx.First(&virtualCard, VirtualCard{User: user, Business: &business})
+		result := tx.First(&virtualCard, VirtualCard{OwnerId: user.ID, BusinessId: business.ID})
 		err = result.GetError()
 		if err != gorm.ErrRecordNotFound && err != nil {
 			return fmt.Errorf("tx.First returned an error: %+v", err)

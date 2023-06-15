@@ -91,6 +91,29 @@ func TestVirtualCardManagerCreate(t *testing.T) {
 	require.Nilf(t, newVirtualCard, "VirtualCardManager.Create should return a nil pointer if the user attempts to create the same card twice")
 }
 
+func TestVirtualCardManagerCreateMultiple(t *testing.T) {
+	s := setupVirtualCardManagerTest(t)
+	user2 := GetTestUser(s.db)
+	user3 := GetTestUser(s.db)
+
+	for _, user := range []*User{s.user, user2, user3} {
+		virtualCard, err := s.manager.Create(user, s.business.PublicId)
+		require.Nilf(t, err, "VirtualCardManager.Create should return a nil error")
+		require.NotNilf(t, virtualCard, "VirtualCardManager.Create should not return a nil virtual card")
+
+		require.Equalf(t, user.ID, virtualCard.OwnerId, "VirtualCardManager.Create should returned a card that belongs to the passed user")
+		require.Equalf(t, s.business.ID, virtualCard.BusinessId, "VirtualCardManager.Create should return a card that belongs to the passed business")
+		require.Equalf(t, uint(0), virtualCard.Points, "VirtualCardManager.Create should returned a card with 0 points")
+
+	}
+
+	for _, user := range []*User{s.user, user2, user3} {
+		newVirtualCard, newErr := s.manager.Create(user, s.business.PublicId)
+		require.Equalf(t, ErrVirtualCardAlreadyExists, newErr, "VirtualCardManager.Create should returned VirtualCardAlreadyExists if the user attempts to create the same card twice")
+		require.Nilf(t, newVirtualCard, "VirtualCardManager.Create should return a nil pointer if the user attempts to create the same card twice")
+	}
+}
+
 // Tests VirtualCardManagerImpl.Remove on happy path
 func TestVirtualCardManagerRemove(t *testing.T) {
 	s := setupVirtualCardManagerTest(t)
