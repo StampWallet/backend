@@ -79,15 +79,18 @@ func ConvertItemDefinitionToApiModel(itd *database.ItemDefinition) api.ItemDefin
 		ed = &itd.EndDate.Time
 	}
 
+	price := int32(itd.Price)
+	maxAmount := int32(itd.MaxAmount)
+
 	return api.ItemDefinitionApiModel{
 		PublicId:    itd.PublicId,
 		Name:        itd.Name,
-		Price:       int32(itd.Price),
+		Price:       &price,
 		Description: itd.Description,
 		ImageId:     itd.ImageId,
 		StartDate:   sd,
 		EndDate:     ed,
-		MaxAmount:   int32(itd.MaxAmount),
+		MaxAmount:   &maxAmount,
 		Available:   itd.Available,
 	}
 }

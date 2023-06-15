@@ -42,7 +42,7 @@ func (manager *LocalCardManagerImpl) Create(user *User, details LocalCardDetails
 			break
 		}
 	}
-	if cardType == (CardType{}) {
+	if cardType.PublicId == "" {
 		return nil, ErrInvalidCardType
 	}
 

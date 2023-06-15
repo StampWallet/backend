@@ -119,16 +119,16 @@ Class | Method | HTTP request | Description
 *ItemDefinitionsApi* | [**addItemDefinition**](docs/ItemDefinitionsApi.md#additemdefinition) | **POST** /business/itemDefinitions | Add a new item definition
 *ItemDefinitionsApi* | [**deleteItemDefinition**](docs/ItemDefinitionsApi.md#deleteitemdefinition) | **DELETE** /business/itemDefinitions/{definitionId} | Delete an exiting item definition
 *ItemDefinitionsApi* | [**getItemDefinitions**](docs/ItemDefinitionsApi.md#getitemdefinitions) | **GET** /business/itemDefinitions | Get list of item definitions
-*ItemDefinitionsApi* | [**updateItemDefinition**](docs/ItemDefinitionsApi.md#updateitemdefinition) | **PATCH** /business/itemDefinitions/{definitionId} | Update an exiting item definition
+*ItemDefinitionsApi* | [**updateItemDefinition**](docs/ItemDefinitionsApi.md#updateitemdefinition) | **PUT** /business/itemDefinitions/{definitionId} | Update an exiting item definition
 *LocalCardsApi* | [**createLocalCard**](docs/LocalCardsApi.md#createlocalcard) | **POST** /user/cards/local | Add a new local card
 *LocalCardsApi* | [**deleteLocalCard**](docs/LocalCardsApi.md#deletelocalcard) | **DELETE** /user/cards/local/{cardId} | Delete a local card
 *LocalCardsApi* | [**getLocalCardTypes**](docs/LocalCardsApi.md#getlocalcardtypes) | **GET** /user/cards/local/types | Get list of local card types
 *SessionsApi* | [**login**](docs/SessionsApi.md#login) | **POST** /auth/sessions | Login
 *SessionsApi* | [**logout**](docs/SessionsApi.md#logout) | **DELETE** /auth/sessions | Logout
-*TransactionApi* | [**getTransactionStatus**](docs/TransactionApi.md#gettransactionstatus) | **GET** /user/cards/virtual/{businessId}/transactions/{transactionCode} | Get info about a transaction
-*TransactionApi* | [**startTransaction**](docs/TransactionApi.md#starttransaction) | **POST** /user/cards/virtual/{businessId}/transactions | Start a transaction
 *TransactionsApi* | [**finishTransaction**](docs/TransactionsApi.md#finishtransaction) | **POST** /business/transactions/{transactionCode} | Finish a transaction
 *TransactionsApi* | [**getTransactionDetails**](docs/TransactionsApi.md#gettransactiondetails) | **GET** /business/transactions/{transactionCode} | Get info about a started transaction
+*TransactionsApi* | [**getTransactionStatus**](docs/TransactionsApi.md#gettransactionstatus) | **GET** /user/cards/virtual/{businessId}/transactions/{transactionCode} | Get info about a transaction
+*TransactionsApi* | [**startTransaction**](docs/TransactionsApi.md#starttransaction) | **POST** /user/cards/virtual/{businessId}/transactions | Start a transaction
 *UserApi* | [**getBusiness**](docs/UserApi.md#getbusiness) | **GET** /user/businesses/{businessId} | Get business info
 *UserApi* | [**searchBusinesses**](docs/UserApi.md#searchbusinesses) | **GET** /user/businesses | Search businesses
 *VirtualCardsApi* | [**buyItem**](docs/VirtualCardsApi.md#buyitem) | **POST** /user/cards/virtual/{businessId}/itemsDefinitions/{itemDefinitionId} | Buy an item
@@ -158,7 +158,6 @@ Class | Method | HTTP request | Description
  - [LocalCardAPIModel](docs/LocalCardAPIModel.md)
  - [OwnedItemAPIModel](docs/OwnedItemAPIModel.md)
  - [PatchBusinessAccountRequest](docs/PatchBusinessAccountRequest.md)
- - [PatchBusinessItemDefinitionRequest](docs/PatchBusinessItemDefinitionRequest.md)
  - [PostAccountEmailConfirmationRequest](docs/PostAccountEmailConfirmationRequest.md)
  - [PostAccountEmailRequest](docs/PostAccountEmailRequest.md)
  - [PostAccountPasswordRequest](docs/PostAccountPasswordRequest.md)
@@ -178,6 +177,7 @@ Class | Method | HTTP request | Description
  - [PostUserVirtualCardTransactionRequest](docs/PostUserVirtualCardTransactionRequest.md)
  - [PostUserVirtualCardTransactionResponse](docs/PostUserVirtualCardTransactionResponse.md)
  - [PublicBusinessDetailsAPIModel](docs/PublicBusinessDetailsAPIModel.md)
+ - [PutBusinessItemDefinitionRequest](docs/PutBusinessItemDefinitionRequest.md)
  - [ShortBusinessDetailsAPIModel](docs/ShortBusinessDetailsAPIModel.md)
  - [ShortVirtualCardAPIModel](docs/ShortVirtualCardAPIModel.md)
  - [TransactionItemDetailAPIModel](docs/TransactionItemDetailAPIModel.md)

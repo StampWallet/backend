@@ -311,9 +311,10 @@ case $state in
             "updateItemDefinition[Update an exiting item definition]"             "createLocalCard[Add a new local card]" \
             "deleteLocalCard[Delete a local card]" \
             "getLocalCardTypes[Get list of local card types]"             "login[Login]" \
-            "logout[Logout]"             "getTransactionStatus[Get info about a transaction]" \
-            "startTransaction[Start a transaction]"             "finishTransaction[Finish a transaction]" \
-            "getTransactionDetails[Get info about a started transaction]"             "getBusiness[Get business info]" \
+            "logout[Logout]"             "finishTransaction[Finish a transaction]" \
+            "getTransactionDetails[Get info about a started transaction]" \
+            "getTransactionStatus[Get info about a transaction]" \
+            "startTransaction[Start a transaction]"             "getBusiness[Get business info]" \
             "searchBusinesses[Search businesses]"             "buyItem[Buy an item]" \
             "createVirtualCard[Add a new virtual card]" \
             "deleteItem[Delete an item]" \
@@ -465,6 +466,20 @@ case $state in
                               )
         _describe -t actions 'operations' _op_arguments -S '' && ret=0
         ;;
+      finishTransaction)
+        local -a _op_arguments
+        _op_arguments=(
+          "transactionCode=:[PATH] Transaction code (scanned or typed in)"
+                    )
+        _describe -t actions 'operations' _op_arguments -S '' && ret=0
+        ;;
+      getTransactionDetails)
+        local -a _op_arguments
+        _op_arguments=(
+          "transactionCode=:[PATH] Transaction code (scanned or typed in)"
+                    )
+        _describe -t actions 'operations' _op_arguments -S '' && ret=0
+        ;;
       getTransactionStatus)
         local -a _op_arguments
         _op_arguments=(
@@ -477,20 +492,6 @@ case $state in
         local -a _op_arguments
         _op_arguments=(
           "businessId=:[PATH] Public ID of the business which card was requested"
-                    )
-        _describe -t actions 'operations' _op_arguments -S '' && ret=0
-        ;;
-      finishTransaction)
-        local -a _op_arguments
-        _op_arguments=(
-          "transactionCode=:[PATH] Transaction code (scanned or typed in)"
-                    )
-        _describe -t actions 'operations' _op_arguments -S '' && ret=0
-        ;;
-      getTransactionDetails)
-        local -a _op_arguments
-        _op_arguments=(
-          "transactionCode=:[PATH] Transaction code (scanned or typed in)"
                     )
         _describe -t actions 'operations' _op_arguments -S '' && ret=0
         ;;

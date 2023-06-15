@@ -64,8 +64,6 @@ type APIClient struct {
 
 	SessionsApi *SessionsApiService
 
-	TransactionApi *TransactionApiService
-
 	TransactionsApi *TransactionsApiService
 
 	UserApi *UserApiService
@@ -96,7 +94,6 @@ func NewAPIClient(cfg *Configuration) *APIClient {
 	c.ItemDefinitionsApi = (*ItemDefinitionsApiService)(&c.common)
 	c.LocalCardsApi = (*LocalCardsApiService)(&c.common)
 	c.SessionsApi = (*SessionsApiService)(&c.common)
-	c.TransactionApi = (*TransactionApiService)(&c.common)
 	c.TransactionsApi = (*TransactionsApiService)(&c.common)
 	c.UserApi = (*UserApiService)(&c.common)
 	c.VirtualCardsApi = (*VirtualCardsApiService)(&c.common)

@@ -138,7 +138,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/DefaultResponse'
+              $ref: '#/components/schemas/PostAccountPasswordRequest'
         required: true
       responses:
         "200":
@@ -487,9 +487,9 @@ paths:
       summary: Delete an exiting item definition
       tags:
       - itemDefinitions
-    patch:
-      description: This endpoint is used to change details of existing item definitions
-        (benefits).
+    put:
+      description: "This endpoint is used to change details of existing item definitions\
+        \ (benefits). Client has to provide all values, even if values do not change"
       operationId: updateItemDefinition
       parameters:
       - description: Public id of the definition to update
@@ -504,7 +504,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PatchBusinessItemDefinitionRequest'
+              $ref: '#/components/schemas/PutBusinessItemDefinitionRequest'
         required: true
       responses:
         "200":
@@ -985,7 +985,7 @@ paths:
       - sessionToken: []
       summary: Start a transaction
       tags:
-      - transaction
+      - transactions
   /user/cards/virtual/{businessId}/transactions/{transactionCode}:
     get:
       description: "This endpoint is used in the last step of transaction processing,\
@@ -1027,7 +1027,7 @@ paths:
       - sessionToken: []
       summary: Get info about a transaction
       tags:
-      - transaction
+      - transactions
   /user/businesses:
     get:
       description: This endpoint is used to search businesses that match the provided
@@ -1311,6 +1311,9 @@ components:
           x-go-custom-tag: binding:"required"
       type: object
     PostAccountPasswordRequest:
+      example:
+        password: zaq1@WSX
+        oldPassword: password123
       properties:
         password:
           example: zaq1@WSX
@@ -1414,12 +1417,68 @@ components:
           example: S2VlNWVlQ2Foajh1Cg
           type: string
       type: object
-    PatchBusinessItemDefinitionRequest:
-      allOf:
-      - $ref: '#/components/schemas/ItemDefinitionAPIModel'
+    PutBusinessItemDefinitionRequest:
+      example:
+        endDate: 2000-01-23T04:56:07.000+00:00
+        price: 0
+        name: name
+        available: true
+        description: description
+        maxAmount: 6
+        startDate: 2000-01-23T04:56:07.000+00:00
+      properties:
+        name:
+          type: string
+        price:
+          nullable: true
+          type: integer
+        description:
+          type: string
+        startDate:
+          format: date-time
+          nullable: true
+          type: string
+        endDate:
+          format: date-time
+          nullable: true
+          type: string
+        maxAmount:
+          nullable: true
+          type: integer
+        available:
+          type: boolean
+      type: object
     PostBusinessItemDefinitionRequest:
-      allOf:
-      - $ref: '#/components/schemas/ItemDefinitionAPIModel'
+      example:
+        endDate: 2000-01-23T04:56:07.000+00:00
+        price: 0
+        name: name
+        available: true
+        description: description
+        maxAmount: 6
+        startDate: 2000-01-23T04:56:07.000+00:00
+      properties:
+        name:
+          type: string
+        price:
+          nullable: true
+          type: integer
+        description:
+          type: string
+        startDate:
+          format: date-time
+          nullable: true
+          type: string
+        endDate:
+          format: date-time
+          nullable: true
+          type: string
+        maxAmount:
+          nullable: true
+          type: integer
+        available:
+          type: boolean
+      type: object
     PostBusinessItemDefinitionResponse:
       example:
         publicId: ZmVlQ2ExYWlnaDRPCg
@@ -1821,6 +1880,7 @@ components:
         name:
           type: string
         price:
+          nullable: true
           type: integer
         description:
           type: string
@@ -1835,6 +1895,7 @@ components:
           nullable: true
           type: string
         maxAmount:
+          nullable: true
           type: integer
         available:
           type: boolean

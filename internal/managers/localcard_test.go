@@ -28,7 +28,8 @@ func TestLocalCardManagerCreate(t *testing.T) {
 	manager := GetLocalCardManager(ctrl)
 	user := GetTestUser(manager.baseServices.Database)
 	localCard, err := manager.Create(user, LocalCardDetails{
-		Type: "test",
+		Name: "asdasd",
+		Type: CardTypes[0].PublicId,
 		Code: "012345678901",
 	})
 
@@ -37,7 +38,7 @@ func TestLocalCardManagerCreate(t *testing.T) {
 		t.Errorf("local card is nil")
 		return
 	}
-	require.Equalf(t, "test", localCard.Type, "LocalCard.Create returned wrong card type")
+	require.Equalf(t, CardTypes[0].PublicId, localCard.Type, "LocalCard.Create returned wrong card type")
 	require.Equalf(t, "012345678901", localCard.Code, "LocalCard.Create returned wrong card code")
 
 	var dbLocalCard LocalCard
@@ -46,11 +47,12 @@ func TestLocalCardManagerCreate(t *testing.T) {
 	})
 	txErr := tx.GetError()
 	require.Nilf(t, txErr, "database find returned an error %w", txErr)
-	require.Equalf(t, "test", dbLocalCard.Type, "database has invalid card type")
+	require.Equalf(t, CardTypes[0].PublicId, dbLocalCard.Type, "database has invalid card type")
 	require.Equalf(t, "012345678901", dbLocalCard.Code, "database has invalid card number")
 
 	_, repeatedErr := manager.Create(user, LocalCardDetails{
-		Type: "test",
+		Name: "asdasd",
+		Type: CardTypes[0].PublicId,
 		Code: "012345678901",
 	})
 	require.Equalf(t, ErrCardAlreadyExists, repeatedErr, "repeated create did not return CardAlreadyExists error")

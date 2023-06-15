@@ -295,6 +295,20 @@ func (mr *MockItemDefinitionManagerMockRecorder) ChangeItemDetails(arg0, arg1 in
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ChangeItemDetails", reflect.TypeOf((*MockItemDefinitionManager)(nil).ChangeItemDetails), arg0, arg1)
 }
 
+// DeleteItem mocks base method.
+func (m *MockItemDefinitionManager) DeleteItem(arg0 *database.ItemDefinition) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteItem", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteItem indicates an expected call of DeleteItem.
+func (mr *MockItemDefinitionManagerMockRecorder) DeleteItem(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteItem", reflect.TypeOf((*MockItemDefinitionManager)(nil).DeleteItem), arg0)
+}
+
 // GetForBusiness mocks base method.
 func (m *MockItemDefinitionManager) GetForBusiness(arg0 *database.Business) ([]database.ItemDefinition, error) {
 	m.ctrl.T.Helper()

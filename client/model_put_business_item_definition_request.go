@@ -16,11 +16,11 @@ import (
 	"time"
 )
 
-// checks if the PostBusinessItemDefinitionRequest type satisfies the MappedNullable interface at compile time
-var _ MappedNullable = &PostBusinessItemDefinitionRequest{}
+// checks if the PutBusinessItemDefinitionRequest type satisfies the MappedNullable interface at compile time
+var _ MappedNullable = &PutBusinessItemDefinitionRequest{}
 
-// PostBusinessItemDefinitionRequest struct for PostBusinessItemDefinitionRequest
-type PostBusinessItemDefinitionRequest struct {
+// PutBusinessItemDefinitionRequest struct for PutBusinessItemDefinitionRequest
+type PutBusinessItemDefinitionRequest struct {
 	Name        *string       `json:"name,omitempty"`
 	Price       NullableInt32 `json:"price,omitempty"`
 	Description *string       `json:"description,omitempty"`
@@ -30,25 +30,25 @@ type PostBusinessItemDefinitionRequest struct {
 	Available   *bool         `json:"available,omitempty"`
 }
 
-// NewPostBusinessItemDefinitionRequest instantiates a new PostBusinessItemDefinitionRequest object
+// NewPutBusinessItemDefinitionRequest instantiates a new PutBusinessItemDefinitionRequest object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewPostBusinessItemDefinitionRequest() *PostBusinessItemDefinitionRequest {
-	this := PostBusinessItemDefinitionRequest{}
+func NewPutBusinessItemDefinitionRequest() *PutBusinessItemDefinitionRequest {
+	this := PutBusinessItemDefinitionRequest{}
 	return &this
 }
 
-// NewPostBusinessItemDefinitionRequestWithDefaults instantiates a new PostBusinessItemDefinitionRequest object
+// NewPutBusinessItemDefinitionRequestWithDefaults instantiates a new PutBusinessItemDefinitionRequest object
 // This constructor will only assign default values to properties that have it defined,
 // but it doesn't guarantee that properties required by API are set
-func NewPostBusinessItemDefinitionRequestWithDefaults() *PostBusinessItemDefinitionRequest {
-	this := PostBusinessItemDefinitionRequest{}
+func NewPutBusinessItemDefinitionRequestWithDefaults() *PutBusinessItemDefinitionRequest {
+	this := PutBusinessItemDefinitionRequest{}
 	return &this
 }
 
 // GetName returns the Name field value if set, zero value otherwise.
-func (o *PostBusinessItemDefinitionRequest) GetName() string {
+func (o *PutBusinessItemDefinitionRequest) GetName() string {
 	if o == nil || isNil(o.Name) {
 		var ret string
 		return ret
@@ -58,7 +58,7 @@ func (o *PostBusinessItemDefinitionRequest) GetName() string {
 
 // GetNameOk returns a tuple with the Name field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *PostBusinessItemDefinitionRequest) GetNameOk() (*string, bool) {
+func (o *PutBusinessItemDefinitionRequest) GetNameOk() (*string, bool) {
 	if o == nil || isNil(o.Name) {
 		return nil, false
 	}
@@ -66,7 +66,7 @@ func (o *PostBusinessItemDefinitionRequest) GetNameOk() (*string, bool) {
 }
 
 // HasName returns a boolean if a field has been set.
-func (o *PostBusinessItemDefinitionRequest) HasName() bool {
+func (o *PutBusinessItemDefinitionRequest) HasName() bool {
 	if o != nil && !isNil(o.Name) {
 		return true
 	}
@@ -75,12 +75,12 @@ func (o *PostBusinessItemDefinitionRequest) HasName() bool {
 }
 
 // SetName gets a reference to the given string and assigns it to the Name field.
-func (o *PostBusinessItemDefinitionRequest) SetName(v string) {
+func (o *PutBusinessItemDefinitionRequest) SetName(v string) {
 	o.Name = &v
 }
 
 // GetPrice returns the Price field value if set, zero value otherwise (both if not set or set to explicit null).
-func (o *PostBusinessItemDefinitionRequest) GetPrice() int32 {
+func (o *PutBusinessItemDefinitionRequest) GetPrice() int32 {
 	if o == nil || isNil(o.Price.Get()) {
 		var ret int32
 		return ret
@@ -91,7 +91,7 @@ func (o *PostBusinessItemDefinitionRequest) GetPrice() int32 {
 // GetPriceOk returns a tuple with the Price field value if set, nil otherwise
 // and a boolean to check if the value has been set.
 // NOTE: If the value is an explicit nil, `nil, true` will be returned
-func (o *PostBusinessItemDefinitionRequest) GetPriceOk() (*int32, bool) {
+func (o *PutBusinessItemDefinitionRequest) GetPriceOk() (*int32, bool) {
 	if o == nil {
 		return nil, false
 	}
@@ -99,7 +99,7 @@ func (o *PostBusinessItemDefinitionRequest) GetPriceOk() (*int32, bool) {
 }
 
 // HasPrice returns a boolean if a field has been set.
-func (o *PostBusinessItemDefinitionRequest) HasPrice() bool {
+func (o *PutBusinessItemDefinitionRequest) HasPrice() bool {
 	if o != nil && o.Price.IsSet() {
 		return true
 	}
@@ -108,22 +108,22 @@ func (o *PostBusinessItemDefinitionRequest) HasPrice() bool {
 }
 
 // SetPrice gets a reference to the given NullableInt32 and assigns it to the Price field.
-func (o *PostBusinessItemDefinitionRequest) SetPrice(v int32) {
+func (o *PutBusinessItemDefinitionRequest) SetPrice(v int32) {
 	o.Price.Set(&v)
 }
 
 // SetPriceNil sets the value for Price to be an explicit nil
-func (o *PostBusinessItemDefinitionRequest) SetPriceNil() {
+func (o *PutBusinessItemDefinitionRequest) SetPriceNil() {
 	o.Price.Set(nil)
 }
 
 // UnsetPrice ensures that no value is present for Price, not even an explicit nil
-func (o *PostBusinessItemDefinitionRequest) UnsetPrice() {
+func (o *PutBusinessItemDefinitionRequest) UnsetPrice() {
 	o.Price.Unset()
 }
 
 // GetDescription returns the Description field value if set, zero value otherwise.
-func (o *PostBusinessItemDefinitionRequest) GetDescription() string {
+func (o *PutBusinessItemDefinitionRequest) GetDescription() string {
 	if o == nil || isNil(o.Description) {
 		var ret string
 		return ret
@@ -133,7 +133,7 @@ func (o *PostBusinessItemDefinitionRequest) GetDescription() string {
 
 // GetDescriptionOk returns a tuple with the Description field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *PostBusinessItemDefinitionRequest) GetDescriptionOk() (*string, bool) {
+func (o *PutBusinessItemDefinitionRequest) GetDescriptionOk() (*string, bool) {
 	if o == nil || isNil(o.Description) {
 		return nil, false
 	}
@@ -141,7 +141,7 @@ func (o *PostBusinessItemDefinitionRequest) GetDescriptionOk() (*string, bool) {
 }
 
 // HasDescription returns a boolean if a field has been set.
-func (o *PostBusinessItemDefinitionRequest) HasDescription() bool {
+func (o *PutBusinessItemDefinitionRequest) HasDescription() bool {
 	if o != nil && !isNil(o.Description) {
 		return true
 	}
@@ -150,12 +150,12 @@ func (o *PostBusinessItemDefinitionRequest) HasDescription() bool {
 }
 
 // SetDescription gets a reference to the given string and assigns it to the Description field.
-func (o *PostBusinessItemDefinitionRequest) SetDescription(v string) {
+func (o *PutBusinessItemDefinitionRequest) SetDescription(v string) {
 	o.Description = &v
 }
 
 // GetStartDate returns the StartDate field value if set, zero value otherwise (both if not set or set to explicit null).
-func (o *PostBusinessItemDefinitionRequest) GetStartDate() time.Time {
+func (o *PutBusinessItemDefinitionRequest) GetStartDate() time.Time {
 	if o == nil || isNil(o.StartDate.Get()) {
 		var ret time.Time
 		return ret
@@ -166,7 +166,7 @@ func (o *PostBusinessItemDefinitionRequest) GetStartDate() time.Time {
 // GetStartDateOk returns a tuple with the StartDate field value if set, nil otherwise
 // and a boolean to check if the value has been set.
 // NOTE: If the value is an explicit nil, `nil, true` will be returned
-func (o *PostBusinessItemDefinitionRequest) GetStartDateOk() (*time.Time, bool) {
+func (o *PutBusinessItemDefinitionRequest) GetStartDateOk() (*time.Time, bool) {
 	if o == nil {
 		return nil, false
 	}
@@ -174,7 +174,7 @@ func (o *PostBusinessItemDefinitionRequest) GetStartDateOk() (*time.Time, bool) 
 }
 
 // HasStartDate returns a boolean if a field has been set.
-func (o *PostBusinessItemDefinitionRequest) HasStartDate() bool {
+func (o *PutBusinessItemDefinitionRequest) HasStartDate() bool {
 	if o != nil && o.StartDate.IsSet() {
 		return true
 	}
@@ -183,22 +183,22 @@ func (o *PostBusinessItemDefinitionRequest) HasStartDate() bool {
 }
 
 // SetStartDate gets a reference to the given NullableTime and assigns it to the StartDate field.
-func (o *PostBusinessItemDefinitionRequest) SetStartDate(v time.Time) {
+func (o *PutBusinessItemDefinitionRequest) SetStartDate(v time.Time) {
 	o.StartDate.Set(&v)
 }
 
 // SetStartDateNil sets the value for StartDate to be an explicit nil
-func (o *PostBusinessItemDefinitionRequest) SetStartDateNil() {
+func (o *PutBusinessItemDefinitionRequest) SetStartDateNil() {
 	o.StartDate.Set(nil)
 }
 
 // UnsetStartDate ensures that no value is present for StartDate, not even an explicit nil
-func (o *PostBusinessItemDefinitionRequest) UnsetStartDate() {
+func (o *PutBusinessItemDefinitionRequest) UnsetStartDate() {
 	o.StartDate.Unset()
 }
 
 // GetEndDate returns the EndDate field value if set, zero value otherwise (both if not set or set to explicit null).
-func (o *PostBusinessItemDefinitionRequest) GetEndDate() time.Time {
+func (o *PutBusinessItemDefinitionRequest) GetEndDate() time.Time {
 	if o == nil || isNil(o.EndDate.Get()) {
 		var ret time.Time
 		return ret
@@ -209,7 +209,7 @@ func (o *PostBusinessItemDefinitionRequest) GetEndDate() time.Time {
 // GetEndDateOk returns a tuple with the EndDate field value if set, nil otherwise
 // and a boolean to check if the value has been set.
 // NOTE: If the value is an explicit nil, `nil, true` will be returned
-func (o *PostBusinessItemDefinitionRequest) GetEndDateOk() (*time.Time, bool) {
+func (o *PutBusinessItemDefinitionRequest) GetEndDateOk() (*time.Time, bool) {
 	if o == nil {
 		return nil, false
 	}
@@ -217,7 +217,7 @@ func (o *PostBusinessItemDefinitionRequest) GetEndDateOk() (*time.Time, bool) {
 }
 
 // HasEndDate returns a boolean if a field has been set.
-func (o *PostBusinessItemDefinitionRequest) HasEndDate() bool {
+func (o *PutBusinessItemDefinitionRequest) HasEndDate() bool {
 	if o != nil && o.EndDate.IsSet() {
 		return true
 	}
@@ -226,22 +226,22 @@ func (o *PostBusinessItemDefinitionRequest) HasEndDate() bool {
 }
 
 // SetEndDate gets a reference to the given NullableTime and assigns it to the EndDate field.
-func (o *PostBusinessItemDefinitionRequest) SetEndDate(v time.Time) {
+func (o *PutBusinessItemDefinitionRequest) SetEndDate(v time.Time) {
 	o.EndDate.Set(&v)
 }
 
 // SetEndDateNil sets the value for EndDate to be an explicit nil
-func (o *PostBusinessItemDefinitionRequest) SetEndDateNil() {
+func (o *PutBusinessItemDefinitionRequest) SetEndDateNil() {
 	o.EndDate.Set(nil)
 }
 
 // UnsetEndDate ensures that no value is present for EndDate, not even an explicit nil
-func (o *PostBusinessItemDefinitionRequest) UnsetEndDate() {
+func (o *PutBusinessItemDefinitionRequest) UnsetEndDate() {
 	o.EndDate.Unset()
 }
 
 // GetMaxAmount returns the MaxAmount field value if set, zero value otherwise (both if not set or set to explicit null).
-func (o *PostBusinessItemDefinitionRequest) GetMaxAmount() int32 {
+func (o *PutBusinessItemDefinitionRequest) GetMaxAmount() int32 {
 	if o == nil || isNil(o.MaxAmount.Get()) {
 		var ret int32
 		return ret
@@ -252,7 +252,7 @@ func (o *PostBusinessItemDefinitionRequest) GetMaxAmount() int32 {
 // GetMaxAmountOk returns a tuple with the MaxAmount field value if set, nil otherwise
 // and a boolean to check if the value has been set.
 // NOTE: If the value is an explicit nil, `nil, true` will be returned
-func (o *PostBusinessItemDefinitionRequest) GetMaxAmountOk() (*int32, bool) {
+func (o *PutBusinessItemDefinitionRequest) GetMaxAmountOk() (*int32, bool) {
 	if o == nil {
 		return nil, false
 	}
@@ -260,7 +260,7 @@ func (o *PostBusinessItemDefinitionRequest) GetMaxAmountOk() (*int32, bool) {
 }
 
 // HasMaxAmount returns a boolean if a field has been set.
-func (o *PostBusinessItemDefinitionRequest) HasMaxAmount() bool {
+func (o *PutBusinessItemDefinitionRequest) HasMaxAmount() bool {
 	if o != nil && o.MaxAmount.IsSet() {
 		return true
 	}
@@ -269,22 +269,22 @@ func (o *PostBusinessItemDefinitionRequest) HasMaxAmount() bool {
 }
 
 // SetMaxAmount gets a reference to the given NullableInt32 and assigns it to the MaxAmount field.
-func (o *PostBusinessItemDefinitionRequest) SetMaxAmount(v int32) {
+func (o *PutBusinessItemDefinitionRequest) SetMaxAmount(v int32) {
 	o.MaxAmount.Set(&v)
 }
 
 // SetMaxAmountNil sets the value for MaxAmount to be an explicit nil
-func (o *PostBusinessItemDefinitionRequest) SetMaxAmountNil() {
+func (o *PutBusinessItemDefinitionRequest) SetMaxAmountNil() {
 	o.MaxAmount.Set(nil)
 }
 
 // UnsetMaxAmount ensures that no value is present for MaxAmount, not even an explicit nil
-func (o *PostBusinessItemDefinitionRequest) UnsetMaxAmount() {
+func (o *PutBusinessItemDefinitionRequest) UnsetMaxAmount() {
 	o.MaxAmount.Unset()
 }
 
 // GetAvailable returns the Available field value if set, zero value otherwise.
-func (o *PostBusinessItemDefinitionRequest) GetAvailable() bool {
+func (o *PutBusinessItemDefinitionRequest) GetAvailable() bool {
 	if o == nil || isNil(o.Available) {
 		var ret bool
 		return ret
@@ -294,7 +294,7 @@ func (o *PostBusinessItemDefinitionRequest) GetAvailable() bool {
 
 // GetAvailableOk returns a tuple with the Available field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *PostBusinessItemDefinitionRequest) GetAvailableOk() (*bool, bool) {
+func (o *PutBusinessItemDefinitionRequest) GetAvailableOk() (*bool, bool) {
 	if o == nil || isNil(o.Available) {
 		return nil, false
 	}
@@ -302,7 +302,7 @@ func (o *PostBusinessItemDefinitionRequest) GetAvailableOk() (*bool, bool) {
 }
 
 // HasAvailable returns a boolean if a field has been set.
-func (o *PostBusinessItemDefinitionRequest) HasAvailable() bool {
+func (o *PutBusinessItemDefinitionRequest) HasAvailable() bool {
 	if o != nil && !isNil(o.Available) {
 		return true
 	}
@@ -311,11 +311,11 @@ func (o *PostBusinessItemDefinitionRequest) HasAvailable() bool {
 }
 
 // SetAvailable gets a reference to the given bool and assigns it to the Available field.
-func (o *PostBusinessItemDefinitionRequest) SetAvailable(v bool) {
+func (o *PutBusinessItemDefinitionRequest) SetAvailable(v bool) {
 	o.Available = &v
 }
 
-func (o PostBusinessItemDefinitionRequest) MarshalJSON() ([]byte, error) {
+func (o PutBusinessItemDefinitionRequest) MarshalJSON() ([]byte, error) {
 	toSerialize, err := o.ToMap()
 	if err != nil {
 		return []byte{}, err
@@ -323,7 +323,7 @@ func (o PostBusinessItemDefinitionRequest) MarshalJSON() ([]byte, error) {
 	return json.Marshal(toSerialize)
 }
 
-func (o PostBusinessItemDefinitionRequest) ToMap() (map[string]interface{}, error) {
+func (o PutBusinessItemDefinitionRequest) ToMap() (map[string]interface{}, error) {
 	toSerialize := map[string]interface{}{}
 	if !isNil(o.Name) {
 		toSerialize["name"] = o.Name
@@ -349,38 +349,38 @@ func (o PostBusinessItemDefinitionRequest) ToMap() (map[string]interface{}, erro
 	return toSerialize, nil
 }
 
-type NullablePostBusinessItemDefinitionRequest struct {
-	value *PostBusinessItemDefinitionRequest
+type NullablePutBusinessItemDefinitionRequest struct {
+	value *PutBusinessItemDefinitionRequest
 	isSet bool
 }
 
-func (v NullablePostBusinessItemDefinitionRequest) Get() *PostBusinessItemDefinitionRequest {
+func (v NullablePutBusinessItemDefinitionRequest) Get() *PutBusinessItemDefinitionRequest {
 	return v.value
 }
 
-func (v *NullablePostBusinessItemDefinitionRequest) Set(val *PostBusinessItemDefinitionRequest) {
+func (v *NullablePutBusinessItemDefinitionRequest) Set(val *PutBusinessItemDefinitionRequest) {
 	v.value = val
 	v.isSet = true
 }
 
-func (v NullablePostBusinessItemDefinitionRequest) IsSet() bool {
+func (v NullablePutBusinessItemDefinitionRequest) IsSet() bool {
 	return v.isSet
 }
 
-func (v *NullablePostBusinessItemDefinitionRequest) Unset() {
+func (v *NullablePutBusinessItemDefinitionRequest) Unset() {
 	v.value = nil
 	v.isSet = false
 }
 
-func NewNullablePostBusinessItemDefinitionRequest(val *PostBusinessItemDefinitionRequest) *NullablePostBusinessItemDefinitionRequest {
-	return &NullablePostBusinessItemDefinitionRequest{value: val, isSet: true}
+func NewNullablePutBusinessItemDefinitionRequest(val *PutBusinessItemDefinitionRequest) *NullablePutBusinessItemDefinitionRequest {
+	return &NullablePutBusinessItemDefinitionRequest{value: val, isSet: true}
 }
 
-func (v NullablePostBusinessItemDefinitionRequest) MarshalJSON() ([]byte, error) {
+func (v NullablePutBusinessItemDefinitionRequest) MarshalJSON() ([]byte, error) {
 	return json.Marshal(v.value)
 }
 
-func (v *NullablePostBusinessItemDefinitionRequest) UnmarshalJSON(src []byte) error {
+func (v *NullablePutBusinessItemDefinitionRequest) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }

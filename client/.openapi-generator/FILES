@@ -27,7 +27,6 @@ docs/LocalCardAPIModel.md
 docs/LocalCardsApi.md
 docs/OwnedItemAPIModel.md
 docs/PatchBusinessAccountRequest.md
-docs/PatchBusinessItemDefinitionRequest.md
 docs/PostAccountEmailConfirmationRequest.md
 docs/PostAccountEmailRequest.md
 docs/PostAccountPasswordRequest.md
@@ -47,10 +46,10 @@ docs/PostUserVirtualCardItemResponse.md
 docs/PostUserVirtualCardTransactionRequest.md
 docs/PostUserVirtualCardTransactionResponse.md
 docs/PublicBusinessDetailsAPIModel.md
+docs/PutBusinessItemDefinitionRequest.md
 docs/SessionsApi.md
 docs/ShortBusinessDetailsAPIModel.md
 docs/ShortVirtualCardAPIModel.md
-docs/TransactionApi.md
 docs/TransactionItemDetailAPIModel.md
 docs/TransactionStateEnum.md
 docs/TransactionsApi.md

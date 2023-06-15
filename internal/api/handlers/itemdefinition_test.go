@@ -10,6 +10,7 @@ import (
 
 	api "github.com/StampWallet/backend/internal/api/models"
 	"github.com/StampWallet/backend/internal/database"
+	acc "github.com/StampWallet/backend/internal/database/accessors"
 	. "github.com/StampWallet/backend/internal/database/accessors/mocks"
 	"github.com/StampWallet/backend/internal/managers"
 	. "github.com/StampWallet/backend/internal/managers/mocks"
@@ -82,14 +83,12 @@ func setupItemDefinitionHandlersPostItemDefinition() (
 	}
 
 	payload := api.PostBusinessItemDefinitionRequest{
-		PublicId:    testItemDef.PublicId,
 		Name:        testItemDef.Name,
-		Price:       int32(testItemDef.Price),
+		Price:       Ptr(int32(testItemDef.Price)),
 		Description: testItemDef.Description,
-		ImageId:     testItemDef.ImageId,
 		StartDate:   &testItemDef.StartDate.Time,
 		EndDate:     &testItemDef.EndDate.Time,
-		MaxAmount:   int32(testItemDef.MaxAmount),
+		MaxAmount:   Ptr(int32(testItemDef.MaxAmount)),
 		Available:   testItemDef.Available,
 	}
 	payloadJson, _ := json.Marshal(payload)
@@ -111,16 +110,26 @@ func setupItemDefinitionHandlersPostItemDefinition() (
 }
 
 func TestItemDefinitionHandlersPostItemDefinitionOk(t *testing.T) {
-	w, context, _, testBusiness, testItemDetails, testItemDef := setupItemDefinitionHandlersPostItemDefinition()
+	w, context, testBusinessUser, testBusiness, testItemDetails, testItemDef := setupItemDefinitionHandlersPostItemDefinition()
 
 	// test env prep
 	ctrl := gomock.NewController(t)
 	handler := getItemHandlers(ctrl)
 
+	handler.userAuthorizedAcessor.(*MockUserAuthorizedAccessor).
+		EXPECT().
+		Get(gomock.Eq(testBusinessUser), gomock.Eq(&database.Business{})).
+		Return(testBusiness, nil)
+
+	sd := testItemDetails.StartDate.Round(time.Duration(0))
+	testItemDetails.StartDate = &sd
+	ed := testItemDetails.EndDate.Truncate(time.Duration(0))
+	testItemDetails.EndDate = &ed
+
 	handler.itemDefinitionManager.(*MockItemDefinitionManager).
 		EXPECT().
 		AddItem(
-			gomock.Eq(testBusiness),
+			gomock.Eq(testBusinessUser),
 			gomock.Eq(testBusiness),
 			gomock.Eq(testItemDetails),
 		).
@@ -131,8 +140,8 @@ func TestItemDefinitionHandlersPostItemDefinitionOk(t *testing.T) {
 
 	handler.postItemDefinition(context)
 
-	respBodyExpected := api.DefaultResponse{Status: api.OK}
-	respBody, respCode, respParseErr := ExtractResponse[api.DefaultResponse](w)
+	respBodyExpected := api.PostBusinessItemDefinitionResponse{PublicId: testItemDef.PublicId}
+	respBody, respCode, respParseErr := ExtractResponse[api.PostBusinessItemDefinitionResponse](w)
 
 	require.Nilf(t, respParseErr, "Failed to parse JSON response")
 	require.Equalf(t, respCode, int(201), "Response returned unexpected status code")
@@ -145,6 +154,16 @@ func TestItemDefinitionHandlersPostItemDefinitionNok_BadDef(t *testing.T) {
 	// test env prep
 	ctrl := gomock.NewController(t)
 	handler := getItemHandlers(ctrl)
+
+	handler.userAuthorizedAcessor.(*MockUserAuthorizedAccessor).
+		EXPECT().
+		Get(gomock.Eq(testBusinessUser), gomock.Eq(&database.Business{})).
+		Return(testBusiness, nil)
+
+	sd := testItemDetails.StartDate.Round(time.Duration(0))
+	testItemDetails.StartDate = &sd
+	ed := testItemDetails.EndDate.Truncate(time.Duration(0))
+	testItemDetails.EndDate = &ed
 
 	handler.itemDefinitionManager.(*MockItemDefinitionManager).
 		EXPECT().
@@ -168,7 +187,7 @@ func TestItemDefinitionHandlersPostItemDefinitionNok_BadDef(t *testing.T) {
 	require.Truef(t, MatchEntities(respBodyExpected, respBody), "Response returned unexpected body contents")
 }
 
-func setupItemDefinitionHandlersPatchItemDefinition() (
+func setupItemDefinitionHandlersPutItemDefinition() (
 	w *httptest.ResponseRecorder,
 	context *gin.Context,
 	testBusiness *database.Business,
@@ -205,14 +224,12 @@ func setupItemDefinitionHandlersPatchItemDefinition() (
 	}
 
 	payload := api.PostBusinessItemDefinitionRequest{
-		PublicId:    newItemDef.PublicId,
 		Name:        newItemDef.Name,
-		Price:       int32(newItemDef.Price),
+		Price:       Ptr(int32(newItemDef.Price)),
 		Description: newItemDef.Description,
-		ImageId:     newItemDef.ImageId,
 		StartDate:   &newItemDef.StartDate.Time,
 		EndDate:     &newItemDef.EndDate.Time,
-		MaxAmount:   int32(newItemDef.MaxAmount),
+		MaxAmount:   Ptr(int32(newItemDef.MaxAmount)),
 		Available:   newItemDef.Available,
 	}
 	payloadJson, _ := json.Marshal(payload)
@@ -228,17 +245,23 @@ func setupItemDefinitionHandlersPatchItemDefinition() (
 		SetHeader("Content-Type", "application/json").
 		SetDefaultToken().
 		SetBody(payloadJson).
+		SetParam("definitionId", testItemDef.PublicId).
 		Context
 
 	return w, context, testBusiness, testItemDef, newItemDef, newItemDetails
 }
 
-func TestItemDefinitionHandlersPatchItemDefinitionOk(t *testing.T) {
-	w, context, testBusiness, testItemDef, newItemDef, newItemDetails := setupItemDefinitionHandlersPatchItemDefinition()
+func TestItemDefinitionHandlersPutItemDefinitionOk(t *testing.T) {
+	w, context, testBusiness, testItemDef, newItemDef, newItemDetails := setupItemDefinitionHandlersPutItemDefinition()
 
 	// test env prep
 	ctrl := gomock.NewController(t)
 	handler := getItemHandlers(ctrl)
+
+	handler.userAuthorizedAcessor.(*MockUserAuthorizedAccessor).
+		EXPECT().
+		Get(gomock.Eq(testBusiness.User), gomock.Eq(&database.Business{})).
+		Return(testBusiness, nil)
 
 	handler.businessAuthorizedAccessor.(*MockBusinessAuthorizedAccessor).
 		EXPECT().
@@ -250,6 +273,11 @@ func TestItemDefinitionHandlersPatchItemDefinitionOk(t *testing.T) {
 			testItemDef,
 			nil,
 		)
+
+	sd := newItemDetails.StartDate.Round(time.Duration(0))
+	newItemDetails.StartDate = &sd
+	ed := newItemDetails.EndDate.Truncate(time.Duration(0))
+	newItemDetails.EndDate = &ed
 
 	handler.itemDefinitionManager.(*MockItemDefinitionManager).
 		EXPECT().
@@ -262,7 +290,7 @@ func TestItemDefinitionHandlersPatchItemDefinitionOk(t *testing.T) {
 			nil,
 		)
 
-	handler.patchItemDefinition(context)
+	handler.putItemDefinition(context)
 
 	respBodyExpected := api.DefaultResponse{Status: api.OK}
 	respBody, respCode, respParseErr := ExtractResponse[api.DefaultResponse](w)
@@ -272,12 +300,17 @@ func TestItemDefinitionHandlersPatchItemDefinitionOk(t *testing.T) {
 	require.Truef(t, MatchEntities(respBodyExpected, respBody), "Response returned unexpected body contents")
 }
 
-func TestItemDefinitionHandlersPatchItemDefinitionNok_InvDef(t *testing.T) {
-	w, context, testBusiness, testItemDef, _, _ := setupItemDefinitionHandlersPatchItemDefinition()
+func TestItemDefinitionHandlersPutItemDefinitionNok_InvDef(t *testing.T) {
+	w, context, testBusiness, testItemDef, _, _ := setupItemDefinitionHandlersPutItemDefinition()
 
 	// test env prep
 	ctrl := gomock.NewController(t)
 	handler := getItemHandlers(ctrl)
+
+	handler.userAuthorizedAcessor.(*MockUserAuthorizedAccessor).
+		EXPECT().
+		Get(gomock.Eq(testBusiness.User), gomock.Eq(&database.Business{})).
+		Return(testBusiness, nil)
 
 	handler.businessAuthorizedAccessor.(*MockBusinessAuthorizedAccessor).
 		EXPECT().
@@ -287,25 +320,30 @@ func TestItemDefinitionHandlersPatchItemDefinitionNok_InvDef(t *testing.T) {
 		).
 		Return(
 			nil,
-			managers.ErrInvalidItemDetails,
+			acc.ErrNotFound,
 		)
 
-	handler.patchItemDefinition(context)
+	handler.putItemDefinition(context)
 
 	respBodyExpected := api.DefaultResponse{Status: api.NOT_FOUND}
 	respBody, respCode, respParseErr := ExtractResponse[api.DefaultResponse](w)
 
 	require.Nilf(t, respParseErr, "Failed to parse JSON response")
-	require.Equalf(t, respCode, int(404), "Response returned unexpected status code")
+	require.Equalf(t, int(404), respCode, "Response returned unexpected status code")
 	require.Truef(t, MatchEntities(respBodyExpected, respBody), "Response returned unexpected body contents")
 }
 
-func TestItemDefinitionHandlersPatchItemDefinitionNok_BadDef(t *testing.T) {
-	w, context, testBusiness, testItemDef, _, newItemDetails := setupItemDefinitionHandlersPatchItemDefinition()
+func TestItemDefinitionHandlersPutItemDefinitionNok_BadDef(t *testing.T) {
+	w, context, testBusiness, testItemDef, _, newItemDetails := setupItemDefinitionHandlersPutItemDefinition()
 
 	// test env prep
 	ctrl := gomock.NewController(t)
 	handler := getItemHandlers(ctrl)
+
+	handler.userAuthorizedAcessor.(*MockUserAuthorizedAccessor).
+		EXPECT().
+		Get(gomock.Eq(testBusiness.User), gomock.Eq(&database.Business{})).
+		Return(testBusiness, nil)
 
 	handler.businessAuthorizedAccessor.(*MockBusinessAuthorizedAccessor).
 		EXPECT().
@@ -318,6 +356,11 @@ func TestItemDefinitionHandlersPatchItemDefinitionNok_BadDef(t *testing.T) {
 			nil,
 		)
 
+	sd := newItemDetails.StartDate.Round(time.Duration(0))
+	newItemDetails.StartDate = &sd
+	ed := newItemDetails.EndDate.Truncate(time.Duration(0))
+	newItemDetails.EndDate = &ed
+
 	handler.itemDefinitionManager.(*MockItemDefinitionManager).
 		EXPECT().
 		ChangeItemDetails(
@@ -329,7 +372,7 @@ func TestItemDefinitionHandlersPatchItemDefinitionNok_BadDef(t *testing.T) {
 			managers.ErrInvalidItemDetails,
 		)
 
-	handler.patchItemDefinition(context)
+	handler.putItemDefinition(context)
 
 	respBodyExpected := api.DefaultResponse{Status: api.INVALID_REQUEST}
 	respBody, respCode, respParseErr := ExtractResponse[api.DefaultResponse](w)
@@ -352,12 +395,18 @@ func TestItemDefinitionHandlersDeleteItemDefinitionOk(t *testing.T) {
 		SetUser(testBusinessUser).
 		SetMethod("DELETE").
 		SetHeader("Content-Type", "application/json").
+		SetParam("definitionId", testItemDef.PublicId).
 		SetDefaultToken().
 		Context
 
 	// test env prep
 	ctrl := gomock.NewController(t)
 	handler := getItemHandlers(ctrl)
+
+	handler.userAuthorizedAcessor.(*MockUserAuthorizedAccessor).
+		EXPECT().
+		Get(gomock.Eq(testBusiness.User), gomock.Eq(&database.Business{})).
+		Return(testBusiness, nil)
 
 	handler.businessAuthorizedAccessor.(*MockBusinessAuthorizedAccessor).
 		EXPECT().
@@ -375,7 +424,7 @@ func TestItemDefinitionHandlersDeleteItemDefinitionOk(t *testing.T) {
 	handler.itemDefinitionManager.(*MockItemDefinitionManager).
 		EXPECT().
 		WithdrawItem(gomock.Eq(testItemDef)).
-		Return(nil)
+		Return(testItemDef, nil)
 
 	handler.deleteItemDefinition(context)
 
@@ -403,11 +452,17 @@ func TestItemDefinitionHandlersDeleteItemDefinitionNok_InvDef(t *testing.T) {
 		SetMethod("DELETE").
 		SetHeader("Content-Type", "application/json").
 		SetDefaultToken().
+		SetParam("definitionId", testItemDef.PublicId).
 		Context
 
 	// test env prep
 	ctrl := gomock.NewController(t)
 	handler := getItemHandlers(ctrl)
+
+	handler.userAuthorizedAcessor.(*MockUserAuthorizedAccessor).
+		EXPECT().
+		Get(gomock.Eq(testBusinessUser1), gomock.Eq(&database.Business{})).
+		Return(testBusiness1, nil)
 
 	handler.businessAuthorizedAccessor.(*MockBusinessAuthorizedAccessor).
 		EXPECT().
@@ -419,7 +474,7 @@ func TestItemDefinitionHandlersDeleteItemDefinitionNok_InvDef(t *testing.T) {
 		).
 		Return(
 			nil,
-			managers.ErrUnknownItem,
+			acc.ErrNotFound,
 		)
 
 	handler.deleteItemDefinition(context)
@@ -428,6 +483,6 @@ func TestItemDefinitionHandlersDeleteItemDefinitionNok_InvDef(t *testing.T) {
 	respBody, respCode, respParseErr := ExtractResponse[api.DefaultResponse](w)
 
 	require.Nilf(t, respParseErr, "Failed to parse JSON response")
-	require.Equalf(t, respCode, int(404), "Response returned unexpected status code")
+	require.Equalf(t, int(404), respCode, "Response returned unexpected status code")
 	require.Truef(t, MatchEntities(respBodyExpected, respBody), "Response returned unexpected body contents")
 }

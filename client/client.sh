@@ -96,7 +96,7 @@ declare -a result_color_table=( "$WHITE" "$WHITE" "$GREEN" "$YELLOW" "$WHITE" "$
 # 1 - required
 declare -A operation_parameters_minimum_occurrences
 operation_parameters_minimum_occurrences["changeEmail:::PostAccountEmailRequest"]=1
-operation_parameters_minimum_occurrences["changePassword:::DefaultResponse"]=1
+operation_parameters_minimum_occurrences["changePassword:::PostAccountPasswordRequest"]=1
 operation_parameters_minimum_occurrences["confirmEmail:::PostAccountEmailConfirmationRequest"]=1
 operation_parameters_minimum_occurrences["createAccount:::PostAccountRequest"]=1
 operation_parameters_minimum_occurrences["createBusinessAccount:::PostBusinessAccountRequest"]=1
@@ -109,17 +109,17 @@ operation_parameters_minimum_occurrences["uploadFile:::body"]=1
 operation_parameters_minimum_occurrences["addItemDefinition:::PostBusinessItemDefinitionRequest"]=1
 operation_parameters_minimum_occurrences["deleteItemDefinition:::definitionId"]=1
 operation_parameters_minimum_occurrences["updateItemDefinition:::definitionId"]=1
-operation_parameters_minimum_occurrences["updateItemDefinition:::PatchBusinessItemDefinitionRequest"]=1
+operation_parameters_minimum_occurrences["updateItemDefinition:::PutBusinessItemDefinitionRequest"]=1
 operation_parameters_minimum_occurrences["createLocalCard:::PostUserLocalCardsRequest"]=1
 operation_parameters_minimum_occurrences["deleteLocalCard:::cardId"]=1
 operation_parameters_minimum_occurrences["login:::PostAccountSessionRequest"]=1
+operation_parameters_minimum_occurrences["finishTransaction:::transactionCode"]=1
+operation_parameters_minimum_occurrences["finishTransaction:::PostBusinessTransactionRequest"]=1
+operation_parameters_minimum_occurrences["getTransactionDetails:::transactionCode"]=1
 operation_parameters_minimum_occurrences["getTransactionStatus:::businessId"]=1
 operation_parameters_minimum_occurrences["getTransactionStatus:::transactionCode"]=1
 operation_parameters_minimum_occurrences["startTransaction:::businessId"]=1
 operation_parameters_minimum_occurrences["startTransaction:::PostUserVirtualCardTransactionRequest"]=1
-operation_parameters_minimum_occurrences["finishTransaction:::transactionCode"]=1
-operation_parameters_minimum_occurrences["finishTransaction:::PostBusinessTransactionRequest"]=1
-operation_parameters_minimum_occurrences["getTransactionDetails:::transactionCode"]=1
 operation_parameters_minimum_occurrences["getBusiness:::businessId"]=1
 operation_parameters_minimum_occurrences["searchBusinesses:::text"]=0
 operation_parameters_minimum_occurrences["searchBusinesses:::location"]=0
@@ -140,7 +140,7 @@ operation_parameters_minimum_occurrences["getVirtualCard:::businessId"]=1
 # 0 - unlimited
 declare -A operation_parameters_maximum_occurrences
 operation_parameters_maximum_occurrences["changeEmail:::PostAccountEmailRequest"]=0
-operation_parameters_maximum_occurrences["changePassword:::DefaultResponse"]=0
+operation_parameters_maximum_occurrences["changePassword:::PostAccountPasswordRequest"]=0
 operation_parameters_maximum_occurrences["confirmEmail:::PostAccountEmailConfirmationRequest"]=0
 operation_parameters_maximum_occurrences["createAccount:::PostAccountRequest"]=0
 operation_parameters_maximum_occurrences["createBusinessAccount:::PostBusinessAccountRequest"]=0
@@ -153,17 +153,17 @@ operation_parameters_maximum_occurrences["uploadFile:::body"]=0
 operation_parameters_maximum_occurrences["addItemDefinition:::PostBusinessItemDefinitionRequest"]=0
 operation_parameters_maximum_occurrences["deleteItemDefinition:::definitionId"]=0
 operation_parameters_maximum_occurrences["updateItemDefinition:::definitionId"]=0
-operation_parameters_maximum_occurrences["updateItemDefinition:::PatchBusinessItemDefinitionRequest"]=0
+operation_parameters_maximum_occurrences["updateItemDefinition:::PutBusinessItemDefinitionRequest"]=0
 operation_parameters_maximum_occurrences["createLocalCard:::PostUserLocalCardsRequest"]=0
 operation_parameters_maximum_occurrences["deleteLocalCard:::cardId"]=0
 operation_parameters_maximum_occurrences["login:::PostAccountSessionRequest"]=0
+operation_parameters_maximum_occurrences["finishTransaction:::transactionCode"]=0
+operation_parameters_maximum_occurrences["finishTransaction:::PostBusinessTransactionRequest"]=0
+operation_parameters_maximum_occurrences["getTransactionDetails:::transactionCode"]=0
 operation_parameters_maximum_occurrences["getTransactionStatus:::businessId"]=0
 operation_parameters_maximum_occurrences["getTransactionStatus:::transactionCode"]=0
 operation_parameters_maximum_occurrences["startTransaction:::businessId"]=0
 operation_parameters_maximum_occurrences["startTransaction:::PostUserVirtualCardTransactionRequest"]=0
-operation_parameters_maximum_occurrences["finishTransaction:::transactionCode"]=0
-operation_parameters_maximum_occurrences["finishTransaction:::PostBusinessTransactionRequest"]=0
-operation_parameters_maximum_occurrences["getTransactionDetails:::transactionCode"]=0
 operation_parameters_maximum_occurrences["getBusiness:::businessId"]=0
 operation_parameters_maximum_occurrences["searchBusinesses:::text"]=0
 operation_parameters_maximum_occurrences["searchBusinesses:::location"]=0
@@ -181,7 +181,7 @@ operation_parameters_maximum_occurrences["getVirtualCard:::businessId"]=0
 # - multi, csv, ssv, tsv
 declare -A operation_parameters_collection_type
 operation_parameters_collection_type["changeEmail:::PostAccountEmailRequest"]=""
-operation_parameters_collection_type["changePassword:::DefaultResponse"]=""
+operation_parameters_collection_type["changePassword:::PostAccountPasswordRequest"]=""
 operation_parameters_collection_type["confirmEmail:::PostAccountEmailConfirmationRequest"]=""
 operation_parameters_collection_type["createAccount:::PostAccountRequest"]=""
 operation_parameters_collection_type["createBusinessAccount:::PostBusinessAccountRequest"]=""
@@ -194,17 +194,17 @@ operation_parameters_collection_type["uploadFile:::body"]=""
 operation_parameters_collection_type["addItemDefinition:::PostBusinessItemDefinitionRequest"]=""
 operation_parameters_collection_type["deleteItemDefinition:::definitionId"]=""
 operation_parameters_collection_type["updateItemDefinition:::definitionId"]=""
-operation_parameters_collection_type["updateItemDefinition:::PatchBusinessItemDefinitionRequest"]=""
+operation_parameters_collection_type["updateItemDefinition:::PutBusinessItemDefinitionRequest"]=""
 operation_parameters_collection_type["createLocalCard:::PostUserLocalCardsRequest"]=""
 operation_parameters_collection_type["deleteLocalCard:::cardId"]=""
 operation_parameters_collection_type["login:::PostAccountSessionRequest"]=""
+operation_parameters_collection_type["finishTransaction:::transactionCode"]=""
+operation_parameters_collection_type["finishTransaction:::PostBusinessTransactionRequest"]=""
+operation_parameters_collection_type["getTransactionDetails:::transactionCode"]=""
 operation_parameters_collection_type["getTransactionStatus:::businessId"]=""
 operation_parameters_collection_type["getTransactionStatus:::transactionCode"]=""
 operation_parameters_collection_type["startTransaction:::businessId"]=""
 operation_parameters_collection_type["startTransaction:::PostUserVirtualCardTransactionRequest"]=""
-operation_parameters_collection_type["finishTransaction:::transactionCode"]=""
-operation_parameters_collection_type["finishTransaction:::PostBusinessTransactionRequest"]=""
-operation_parameters_collection_type["getTransactionDetails:::transactionCode"]=""
 operation_parameters_collection_type["getBusiness:::businessId"]=""
 operation_parameters_collection_type["searchBusinesses:::text"]=""
 operation_parameters_collection_type["searchBusinesses:::location"]=""
@@ -660,17 +660,12 @@ read -r -d '' ops <<EOF
 EOF
 echo "  $ops" | column -t -s ';'
     echo ""
-    echo -e "${BOLD}${WHITE}[transaction]${OFF}"
-read -r -d '' ops <<EOF
-  ${CYAN}getTransactionStatus${OFF};Get info about a transaction (AUTH)
-  ${CYAN}startTransaction${OFF};Start a transaction (AUTH)
-EOF
-echo "  $ops" | column -t -s ';'
-    echo ""
     echo -e "${BOLD}${WHITE}[transactions]${OFF}"
 read -r -d '' ops <<EOF
   ${CYAN}finishTransaction${OFF};Finish a transaction (AUTH)
   ${CYAN}getTransactionDetails${OFF};Get info about a started transaction (AUTH)
+  ${CYAN}getTransactionStatus${OFF};Get info about a transaction (AUTH)
+  ${CYAN}startTransaction${OFF};Start a transaction (AUTH)
 EOF
 echo "  $ops" | column -t -s ';'
     echo ""
@@ -1085,7 +1080,7 @@ print_updateItemDefinition_help() {
     echo ""
     echo -e "${BOLD}${WHITE}updateItemDefinition - Update an exiting item definition${OFF}${BLUE}(AUTH - BASIC)${OFF}" | paste -sd' ' | fold -sw 80 | sed '2,$s/^/    /'
     echo -e ""
-    echo -e "This endpoint is used to change details of existing item definitions (benefits)." | paste -sd' ' | fold -sw 80
+    echo -e "This endpoint is used to change details of existing item definitions (benefits). Client has to provide all values, even if values do not change" | paste -sd' ' | fold -sw 80
     echo -e ""
     echo -e "${BOLD}${WHITE}Parameters${OFF}"
     echo -e "  * ${GREEN}definitionId${OFF} ${BLUE}[string]${OFF} ${RED}(required)${OFF} ${CYAN}(default: null)${OFF} - Public id of the definition to update ${YELLOW}Specify as: definitionId=value${OFF}" | paste -sd' ' | fold -sw 80 | sed '2,$s/^/    /'
@@ -1200,6 +1195,50 @@ print_logout_help() {
 }
 ##############################################################################
 #
+# Print help for finishTransaction operation
+#
+##############################################################################
+print_finishTransaction_help() {
+    echo ""
+    echo -e "${BOLD}${WHITE}finishTransaction - Finish a transaction${OFF}${BLUE}(AUTH - BASIC)${OFF}" | paste -sd' ' | fold -sw 80 | sed '2,$s/^/    /'
+    echo -e ""
+    echo -e "This endpoint is used in the third step of transaction processing, the app should use it to update transaction details with data about points added to user's account and actions that were taken on items included in the transaction." | paste -sd' ' | fold -sw 80
+    echo -e ""
+    echo -e "${BOLD}${WHITE}Parameters${OFF}"
+    echo -e "  * ${GREEN}transactionCode${OFF} ${BLUE}[string]${OFF} ${RED}(required)${OFF} ${CYAN}(default: null)${OFF} - Transaction code (scanned or typed in) ${YELLOW}Specify as: transactionCode=value${OFF}" | paste -sd' ' | fold -sw 80 | sed '2,$s/^/    /'
+    echo -e "  * ${GREEN}body${OFF} ${BLUE}[application/json]${OFF} ${RED}(required)${OFF}${OFF} - " | paste -sd' ' | fold -sw 80 | sed '2,$s/^/    /'
+    echo -e ""
+    echo ""
+    echo -e "${BOLD}${WHITE}Responses${OFF}"
+    code=200
+    echo -e "${result_color_table[${code:0:1}]}  200;Successful operation${OFF}" | paste -sd' ' | column -t -s ';' | fold -sw 80 | sed '2,$s/^/       /'
+    code=400
+    echo -e "${result_color_table[${code:0:1}]}  400;Invalid request${OFF}" | paste -sd' ' | column -t -s ';' | fold -sw 80 | sed '2,$s/^/       /'
+    code=404
+    echo -e "${result_color_table[${code:0:1}]}  404;Does not exist or forbidden${OFF}" | paste -sd' ' | column -t -s ';' | fold -sw 80 | sed '2,$s/^/       /'
+}
+##############################################################################
+#
+# Print help for getTransactionDetails operation
+#
+##############################################################################
+print_getTransactionDetails_help() {
+    echo ""
+    echo -e "${BOLD}${WHITE}getTransactionDetails - Get info about a started transaction${OFF}${BLUE}(AUTH - BASIC)${OFF}" | paste -sd' ' | fold -sw 80 | sed '2,$s/^/    /'
+    echo -e ""
+    echo -e "This endpoint is used in the second step of transaction processing, the app should use it to retrieve details about a transaction started by a user, after scanning user's transaction code." | paste -sd' ' | fold -sw 80
+    echo -e ""
+    echo -e "${BOLD}${WHITE}Parameters${OFF}"
+    echo -e "  * ${GREEN}transactionCode${OFF} ${BLUE}[string]${OFF} ${RED}(required)${OFF} ${CYAN}(default: null)${OFF} - Transaction code (scanned or typed in) ${YELLOW}Specify as: transactionCode=value${OFF}" | paste -sd' ' | fold -sw 80 | sed '2,$s/^/    /'
+    echo ""
+    echo -e "${BOLD}${WHITE}Responses${OFF}"
+    code=200
+    echo -e "${result_color_table[${code:0:1}]}  200;Successful operation${OFF}" | paste -sd' ' | column -t -s ';' | fold -sw 80 | sed '2,$s/^/       /'
+    code=404
+    echo -e "${result_color_table[${code:0:1}]}  404;Does not exist or forbidden${OFF}" | paste -sd' ' | column -t -s ';' | fold -sw 80 | sed '2,$s/^/       /'
+}
+##############################################################################
+#
 # Print help for getTransactionStatus operation
 #
 ##############################################################################
@@ -1242,50 +1281,6 @@ print_startTransaction_help() {
     echo -e "${result_color_table[${code:0:1}]}  400;Invalid request${OFF}" | paste -sd' ' | column -t -s ';' | fold -sw 80 | sed '2,$s/^/       /'
     code=404
     echo -e "${result_color_table[${code:0:1}]}  404;No such item${OFF}" | paste -sd' ' | column -t -s ';' | fold -sw 80 | sed '2,$s/^/       /'
-}
-##############################################################################
-#
-# Print help for finishTransaction operation
-#
-##############################################################################
-print_finishTransaction_help() {
-    echo ""
-    echo -e "${BOLD}${WHITE}finishTransaction - Finish a transaction${OFF}${BLUE}(AUTH - BASIC)${OFF}" | paste -sd' ' | fold -sw 80 | sed '2,$s/^/    /'
-    echo -e ""
-    echo -e "This endpoint is used in the third step of transaction processing, the app should use it to update transaction details with data about points added to user's account and actions that were taken on items included in the transaction." | paste -sd' ' | fold -sw 80
-    echo -e ""
-    echo -e "${BOLD}${WHITE}Parameters${OFF}"
-    echo -e "  * ${GREEN}transactionCode${OFF} ${BLUE}[string]${OFF} ${RED}(required)${OFF} ${CYAN}(default: null)${OFF} - Transaction code (scanned or typed in) ${YELLOW}Specify as: transactionCode=value${OFF}" | paste -sd' ' | fold -sw 80 | sed '2,$s/^/    /'
-    echo -e "  * ${GREEN}body${OFF} ${BLUE}[application/json]${OFF} ${RED}(required)${OFF}${OFF} - " | paste -sd' ' | fold -sw 80 | sed '2,$s/^/    /'
-    echo -e ""
-    echo ""
-    echo -e "${BOLD}${WHITE}Responses${OFF}"
-    code=200
-    echo -e "${result_color_table[${code:0:1}]}  200;Successful operation${OFF}" | paste -sd' ' | column -t -s ';' | fold -sw 80 | sed '2,$s/^/       /'
-    code=400
-    echo -e "${result_color_table[${code:0:1}]}  400;Invalid request${OFF}" | paste -sd' ' | column -t -s ';' | fold -sw 80 | sed '2,$s/^/       /'
-    code=404
-    echo -e "${result_color_table[${code:0:1}]}  404;Does not exist or forbidden${OFF}" | paste -sd' ' | column -t -s ';' | fold -sw 80 | sed '2,$s/^/       /'
-}
-##############################################################################
-#
-# Print help for getTransactionDetails operation
-#
-##############################################################################
-print_getTransactionDetails_help() {
-    echo ""
-    echo -e "${BOLD}${WHITE}getTransactionDetails - Get info about a started transaction${OFF}${BLUE}(AUTH - BASIC)${OFF}" | paste -sd' ' | fold -sw 80 | sed '2,$s/^/    /'
-    echo -e ""
-    echo -e "This endpoint is used in the second step of transaction processing, the app should use it to retrieve details about a transaction started by a user, after scanning user's transaction code." | paste -sd' ' | fold -sw 80
-    echo -e ""
-    echo -e "${BOLD}${WHITE}Parameters${OFF}"
-    echo -e "  * ${GREEN}transactionCode${OFF} ${BLUE}[string]${OFF} ${RED}(required)${OFF} ${CYAN}(default: null)${OFF} - Transaction code (scanned or typed in) ${YELLOW}Specify as: transactionCode=value${OFF}" | paste -sd' ' | fold -sw 80 | sed '2,$s/^/    /'
-    echo ""
-    echo -e "${BOLD}${WHITE}Responses${OFF}"
-    code=200
-    echo -e "${result_color_table[${code:0:1}]}  200;Successful operation${OFF}" | paste -sd' ' | column -t -s ';' | fold -sw 80 | sed '2,$s/^/       /'
-    code=404
-    echo -e "${result_color_table[${code:0:1}]}  404;Does not exist or forbidden${OFF}" | paste -sd' ' | column -t -s ';' | fold -sw 80 | sed '2,$s/^/       /'
 }
 ##############################################################################
 #
@@ -2370,7 +2365,7 @@ call_updateItemDefinition() {
         ERROR_MSG=$path
         exit 1
     fi
-    local method="PATCH"
+    local method="PUT"
     local headers_curl
     headers_curl=$(header_arguments_to_curl)
     if [[ -n $header_accept ]]; then
@@ -2696,120 +2691,6 @@ call_logout() {
 
 ##############################################################################
 #
-# Call getTransactionStatus operation
-#
-##############################################################################
-call_getTransactionStatus() {
-    # ignore error about 'path_parameter_names' being unused; passed by reference
-    # shellcheck disable=SC2034
-    local path_parameter_names=(businessId transactionCode)
-    # ignore error about 'query_parameter_names' being unused; passed by reference
-    # shellcheck disable=SC2034
-    local query_parameter_names=(  )
-    local path
-
-    if ! path=$(build_request_path "/user/cards/virtual/{businessId}/transactions/{transactionCode}" path_parameter_names query_parameter_names); then
-        ERROR_MSG=$path
-        exit 1
-    fi
-    local method="GET"
-    local headers_curl
-    headers_curl=$(header_arguments_to_curl)
-    if [[ -n $header_accept ]]; then
-        headers_curl="${headers_curl} -H 'Accept: ${header_accept}'"
-    fi
-
-    local basic_auth_option=""
-    if [[ -n $basic_auth_credential ]]; then
-        basic_auth_option="-u ${basic_auth_credential}"
-    fi
-    if [[ "$print_curl" = true ]]; then
-        echo "curl -d '' ${basic_auth_option} ${curl_arguments} ${headers_curl} -X ${method} \"${host}${path}\""
-    else
-        eval "curl -d '' ${basic_auth_option} ${curl_arguments} ${headers_curl} -X ${method} \"${host}${path}\""
-    fi
-}
-
-##############################################################################
-#
-# Call startTransaction operation
-#
-##############################################################################
-call_startTransaction() {
-    # ignore error about 'path_parameter_names' being unused; passed by reference
-    # shellcheck disable=SC2034
-    local path_parameter_names=(businessId)
-    # ignore error about 'query_parameter_names' being unused; passed by reference
-    # shellcheck disable=SC2034
-    local query_parameter_names=(  )
-    local path
-
-    if ! path=$(build_request_path "/user/cards/virtual/{businessId}/transactions" path_parameter_names query_parameter_names); then
-        ERROR_MSG=$path
-        exit 1
-    fi
-    local method="POST"
-    local headers_curl
-    headers_curl=$(header_arguments_to_curl)
-    if [[ -n $header_accept ]]; then
-        headers_curl="${headers_curl} -H 'Accept: ${header_accept}'"
-    fi
-
-    local basic_auth_option=""
-    if [[ -n $basic_auth_credential ]]; then
-        basic_auth_option="-u ${basic_auth_credential}"
-    fi
-    local body_json_curl=""
-
-    #
-    # Check if the user provided 'Content-type' headers in the
-    # command line. If not try to set them based on the OpenAPI specification
-    # if values produces and consumes are defined unambiguously
-    #
-    if [[ -z $header_content_type ]]; then
-        header_content_type="application/json"
-    fi
-
-
-    if [[ -z $header_content_type && "$force" = false ]]; then
-        :
-        echo "ERROR: Request's content-type not specified!!!"
-        echo "This operation expects content-type in one of the following formats:"
-        echo -e "\\t- application/json"
-        echo ""
-        echo "Use '--content-type' to set proper content type"
-        exit 1
-    else
-        headers_curl="${headers_curl} -H 'Content-type: ${header_content_type}'"
-    fi
-
-
-    #
-    # If we have received some body content over pipe, pass it from the
-    # temporary file to cURL
-    #
-    if [[ -n $body_content_temp_file ]]; then
-        if [[ "$print_curl" = true ]]; then
-            echo "cat ${body_content_temp_file} | curl ${basic_auth_option} ${curl_arguments} ${headers_curl} -X ${method} \"${host}${path}\" -d @-"
-        else
-            eval "cat ${body_content_temp_file} | curl ${basic_auth_option} ${curl_arguments} ${headers_curl} -X ${method} \"${host}${path}\" -d @-"
-        fi
-        rm "${body_content_temp_file}"
-    #
-    # If not, try to build the content body from arguments KEY==VALUE and KEY:=VALUE
-    #
-    else
-        body_json_curl=$(body_parameters_to_json)
-        if [[ "$print_curl" = true ]]; then
-            echo "curl ${basic_auth_option} ${curl_arguments} ${headers_curl} -X ${method} ${body_json_curl} \"${host}${path}\""
-        else
-            eval "curl ${basic_auth_option} ${curl_arguments} ${headers_curl} -X ${method} ${body_json_curl} \"${host}${path}\""
-        fi
-    fi
-}
-
-##############################################################################
-#
 # Call finishTransaction operation
 #
 ##############################################################################
@@ -2919,6 +2800,120 @@ call_getTransactionDetails() {
         echo "curl -d '' ${basic_auth_option} ${curl_arguments} ${headers_curl} -X ${method} \"${host}${path}\""
     else
         eval "curl -d '' ${basic_auth_option} ${curl_arguments} ${headers_curl} -X ${method} \"${host}${path}\""
+    fi
+}
+
+##############################################################################
+#
+# Call getTransactionStatus operation
+#
+##############################################################################
+call_getTransactionStatus() {
+    # ignore error about 'path_parameter_names' being unused; passed by reference
+    # shellcheck disable=SC2034
+    local path_parameter_names=(businessId transactionCode)
+    # ignore error about 'query_parameter_names' being unused; passed by reference
+    # shellcheck disable=SC2034
+    local query_parameter_names=(  )
+    local path
+
+    if ! path=$(build_request_path "/user/cards/virtual/{businessId}/transactions/{transactionCode}" path_parameter_names query_parameter_names); then
+        ERROR_MSG=$path
+        exit 1
+    fi
+    local method="GET"
+    local headers_curl
+    headers_curl=$(header_arguments_to_curl)
+    if [[ -n $header_accept ]]; then
+        headers_curl="${headers_curl} -H 'Accept: ${header_accept}'"
+    fi
+
+    local basic_auth_option=""
+    if [[ -n $basic_auth_credential ]]; then
+        basic_auth_option="-u ${basic_auth_credential}"
+    fi
+    if [[ "$print_curl" = true ]]; then
+        echo "curl -d '' ${basic_auth_option} ${curl_arguments} ${headers_curl} -X ${method} \"${host}${path}\""
+    else
+        eval "curl -d '' ${basic_auth_option} ${curl_arguments} ${headers_curl} -X ${method} \"${host}${path}\""
+    fi
+}
+
+##############################################################################
+#
+# Call startTransaction operation
+#
+##############################################################################
+call_startTransaction() {
+    # ignore error about 'path_parameter_names' being unused; passed by reference
+    # shellcheck disable=SC2034
+    local path_parameter_names=(businessId)
+    # ignore error about 'query_parameter_names' being unused; passed by reference
+    # shellcheck disable=SC2034
+    local query_parameter_names=(  )
+    local path
+
+    if ! path=$(build_request_path "/user/cards/virtual/{businessId}/transactions" path_parameter_names query_parameter_names); then
+        ERROR_MSG=$path
+        exit 1
+    fi
+    local method="POST"
+    local headers_curl
+    headers_curl=$(header_arguments_to_curl)
+    if [[ -n $header_accept ]]; then
+        headers_curl="${headers_curl} -H 'Accept: ${header_accept}'"
+    fi
+
+    local basic_auth_option=""
+    if [[ -n $basic_auth_credential ]]; then
+        basic_auth_option="-u ${basic_auth_credential}"
+    fi
+    local body_json_curl=""
+
+    #
+    # Check if the user provided 'Content-type' headers in the
+    # command line. If not try to set them based on the OpenAPI specification
+    # if values produces and consumes are defined unambiguously
+    #
+    if [[ -z $header_content_type ]]; then
+        header_content_type="application/json"
+    fi
+
+
+    if [[ -z $header_content_type && "$force" = false ]]; then
+        :
+        echo "ERROR: Request's content-type not specified!!!"
+        echo "This operation expects content-type in one of the following formats:"
+        echo -e "\\t- application/json"
+        echo ""
+        echo "Use '--content-type' to set proper content type"
+        exit 1
+    else
+        headers_curl="${headers_curl} -H 'Content-type: ${header_content_type}'"
+    fi
+
+
+    #
+    # If we have received some body content over pipe, pass it from the
+    # temporary file to cURL
+    #
+    if [[ -n $body_content_temp_file ]]; then
+        if [[ "$print_curl" = true ]]; then
+            echo "cat ${body_content_temp_file} | curl ${basic_auth_option} ${curl_arguments} ${headers_curl} -X ${method} \"${host}${path}\" -d @-"
+        else
+            eval "cat ${body_content_temp_file} | curl ${basic_auth_option} ${curl_arguments} ${headers_curl} -X ${method} \"${host}${path}\" -d @-"
+        fi
+        rm "${body_content_temp_file}"
+    #
+    # If not, try to build the content body from arguments KEY==VALUE and KEY:=VALUE
+    #
+    else
+        body_json_curl=$(body_parameters_to_json)
+        if [[ "$print_curl" = true ]]; then
+            echo "curl ${basic_auth_option} ${curl_arguments} ${headers_curl} -X ${method} ${body_json_curl} \"${host}${path}\""
+        else
+            eval "curl ${basic_auth_option} ${curl_arguments} ${headers_curl} -X ${method} ${body_json_curl} \"${host}${path}\""
+        fi
     fi
 }
 
@@ -3337,17 +3332,17 @@ case $key in
     logout)
     operation="logout"
     ;;
-    getTransactionStatus)
-    operation="getTransactionStatus"
-    ;;
-    startTransaction)
-    operation="startTransaction"
-    ;;
     finishTransaction)
     operation="finishTransaction"
     ;;
     getTransactionDetails)
     operation="getTransactionDetails"
+    ;;
+    getTransactionStatus)
+    operation="getTransactionStatus"
+    ;;
+    startTransaction)
+    operation="startTransaction"
     ;;
     getBusiness)
     operation="getBusiness"
@@ -3513,17 +3508,17 @@ case $operation in
     logout)
     call_logout
     ;;
-    getTransactionStatus)
-    call_getTransactionStatus
-    ;;
-    startTransaction)
-    call_startTransaction
-    ;;
     finishTransaction)
     call_finishTransaction
     ;;
     getTransactionDetails)
     call_getTransactionDetails
+    ;;
+    getTransactionStatus)
+    call_getTransactionStatus
+    ;;
+    startTransaction)
+    call_startTransaction
     ;;
     getBusiness)
     call_getBusiness

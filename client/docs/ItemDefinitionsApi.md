@@ -7,7 +7,7 @@ Method | HTTP request | Description
 [**addItemDefinition**](ItemDefinitionsApi.md#addItemDefinition) | **POST** /business/itemDefinitions | Add a new item definition
 [**deleteItemDefinition**](ItemDefinitionsApi.md#deleteItemDefinition) | **DELETE** /business/itemDefinitions/{definitionId} | Delete an exiting item definition
 [**getItemDefinitions**](ItemDefinitionsApi.md#getItemDefinitions) | **GET** /business/itemDefinitions | Get list of item definitions
-[**updateItemDefinition**](ItemDefinitionsApi.md#updateItemDefinition) | **PATCH** /business/itemDefinitions/{definitionId} | Update an exiting item definition
+[**updateItemDefinition**](ItemDefinitionsApi.md#updateItemDefinition) | **PUT** /business/itemDefinitions/{definitionId} | Update an exiting item definition
 
 
 
@@ -117,7 +117,7 @@ This endpoint does not need any parameter.
 
 Update an exiting item definition
 
-This endpoint is used to change details of existing item definitions (benefits).
+This endpoint is used to change details of existing item definitions (benefits). Client has to provide all values, even if values do not change
 
 ### Example
 
@@ -131,7 +131,7 @@ This endpoint is used to change details of existing item definitions (benefits).
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **definitionId** | **string** | Public id of the definition to update | [default to null]
- **patchBusinessItemDefinitionRequest** | [**PatchBusinessItemDefinitionRequest**](PatchBusinessItemDefinitionRequest.md) |  |
+ **putBusinessItemDefinitionRequest** | [**PutBusinessItemDefinitionRequest**](PutBusinessItemDefinitionRequest.md) |  |
 
 ### Return type
 

@@ -15,6 +15,7 @@ type ItemDefinitionManager interface {
 	AddItem(user *User, business *Business, details *ItemDetails) (*ItemDefinition, error)
 	ChangeItemDetails(item *ItemDefinition, details *ItemDetails) (*ItemDefinition, error)
 	WithdrawItem(item *ItemDefinition) (*ItemDefinition, error)
+	DeleteItem(item *ItemDefinition) error
 	GetForBusiness(business *Business) ([]ItemDefinition, error)
 }
 
@@ -53,6 +54,31 @@ func (manager *ItemDefinitionManagerImpl) AddItem(user *User, business *Business
 		return nil, ErrInvalidArgs
 	}
 
+	if details.Name == "" || details.Description == "" || details.Price == nil {
+		return nil, ErrInvalidItemDetails
+	}
+
+	var maxAmount uint = 0
+	if details.MaxAmount != nil {
+		maxAmount = *details.MaxAmount
+	}
+
+	var available bool = true
+	if details.Available != nil {
+		available = *details.Available
+	}
+
+	startDate := sql.NullTime{Valid: true, Time: time.Now()}
+	if details.StartDate != nil {
+		startDate.Time = *details.StartDate
+	}
+
+	endDate := sql.NullTime{Valid: false}
+	if details.StartDate != nil {
+		endDate.Valid = true
+		endDate.Time = *details.EndDate
+	}
+
 	err := manager.baseServices.Database.Transaction(func(db GormDB) error {
 		imageFile, err := manager.fileStorageService.CreateStub(user)
 		if err != nil {
@@ -66,10 +92,10 @@ func (manager *ItemDefinitionManagerImpl) AddItem(user *User, business *Business
 			Price:       *details.Price,
 			Description: details.Description,
 			ImageId:     imageFile.PublicId, // TODO: expect PublicId here?
-			StartDate:   sql.NullTime{Time: *details.StartDate, Valid: true},
-			EndDate:     sql.NullTime{Time: *details.EndDate, Valid: true},
-			MaxAmount:   *details.MaxAmount,
-			Available:   *details.Available,
+			StartDate:   startDate,
+			EndDate:     endDate,
+			MaxAmount:   maxAmount,
+			Available:   available,
 			Withdrawn:   false,
 		}
 
@@ -100,6 +126,7 @@ func (manager *ItemDefinitionManagerImpl) ChangeItemDetails(item *ItemDefinition
 	if details.StartDate != nil {
 		item.StartDate = sql.NullTime{Time: *details.StartDate, Valid: true}
 	}
+	//TODO end date cannot be removed
 	if details.EndDate != nil {
 		item.EndDate = sql.NullTime{Time: *details.EndDate, Valid: true}
 	}
@@ -164,6 +191,20 @@ func (manager *ItemDefinitionManagerImpl) WithdrawItem(item *ItemDefinition) (*I
 		return nil, err
 	}
 	return item, nil
+}
+
+func (manager *ItemDefinitionManagerImpl) DeleteItem(item *ItemDefinition) error {
+	item, err := manager.WithdrawItem(item)
+	if err != nil {
+		return err
+	}
+
+	result := manager.baseServices.Database.Delete(item, &ItemDefinition{PublicId: item.PublicId})
+	if err := result.GetError(); err != nil {
+		return fmt.Errorf("failed to delete item: %+w", err)
+	}
+
+	return nil
 }
 
 func (manager *ItemDefinitionManagerImpl) GetForBusiness(business *Business) ([]ItemDefinition, error) {

@@ -90,10 +90,10 @@ _()
     operations["getLocalCardTypes"]=1
     operations["login"]=1
     operations["logout"]=1
-    operations["getTransactionStatus"]=1
-    operations["startTransaction"]=1
     operations["finishTransaction"]=1
     operations["getTransactionDetails"]=1
+    operations["getTransactionStatus"]=1
+    operations["startTransaction"]=1
     operations["getBusiness"]=1
     operations["searchBusinesses"]=1
     operations["buyItem"]=1
@@ -127,10 +127,10 @@ _()
     operation_parameters["getLocalCardTypes"]=""
     operation_parameters["login"]=""
     operation_parameters["logout"]=""
-    operation_parameters["getTransactionStatus"]="businessId= transactionCode= "
-    operation_parameters["startTransaction"]="businessId= "
     operation_parameters["finishTransaction"]="transactionCode= "
     operation_parameters["getTransactionDetails"]="transactionCode= "
+    operation_parameters["getTransactionStatus"]="businessId= transactionCode= "
+    operation_parameters["startTransaction"]="businessId= "
     operation_parameters["getBusiness"]="businessId= "
     operation_parameters["searchBusinesses"]="text= location= proximity= "
     operation_parameters["buyItem"]="businessId= itemDefinitionId= "

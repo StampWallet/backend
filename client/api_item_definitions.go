@@ -370,14 +370,14 @@ func (a *ItemDefinitionsApiService) GetItemDefinitionsExecute(r ApiGetItemDefini
 }
 
 type ApiUpdateItemDefinitionRequest struct {
-	ctx                                context.Context
-	ApiService                         *ItemDefinitionsApiService
-	definitionId                       string
-	patchBusinessItemDefinitionRequest *PatchBusinessItemDefinitionRequest
+	ctx                              context.Context
+	ApiService                       *ItemDefinitionsApiService
+	definitionId                     string
+	putBusinessItemDefinitionRequest *PutBusinessItemDefinitionRequest
 }
 
-func (r ApiUpdateItemDefinitionRequest) PatchBusinessItemDefinitionRequest(patchBusinessItemDefinitionRequest PatchBusinessItemDefinitionRequest) ApiUpdateItemDefinitionRequest {
-	r.patchBusinessItemDefinitionRequest = &patchBusinessItemDefinitionRequest
+func (r ApiUpdateItemDefinitionRequest) PutBusinessItemDefinitionRequest(putBusinessItemDefinitionRequest PutBusinessItemDefinitionRequest) ApiUpdateItemDefinitionRequest {
+	r.putBusinessItemDefinitionRequest = &putBusinessItemDefinitionRequest
 	return r
 }
 
@@ -388,7 +388,7 @@ func (r ApiUpdateItemDefinitionRequest) Execute() (*DefaultResponse, *http.Respo
 /*
 UpdateItemDefinition Update an exiting item definition
 
-This endpoint is used to change details of existing item definitions (benefits).
+This endpoint is used to change details of existing item definitions (benefits). Client has to provide all values, even if values do not change
 
 	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 	@param definitionId Public id of the definition to update
@@ -407,7 +407,7 @@ func (a *ItemDefinitionsApiService) UpdateItemDefinition(ctx context.Context, de
 //	@return DefaultResponse
 func (a *ItemDefinitionsApiService) UpdateItemDefinitionExecute(r ApiUpdateItemDefinitionRequest) (*DefaultResponse, *http.Response, error) {
 	var (
-		localVarHTTPMethod  = http.MethodPatch
+		localVarHTTPMethod  = http.MethodPut
 		localVarPostBody    interface{}
 		formFiles           []formFile
 		localVarReturnValue *DefaultResponse
@@ -424,8 +424,8 @@ func (a *ItemDefinitionsApiService) UpdateItemDefinitionExecute(r ApiUpdateItemD
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}
 	localVarFormParams := url.Values{}
-	if r.patchBusinessItemDefinitionRequest == nil {
-		return localVarReturnValue, nil, reportError("patchBusinessItemDefinitionRequest is required and must be specified")
+	if r.putBusinessItemDefinitionRequest == nil {
+		return localVarReturnValue, nil, reportError("putBusinessItemDefinitionRequest is required and must be specified")
 	}
 
 	// to determine the Content-Type header
@@ -446,7 +446,7 @@ func (a *ItemDefinitionsApiService) UpdateItemDefinitionExecute(r ApiUpdateItemD
 		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
 	}
 	// body params
-	localVarPostBody = r.patchBusinessItemDefinitionRequest
+	localVarPostBody = r.putBusinessItemDefinitionRequest
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, formFiles)
 	if err != nil {
 		return localVarReturnValue, nil, err

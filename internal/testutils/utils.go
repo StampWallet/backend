@@ -92,7 +92,7 @@ func (TimeJustBeforeNow) String() string {
 }
 
 type Copyable interface {
-	uint64 | uint | string | bool | time.Time | database.GPSCoordinates
+	int32 | uint64 | uint | string | bool | time.Time | database.GPSCoordinates
 }
 
 func Ptr[T Copyable](s T) *T {

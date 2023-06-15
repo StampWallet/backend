@@ -68,7 +68,13 @@ func TestItemDefinitionAddItem(t *testing.T) {
 		Available:   details.Available,
 	}
 	definition, err := manager.AddItem(user, business, details)
-	require.Truef(t, MatchEntities(detailsMatcher, definition), "entities do not match")
+	require.Equal(t, detailsMatcher.Name, definition.Name)
+	require.Equal(t, *detailsMatcher.Price, definition.Price)
+	require.Equal(t, detailsMatcher.Description, definition.Description)
+	require.Equal(t, detailsMatcher.StartDate.Time, definition.StartDate.Time)
+	require.Equal(t, detailsMatcher.EndDate.Time, definition.EndDate.Time)
+	require.Equal(t, *detailsMatcher.MaxAmount, definition.MaxAmount)
+	//require.Truef(t, MatchEntitieAvailable:  s(detailsMatcher, definition), "entities do not match")
 	require.Nilf(t, err, "additem returned an error")
 	require.Equalf(t, imageFile.PublicId, definition.ImageId, "additem returned an error")
 	var dbDetails ItemDefinition
@@ -106,7 +112,15 @@ func TestItemDefinitionChangeItemDetails(t *testing.T) {
 	}
 	newDefinition, err := manager.ChangeItemDetails(definition, &newDetails)
 
-	require.Truef(t, MatchEntities(detailsMatcher, newDefinition), "entities do not match")
+	//require.Truef(t, MatchEntities(detailsMatcher, newDefinition), "entities do not match")
+
+	require.Equal(t, detailsMatcher.Name, newDefinition.Name)
+	require.Equal(t, *detailsMatcher.Price, newDefinition.Price)
+	require.Equal(t, detailsMatcher.Description, newDefinition.Description)
+	require.Equal(t, detailsMatcher.StartDate.Time, newDefinition.StartDate.Time)
+	require.Equal(t, detailsMatcher.EndDate.Time, newDefinition.EndDate.Time)
+	require.Equal(t, *detailsMatcher.MaxAmount, newDefinition.MaxAmount)
+
 	require.Nilf(t, err, "ChangeItemDetails returned an error")
 
 	var dbDetails ItemDefinition

@@ -371,12 +371,12 @@ func setupBusinessHandlersGetAccountInfo() (
 			{
 				PublicId:    testItemDef.PublicId,
 				Name:        testItemDef.Name,
-				Price:       int32(testItemDef.Price),
+				Price:       Ptr(int32(testItemDef.Price)),
 				Description: testItemDef.Description,
 				ImageId:     testItemDef.ImageId,
 				StartDate:   &sd,
 				EndDate:     &ed, // TODO: Should be ptr?
-				MaxAmount:   int32(testItemDef.MaxAmount),
+				MaxAmount:   Ptr(int32(testItemDef.MaxAmount)),
 				Available:   testItemDef.Available,
 			},
 		},

@@ -21,15 +21,15 @@ var _ MappedNullable = &ItemDefinitionAPIModel{}
 
 // ItemDefinitionAPIModel struct for ItemDefinitionAPIModel
 type ItemDefinitionAPIModel struct {
-	PublicId    *string      `json:"publicId,omitempty"`
-	Name        *string      `json:"name,omitempty"`
-	Price       *int32       `json:"price,omitempty"`
-	Description *string      `json:"description,omitempty"`
-	ImageId     *string      `json:"imageId,omitempty"`
-	StartDate   NullableTime `json:"startDate,omitempty"`
-	EndDate     NullableTime `json:"endDate,omitempty"`
-	MaxAmount   *int32       `json:"maxAmount,omitempty"`
-	Available   *bool        `json:"available,omitempty"`
+	PublicId    *string       `json:"publicId,omitempty"`
+	Name        *string       `json:"name,omitempty"`
+	Price       NullableInt32 `json:"price,omitempty"`
+	Description *string       `json:"description,omitempty"`
+	ImageId     *string       `json:"imageId,omitempty"`
+	StartDate   NullableTime  `json:"startDate,omitempty"`
+	EndDate     NullableTime  `json:"endDate,omitempty"`
+	MaxAmount   NullableInt32 `json:"maxAmount,omitempty"`
+	Available   *bool         `json:"available,omitempty"`
 }
 
 // NewItemDefinitionAPIModel instantiates a new ItemDefinitionAPIModel object
@@ -113,36 +113,47 @@ func (o *ItemDefinitionAPIModel) SetName(v string) {
 	o.Name = &v
 }
 
-// GetPrice returns the Price field value if set, zero value otherwise.
+// GetPrice returns the Price field value if set, zero value otherwise (both if not set or set to explicit null).
 func (o *ItemDefinitionAPIModel) GetPrice() int32 {
-	if o == nil || isNil(o.Price) {
+	if o == nil || isNil(o.Price.Get()) {
 		var ret int32
 		return ret
 	}
-	return *o.Price
+	return *o.Price.Get()
 }
 
 // GetPriceOk returns a tuple with the Price field value if set, nil otherwise
 // and a boolean to check if the value has been set.
+// NOTE: If the value is an explicit nil, `nil, true` will be returned
 func (o *ItemDefinitionAPIModel) GetPriceOk() (*int32, bool) {
-	if o == nil || isNil(o.Price) {
+	if o == nil {
 		return nil, false
 	}
-	return o.Price, true
+	return o.Price.Get(), o.Price.IsSet()
 }
 
 // HasPrice returns a boolean if a field has been set.
 func (o *ItemDefinitionAPIModel) HasPrice() bool {
-	if o != nil && !isNil(o.Price) {
+	if o != nil && o.Price.IsSet() {
 		return true
 	}
 
 	return false
 }
 
-// SetPrice gets a reference to the given int32 and assigns it to the Price field.
+// SetPrice gets a reference to the given NullableInt32 and assigns it to the Price field.
 func (o *ItemDefinitionAPIModel) SetPrice(v int32) {
-	o.Price = &v
+	o.Price.Set(&v)
+}
+
+// SetPriceNil sets the value for Price to be an explicit nil
+func (o *ItemDefinitionAPIModel) SetPriceNil() {
+	o.Price.Set(nil)
+}
+
+// UnsetPrice ensures that no value is present for Price, not even an explicit nil
+func (o *ItemDefinitionAPIModel) UnsetPrice() {
+	o.Price.Unset()
 }
 
 // GetDescription returns the Description field value if set, zero value otherwise.
@@ -295,36 +306,47 @@ func (o *ItemDefinitionAPIModel) UnsetEndDate() {
 	o.EndDate.Unset()
 }
 
-// GetMaxAmount returns the MaxAmount field value if set, zero value otherwise.
+// GetMaxAmount returns the MaxAmount field value if set, zero value otherwise (both if not set or set to explicit null).
 func (o *ItemDefinitionAPIModel) GetMaxAmount() int32 {
-	if o == nil || isNil(o.MaxAmount) {
+	if o == nil || isNil(o.MaxAmount.Get()) {
 		var ret int32
 		return ret
 	}
-	return *o.MaxAmount
+	return *o.MaxAmount.Get()
 }
 
 // GetMaxAmountOk returns a tuple with the MaxAmount field value if set, nil otherwise
 // and a boolean to check if the value has been set.
+// NOTE: If the value is an explicit nil, `nil, true` will be returned
 func (o *ItemDefinitionAPIModel) GetMaxAmountOk() (*int32, bool) {
-	if o == nil || isNil(o.MaxAmount) {
+	if o == nil {
 		return nil, false
 	}
-	return o.MaxAmount, true
+	return o.MaxAmount.Get(), o.MaxAmount.IsSet()
 }
 
 // HasMaxAmount returns a boolean if a field has been set.
 func (o *ItemDefinitionAPIModel) HasMaxAmount() bool {
-	if o != nil && !isNil(o.MaxAmount) {
+	if o != nil && o.MaxAmount.IsSet() {
 		return true
 	}
 
 	return false
 }
 
-// SetMaxAmount gets a reference to the given int32 and assigns it to the MaxAmount field.
+// SetMaxAmount gets a reference to the given NullableInt32 and assigns it to the MaxAmount field.
 func (o *ItemDefinitionAPIModel) SetMaxAmount(v int32) {
-	o.MaxAmount = &v
+	o.MaxAmount.Set(&v)
+}
+
+// SetMaxAmountNil sets the value for MaxAmount to be an explicit nil
+func (o *ItemDefinitionAPIModel) SetMaxAmountNil() {
+	o.MaxAmount.Set(nil)
+}
+
+// UnsetMaxAmount ensures that no value is present for MaxAmount, not even an explicit nil
+func (o *ItemDefinitionAPIModel) UnsetMaxAmount() {
+	o.MaxAmount.Unset()
 }
 
 // GetAvailable returns the Available field value if set, zero value otherwise.
@@ -375,8 +397,8 @@ func (o ItemDefinitionAPIModel) ToMap() (map[string]interface{}, error) {
 	if !isNil(o.Name) {
 		toSerialize["name"] = o.Name
 	}
-	if !isNil(o.Price) {
-		toSerialize["price"] = o.Price
+	if o.Price.IsSet() {
+		toSerialize["price"] = o.Price.Get()
 	}
 	if !isNil(o.Description) {
 		toSerialize["description"] = o.Description
@@ -390,8 +412,8 @@ func (o ItemDefinitionAPIModel) ToMap() (map[string]interface{}, error) {
 	if o.EndDate.IsSet() {
 		toSerialize["endDate"] = o.EndDate.Get()
 	}
-	if !isNil(o.MaxAmount) {
-		toSerialize["maxAmount"] = o.MaxAmount
+	if o.MaxAmount.IsSet() {
+		toSerialize["maxAmount"] = o.MaxAmount.Get()
 	}
 	if !isNil(o.Available) {
 		toSerialize["available"] = o.Available
