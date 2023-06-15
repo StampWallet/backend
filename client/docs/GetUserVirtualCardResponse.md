@@ -3,7 +3,7 @@
 ## Properties
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**points** | **integer** |  | [optional] [default to null]
+**points** | **integer** |  | [default to null]
 **ownedItems** | [**array[OwnedItemAPIModel]**](OwnedItemAPIModel.md) |  | [optional] [default to null]
 **businessDetails** | [**PublicBusinessDetailsAPIModel**](PublicBusinessDetailsAPIModel.md) |  | [optional] [default to null]
 

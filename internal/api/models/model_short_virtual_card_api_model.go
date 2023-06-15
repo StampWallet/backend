@@ -13,5 +13,5 @@ package api
 type ShortVirtualCardApiModel struct {
 	BusinessDetails ShortBusinessDetailsApiModel `json:"businessDetails,omitempty"`
 
-	Points int32 `json:"points,omitempty"`
+	Points int32 `json:"points"`
 }

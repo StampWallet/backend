@@ -20,7 +20,7 @@ var _ MappedNullable = &GetUserVirtualCardResponse{}
 
 // GetUserVirtualCardResponse struct for GetUserVirtualCardResponse
 type GetUserVirtualCardResponse struct {
-	Points          *int32                         `json:"points,omitempty"`
+	Points          int32                          `json:"points"`
 	OwnedItems      []OwnedItemAPIModel            `json:"ownedItems,omitempty"`
 	BusinessDetails *PublicBusinessDetailsAPIModel `json:"businessDetails,omitempty"`
 }
@@ -29,8 +29,9 @@ type GetUserVirtualCardResponse struct {
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewGetUserVirtualCardResponse() *GetUserVirtualCardResponse {
+func NewGetUserVirtualCardResponse(points int32) *GetUserVirtualCardResponse {
 	this := GetUserVirtualCardResponse{}
+	this.Points = points
 	return &this
 }
 
@@ -42,36 +43,28 @@ func NewGetUserVirtualCardResponseWithDefaults() *GetUserVirtualCardResponse {
 	return &this
 }
 
-// GetPoints returns the Points field value if set, zero value otherwise.
+// GetPoints returns the Points field value
 func (o *GetUserVirtualCardResponse) GetPoints() int32 {
-	if o == nil || isNil(o.Points) {
+	if o == nil {
 		var ret int32
 		return ret
 	}
-	return *o.Points
+
+	return o.Points
 }
 
-// GetPointsOk returns a tuple with the Points field value if set, nil otherwise
+// GetPointsOk returns a tuple with the Points field value
 // and a boolean to check if the value has been set.
 func (o *GetUserVirtualCardResponse) GetPointsOk() (*int32, bool) {
-	if o == nil || isNil(o.Points) {
+	if o == nil {
 		return nil, false
 	}
-	return o.Points, true
+	return &o.Points, true
 }
 
-// HasPoints returns a boolean if a field has been set.
-func (o *GetUserVirtualCardResponse) HasPoints() bool {
-	if o != nil && !isNil(o.Points) {
-		return true
-	}
-
-	return false
-}
-
-// SetPoints gets a reference to the given int32 and assigns it to the Points field.
+// SetPoints sets field value
 func (o *GetUserVirtualCardResponse) SetPoints(v int32) {
-	o.Points = &v
+	o.Points = v
 }
 
 // GetOwnedItems returns the OwnedItems field value if set, zero value otherwise.
@@ -148,9 +141,7 @@ func (o GetUserVirtualCardResponse) MarshalJSON() ([]byte, error) {
 
 func (o GetUserVirtualCardResponse) ToMap() (map[string]interface{}, error) {
 	toSerialize := map[string]interface{}{}
-	if !isNil(o.Points) {
-		toSerialize["points"] = o.Points
-	}
+	toSerialize["points"] = o.Points
 	if !isNil(o.OwnedItems) {
 		toSerialize["ownedItems"] = o.OwnedItems
 	}

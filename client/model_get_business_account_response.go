@@ -25,7 +25,7 @@ type GetBusinessAccountResponse struct {
 	Address         *string                  `json:"address,omitempty"`
 	GpsCoordinates  *string                  `json:"gpsCoordinates,omitempty"`
 	BannerImageId   *string                  `json:"bannerImageId,omitempty"`
-	Description     *string                  `json:"description,omitempty"`
+	Description     string                   `json:"description"`
 	IconImageId     *string                  `json:"iconImageId,omitempty"`
 	MenuImageIds    []string                 `json:"menuImageIds,omitempty"`
 	ItemDefinitions []ItemDefinitionAPIModel `json:"itemDefinitions,omitempty"`
@@ -39,8 +39,9 @@ type GetBusinessAccountResponse struct {
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewGetBusinessAccountResponse() *GetBusinessAccountResponse {
+func NewGetBusinessAccountResponse(description string) *GetBusinessAccountResponse {
 	this := GetBusinessAccountResponse{}
+	this.Description = description
 	return &this
 }
 
@@ -212,36 +213,28 @@ func (o *GetBusinessAccountResponse) SetBannerImageId(v string) {
 	o.BannerImageId = &v
 }
 
-// GetDescription returns the Description field value if set, zero value otherwise.
+// GetDescription returns the Description field value
 func (o *GetBusinessAccountResponse) GetDescription() string {
-	if o == nil || isNil(o.Description) {
+	if o == nil {
 		var ret string
 		return ret
 	}
-	return *o.Description
+
+	return o.Description
 }
 
-// GetDescriptionOk returns a tuple with the Description field value if set, nil otherwise
+// GetDescriptionOk returns a tuple with the Description field value
 // and a boolean to check if the value has been set.
 func (o *GetBusinessAccountResponse) GetDescriptionOk() (*string, bool) {
-	if o == nil || isNil(o.Description) {
+	if o == nil {
 		return nil, false
 	}
-	return o.Description, true
+	return &o.Description, true
 }
 
-// HasDescription returns a boolean if a field has been set.
-func (o *GetBusinessAccountResponse) HasDescription() bool {
-	if o != nil && !isNil(o.Description) {
-		return true
-	}
-
-	return false
-}
-
-// SetDescription gets a reference to the given string and assigns it to the Description field.
+// SetDescription sets field value
 func (o *GetBusinessAccountResponse) SetDescription(v string) {
-	o.Description = &v
+	o.Description = v
 }
 
 // GetIconImageId returns the IconImageId field value if set, zero value otherwise.
@@ -493,9 +486,7 @@ func (o GetBusinessAccountResponse) ToMap() (map[string]interface{}, error) {
 	if !isNil(o.BannerImageId) {
 		toSerialize["bannerImageId"] = o.BannerImageId
 	}
-	if !isNil(o.Description) {
-		toSerialize["description"] = o.Description
-	}
+	toSerialize["description"] = o.Description
 	if !isNil(o.IconImageId) {
 		toSerialize["iconImageId"] = o.IconImageId
 	}

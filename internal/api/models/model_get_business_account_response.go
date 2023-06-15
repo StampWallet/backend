@@ -21,7 +21,7 @@ type GetBusinessAccountResponse struct {
 
 	BannerImageId string `json:"bannerImageId,omitempty"`
 
-	Description string `json:"description,omitempty"`
+	Description string `json:"description"`
 
 	IconImageId string `json:"iconImageId,omitempty"`
 

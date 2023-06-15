@@ -21,15 +21,16 @@ var _ MappedNullable = &ShortVirtualCardAPIModel{}
 // ShortVirtualCardAPIModel struct for ShortVirtualCardAPIModel
 type ShortVirtualCardAPIModel struct {
 	BusinessDetails *ShortBusinessDetailsAPIModel `json:"businessDetails,omitempty"`
-	Points          *int32                        `json:"points,omitempty"`
+	Points          int32                         `json:"points"`
 }
 
 // NewShortVirtualCardAPIModel instantiates a new ShortVirtualCardAPIModel object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewShortVirtualCardAPIModel() *ShortVirtualCardAPIModel {
+func NewShortVirtualCardAPIModel(points int32) *ShortVirtualCardAPIModel {
 	this := ShortVirtualCardAPIModel{}
+	this.Points = points
 	return &this
 }
 
@@ -73,36 +74,28 @@ func (o *ShortVirtualCardAPIModel) SetBusinessDetails(v ShortBusinessDetailsAPIM
 	o.BusinessDetails = &v
 }
 
-// GetPoints returns the Points field value if set, zero value otherwise.
+// GetPoints returns the Points field value
 func (o *ShortVirtualCardAPIModel) GetPoints() int32 {
-	if o == nil || isNil(o.Points) {
+	if o == nil {
 		var ret int32
 		return ret
 	}
-	return *o.Points
+
+	return o.Points
 }
 
-// GetPointsOk returns a tuple with the Points field value if set, nil otherwise
+// GetPointsOk returns a tuple with the Points field value
 // and a boolean to check if the value has been set.
 func (o *ShortVirtualCardAPIModel) GetPointsOk() (*int32, bool) {
-	if o == nil || isNil(o.Points) {
+	if o == nil {
 		return nil, false
 	}
-	return o.Points, true
+	return &o.Points, true
 }
 
-// HasPoints returns a boolean if a field has been set.
-func (o *ShortVirtualCardAPIModel) HasPoints() bool {
-	if o != nil && !isNil(o.Points) {
-		return true
-	}
-
-	return false
-}
-
-// SetPoints gets a reference to the given int32 and assigns it to the Points field.
+// SetPoints sets field value
 func (o *ShortVirtualCardAPIModel) SetPoints(v int32) {
-	o.Points = &v
+	o.Points = v
 }
 
 func (o ShortVirtualCardAPIModel) MarshalJSON() ([]byte, error) {
@@ -118,9 +111,7 @@ func (o ShortVirtualCardAPIModel) ToMap() (map[string]interface{}, error) {
 	if !isNil(o.BusinessDetails) {
 		toSerialize["businessDetails"] = o.BusinessDetails
 	}
-	if !isNil(o.Points) {
-		toSerialize["points"] = o.Points
-	}
+	toSerialize["points"] = o.Points
 	return toSerialize, nil
 }
 

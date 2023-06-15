@@ -11,7 +11,7 @@
 package api
 
 type GetUserVirtualCardResponse struct {
-	Points int32 `json:"points,omitempty"`
+	Points int32 `json:"points"`
 
 	OwnedItems []OwnedItemApiModel `json:"ownedItems,omitempty"`
 

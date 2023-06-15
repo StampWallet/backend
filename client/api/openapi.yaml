@@ -1356,6 +1356,7 @@ components:
         nip: 1234567899
         krs: 1234567890
         regon: 12345678901234
+        description: test asdas
         ownerName: Jan Kowalski
       properties:
         name:
@@ -1688,6 +1689,8 @@ components:
           type: array
         businessDetails:
           $ref: '#/components/schemas/PublicBusinessDetailsAPIModel'
+      required:
+      - points
       type: object
     PostUserVirtualCardTransactionRequest:
       example:
@@ -1818,6 +1821,8 @@ components:
           $ref: '#/components/schemas/ShortBusinessDetailsAPIModel'
         points:
           type: integer
+      required:
+      - points
       type: object
     PublicBusinessDetailsAPIModel:
       example:
@@ -1862,6 +1867,8 @@ components:
           items:
             $ref: '#/components/schemas/ItemDefinitionAPIModel'
           type: array
+      required:
+      - description
       type: object
     ItemDefinitionAPIModel:
       example:
