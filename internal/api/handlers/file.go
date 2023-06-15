@@ -92,8 +92,22 @@ func (handler *FileHandlers) postFile(c *gin.Context) {
 		return
 	}
 
+	fileHeader, err := c.FormFile("file")
+	if err != nil {
+		handler.logger.Printf("%s unknown error after c.FormFile: %+v", CallerFilename(), err)
+		c.JSON(400, api.DefaultResponse{Status: api.INVALID_REQUEST})
+		return
+	}
+
+	file, err := fileHeader.Open()
+	if err != nil {
+		handler.logger.Printf("%s failed to open file: %+v", CallerFilename(), err)
+		c.JSON(500, api.DefaultResponse{Status: api.UNKNOWN_ERROR})
+		return
+	}
+
 	// Pass request bdoy to fileStorageService
-	_, err := handler.fileStorageService.Upload(*fileMetadata, c.Request.Body, mimetype)
+	_, err = handler.fileStorageService.Upload(*fileMetadata, file, fileHeader.Header.Get("Content-Type"))
 	if err == ErrInvalidMimeType {
 		c.JSON(400, api.DefaultResponse{Status: api.INVALID_REQUEST, Message: "INVALID_CONTENT_TYPE"})
 		return

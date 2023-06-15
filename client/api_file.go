@@ -267,12 +267,11 @@ type ApiUploadFileRequest struct {
 	ctx        context.Context
 	ApiService *FileApiService
 	fileId     string
-	body       *os.File
+	file       *os.File
 }
 
-// File data
-func (r ApiUploadFileRequest) Body(body *os.File) ApiUploadFileRequest {
-	r.body = body
+func (r ApiUploadFileRequest) File(file *os.File) ApiUploadFileRequest {
+	r.file = file
 	return r
 }
 
@@ -319,12 +318,9 @@ func (a *FileApiService) UploadFileExecute(r ApiUploadFileRequest) (*DefaultResp
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}
 	localVarFormParams := url.Values{}
-	if r.body == nil {
-		return localVarReturnValue, nil, reportError("body is required and must be specified")
-	}
 
 	// to determine the Content-Type header
-	localVarHTTPContentTypes := []string{"image/png", "image/jpg"}
+	localVarHTTPContentTypes := []string{"multipart/form-data"}
 
 	// set Content-Type header
 	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
@@ -340,8 +336,22 @@ func (a *FileApiService) UploadFileExecute(r ApiUploadFileRequest) (*DefaultResp
 	if localVarHTTPHeaderAccept != "" {
 		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
 	}
-	// body params
-	localVarPostBody = r.body
+	var fileLocalVarFormFileName string
+	var fileLocalVarFileName string
+	var fileLocalVarFileBytes []byte
+
+	fileLocalVarFormFileName = "file"
+
+	fileLocalVarFile := r.file
+
+	if fileLocalVarFile != nil {
+		fbs, _ := ioutil.ReadAll(fileLocalVarFile)
+
+		fileLocalVarFileBytes = fbs
+		fileLocalVarFileName = fileLocalVarFile.Name()
+		fileLocalVarFile.Close()
+		formFiles = append(formFiles, formFile{fileBytes: fileLocalVarFileBytes, fileName: fileLocalVarFileName, formFileName: fileLocalVarFormFileName})
+	}
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, formFiles)
 	if err != nil {
 		return localVarReturnValue, nil, err

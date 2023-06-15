@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"io"
 	"math"
+	"mime/multipart"
 	"os"
 	"path"
 	"reflect"
@@ -114,10 +115,22 @@ func ReturnArg(arg interface{}) interface{} {
 
 type TestContextBuilder struct{ Context *gin.Context }
 
-func TestFileReader(filename string) io.Reader {
+func TestFileReader(filename string) (io.Reader, string) {
 	buf := new(bytes.Buffer)
-	//mw := multipart.NewWriter(buf)
-	//w, _ := mw.CreateFormFile("file", "test")
+	mw := multipart.NewWriter(buf)
+	w, _ := mw.CreateFormFile("file", "test")
+
+	file, _ := os.Open(filename)
+	io.Copy(w, file)
+	//io.Copy(buf, file)
+
+	file.Close()
+	mw.Close()
+	return buf, mw.Boundary()
+}
+
+func TestFileReaderWithoutMultipart(filename string) io.Reader {
+	buf := new(bytes.Buffer)
 
 	file, _ := os.Open(filename)
 	io.Copy(buf, file)
@@ -181,9 +194,9 @@ func (tc *TestContextBuilder) SetHeader(headerKey string, headerValue string) *T
 // Overwrites request body
 // Lifted from https://github.com/gin-gonic/gin/blob/master/context_test.go > TestContextFormFile
 func (tc *TestContextBuilder) SetTestFile(filename string) *TestContextBuilder {
-	r := TestFileReader(filename)
+	r, bound := TestFileReader(filename)
 	tc.Context.Request.Body = io.NopCloser(r)
-	return tc.SetHeader("Content-Type", "multipart/form-data")
+	return tc.SetHeader("Content-Type", "multipart/form-data; boundary="+bound)
 }
 
 func (tc *TestContextBuilder) AttachTestPng() *TestContextBuilder {

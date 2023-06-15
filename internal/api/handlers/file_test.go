@@ -65,7 +65,7 @@ func TestFileHandlerGetFileOk(t *testing.T) {
 
 	handler.getFile(context)
 
-	expectedContents, _ := io.ReadAll(TestFileReader("resources/test.png"))
+	expectedContents, _ := io.ReadAll(TestFileReaderWithoutMultipart("resources/test.png"))
 
 	require.Equalf(t, w.Result().StatusCode, int(200), "Response returned unexpected status code")
 	require.Truef(t, bytes.Compare(w.Body.Bytes(), expectedContents) == 0, "Response returned unexpected file data")
@@ -86,7 +86,6 @@ func TestFileHandlersPostFileOk(t *testing.T) {
 		SetMethod("POST").
 		AttachTestPng().
 		SetHeader("Accept", "application/json").
-		SetHeader("Content-Type", "image/png").
 		SetParam("fileId", fileId).
 		SetDefaultToken().
 		Context
@@ -106,7 +105,9 @@ func TestFileHandlersPostFileOk(t *testing.T) {
 		Upload(
 			gomock.Eq(*testFileMetadata),
 			gomock.Any(), // TODO: Matcher for test png?
-			gomock.Eq("image/png"),
+			//gomock.Eq("image/png"),
+			//TODO change multipart content type
+			gomock.Eq("application/octet-stream"),
 		).
 		Return(
 			testFileMetadata, // Q: Should this change upon upload?

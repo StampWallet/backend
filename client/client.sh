@@ -105,7 +105,7 @@ operation_parameters_minimum_occurrences["updateBusinessAccount:::PatchBusinessA
 operation_parameters_minimum_occurrences["deleteFile:::fileId"]=1
 operation_parameters_minimum_occurrences["getFile:::fileId"]=1
 operation_parameters_minimum_occurrences["uploadFile:::fileId"]=1
-operation_parameters_minimum_occurrences["uploadFile:::body"]=1
+operation_parameters_minimum_occurrences["uploadFile:::file"]=0
 operation_parameters_minimum_occurrences["addItemDefinition:::PostBusinessItemDefinitionRequest"]=1
 operation_parameters_minimum_occurrences["deleteItemDefinition:::definitionId"]=1
 operation_parameters_minimum_occurrences["updateItemDefinition:::definitionId"]=1
@@ -149,7 +149,7 @@ operation_parameters_maximum_occurrences["updateBusinessAccount:::PatchBusinessA
 operation_parameters_maximum_occurrences["deleteFile:::fileId"]=0
 operation_parameters_maximum_occurrences["getFile:::fileId"]=0
 operation_parameters_maximum_occurrences["uploadFile:::fileId"]=0
-operation_parameters_maximum_occurrences["uploadFile:::body"]=0
+operation_parameters_maximum_occurrences["uploadFile:::file"]=0
 operation_parameters_maximum_occurrences["addItemDefinition:::PostBusinessItemDefinitionRequest"]=0
 operation_parameters_maximum_occurrences["deleteItemDefinition:::definitionId"]=0
 operation_parameters_maximum_occurrences["updateItemDefinition:::definitionId"]=0
@@ -190,7 +190,7 @@ operation_parameters_collection_type["updateBusinessAccount:::PatchBusinessAccou
 operation_parameters_collection_type["deleteFile:::fileId"]=""
 operation_parameters_collection_type["getFile:::fileId"]=""
 operation_parameters_collection_type["uploadFile:::fileId"]=""
-operation_parameters_collection_type["uploadFile:::body"]=""
+operation_parameters_collection_type["uploadFile:::file"]=""
 operation_parameters_collection_type["addItemDefinition:::PostBusinessItemDefinitionRequest"]=""
 operation_parameters_collection_type["deleteItemDefinition:::definitionId"]=""
 operation_parameters_collection_type["updateItemDefinition:::definitionId"]=""
@@ -1001,8 +1001,6 @@ print_uploadFile_help() {
     echo -e ""
     echo -e "${BOLD}${WHITE}Parameters${OFF}"
     echo -e "  * ${GREEN}fileId${OFF} ${BLUE}[string]${OFF} ${RED}(required)${OFF} ${CYAN}(default: null)${OFF} - ID of file to upload/replace ${YELLOW}Specify as: fileId=value${OFF}" | paste -sd' ' | fold -sw 80 | sed '2,$s/^/    /'
-    echo -e "  * ${GREEN}body${OFF} ${BLUE}[image/png,image/jpg]${OFF} ${RED}(required)${OFF}${OFF} - File data" | paste -sd' ' | fold -sw 80 | sed '2,$s/^/    /'
-    echo -e ""
     echo ""
     echo -e "${BOLD}${WHITE}Responses${OFF}"
     code=200
@@ -2150,50 +2148,11 @@ call_uploadFile() {
     if [[ -n $basic_auth_credential ]]; then
         basic_auth_option="-u ${basic_auth_credential}"
     fi
-    local body_json_curl=""
-
-    #
-    # Check if the user provided 'Content-type' headers in the
-    # command line. If not try to set them based on the OpenAPI specification
-    # if values produces and consumes are defined unambiguously
-    #
-
-
-    if [[ -z $header_content_type && "$force" = false ]]; then
-        :
-        echo "ERROR: Request's content-type not specified!!!"
-        echo "This operation expects content-type in one of the following formats:"
-        echo -e "\\t- image/png"
-        echo -e "\\t- image/jpg"
-        echo ""
-        echo "Use '--content-type' to set proper content type"
-        exit 1
+    body_form_urlencoded=$(body_parameters_to_form_urlencoded)
+    if [[ "$print_curl" = true ]]; then
+        echo "curl ${body_form_urlencoded} ${basic_auth_option} ${curl_arguments} ${headers_curl} -X ${method} \"${host}${path}\""
     else
-        headers_curl="${headers_curl} -H 'Content-type: ${header_content_type}'"
-    fi
-
-
-    #
-    # If we have received some body content over pipe, pass it from the
-    # temporary file to cURL
-    #
-    if [[ -n $body_content_temp_file ]]; then
-        if [[ "$print_curl" = true ]]; then
-            echo "cat ${body_content_temp_file} | curl ${basic_auth_option} ${curl_arguments} ${headers_curl} -X ${method} \"${host}${path}\" -d @-"
-        else
-            eval "cat ${body_content_temp_file} | curl ${basic_auth_option} ${curl_arguments} ${headers_curl} -X ${method} \"${host}${path}\" -d @-"
-        fi
-        rm "${body_content_temp_file}"
-    #
-    # If not, try to build the content body from arguments KEY==VALUE and KEY:=VALUE
-    #
-    else
-        body_json_curl=$(body_parameters_to_json)
-        if [[ "$print_curl" = true ]]; then
-            echo "curl ${basic_auth_option} ${curl_arguments} ${headers_curl} -X ${method} ${body_json_curl} \"${host}${path}\""
-        else
-            eval "curl ${basic_auth_option} ${curl_arguments} ${headers_curl} -X ${method} ${body_json_curl} \"${host}${path}\""
-        fi
+        eval "curl ${body_form_urlencoded} ${curl_arguments} ${headers_curl} -X ${method} \"${host}${path}\""
     fi
 }
 

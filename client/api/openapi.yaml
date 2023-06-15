@@ -1206,14 +1206,13 @@ paths:
         style: simple
       requestBody:
         content:
-          image/png:
+          multipart/form-data:
+            encoding:
+              file:
+                contentType: "image/png, image/jpeg, image/webp"
+                style: form
             schema:
-              format: binary
-              type: string
-          image/jpg:
-            schema:
-              format: binary
-              type: string
+              $ref: '#/components/schemas/uploadFile_request'
         description: File data
         required: true
       responses:
@@ -1924,6 +1923,12 @@ components:
       - RECALLED
       - CANCELLED
       type: string
+    uploadFile_request:
+      properties:
+        file:
+          format: binary
+          type: string
+      type: object
     GetBusinessAccountResponse_allOf:
       properties:
         nip:

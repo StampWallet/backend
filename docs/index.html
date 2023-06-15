@@ -934,20 +934,18 @@ font-style: italic;
     <h3 class="field-label">Consumes</h3>
     This API call consumes the following media types via the <span class="header">Content-Type</span> request header:
     <ul>
-      <li><code>image/png</code></li>
-      <li><code>image/jpg</code></li>
+      <li><code>multipart/form-data</code></li>
     </ul>
 
-    <h3 class="field-label">Request body</h3>
+
+
+
+    <h3 class="field-label">Form parameters</h3>
     <div class="field-items">
-      <div class="param">body <a href="#file">file</a> (required)</div>
+      <div class="param">file (optional)</div>
 
-      <div class="param-desc"><span class="param-type">Body Parameter</span> &mdash;  </div>
-
+      <div class="param-desc"><span class="param-type">Form Parameter</span> &mdash;  default: null format: binary</div>
     </div>  <!-- field-items -->
-
-
-
 
     <h3 class="field-label">Return type</h3>
     <div class="return-type">
