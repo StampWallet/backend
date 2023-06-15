@@ -14,7 +14,9 @@ import (
 
 var (
 	ErrVirtualCardAlreadyExists = errors.New("Virtual card already exists")
-	ErrNoSuchVirtualCard        = errors.New("No such virtual card")
+	ErrNoSuchVirtualCard        = errors.New("Virtual card not found")
+	ErrNoSuchBusiness           = errors.New("Business not found")
+	ErrNoSuchItemDefinition     = errors.New("Item definition not found")
 	ErrAboveMaxAmount           = errors.New("Attempt to buy item above max item amount")
 	ErrNotEnoughPoints          = errors.New("Attempt to buy item with not enough points")
 	ErrBeforeStartDate          = errors.New("Attempt to buy item before start date")
@@ -26,7 +28,8 @@ var (
 
 type VirtualCardManager interface {
 	// Creates virtual card of business for user
-	Create(user *User, business *Business) (*VirtualCard, error)
+	// businessId passed as string - caller is not required to have "access" to a business object
+	Create(user *User, businessId string) (*VirtualCard, error)
 
 	// Removes virtual card
 	Remove(virtualCard *VirtualCard) error
@@ -40,7 +43,8 @@ type VirtualCardManager interface {
 	// Creates a new OwnedItem for virtual card if all conditions are met
 	// (ex. virtualCard has enough points, item is still/already valid,
 	// virtualCard has less items of this type than ItemDefinition.MaxAmount...)
-	BuyItem(virtual *VirtualCard, itemDefinition *ItemDefinition) (*OwnedItem, error)
+	// itemDefinitionId passed as string - caller is not required to have "access" to the ItemDefinition object
+	BuyItem(virtual *VirtualCard, itemDefinitionId string) (*OwnedItem, error)
 
 	// Returns item - item is removed from virtualCard, points are returned to the card.
 	// Fails if item was used.
@@ -57,12 +61,22 @@ func CreateVirtualCardManagerImpl(baseServices BaseServices) *VirtualCardManager
 	}
 }
 
-func (manager *VirtualCardManagerImpl) Create(user *User, business *Business) (*VirtualCard, error) {
+func (manager *VirtualCardManagerImpl) Create(user *User, businessId string) (*VirtualCard, error) {
 	var virtualCard VirtualCard
 	err := manager.baseServices.Database.Transaction(func(tx GormDB) error {
+		// Find business by id
+		var business Business
+		businessResult := tx.First(&business, Business{PublicId: businessId})
+		err := businessResult.GetError()
+		if err == gorm.ErrRecordNotFound {
+			return ErrNoSuchBusiness
+		} else if err != nil {
+			return fmt.Errorf("tx.First returned an error: %+v", err)
+		}
+
 		// Checks if user already has this virtual card
-		result := tx.First(&virtualCard, VirtualCard{User: user, Business: business})
-		err := result.GetError()
+		result := tx.First(&virtualCard, VirtualCard{User: user, Business: &business})
+		err = result.GetError()
 		if err != gorm.ErrRecordNotFound && err != nil {
 			return fmt.Errorf("tx.First returned an error: %+v", err)
 		} else if err == nil {
@@ -74,7 +88,7 @@ func (manager *VirtualCardManagerImpl) Create(user *User, business *Business) (*
 			PublicId: shortuuid.New(),
 			Points:   0,
 			User:     user,
-			Business: business,
+			Business: &business,
 		}
 
 		result = tx.Create(&virtualCard)
@@ -156,7 +170,10 @@ func (manager *VirtualCardManagerImpl) GetOwnedItems(virtualCard *VirtualCard) (
 
 func (manager *VirtualCardManagerImpl) FilterOwnedItems(virtualCard *VirtualCard, ids []string) ([]OwnedItem, error) {
 	var ownedItems []OwnedItem
-	result := manager.baseServices.Database.Where("public_id in ?", ids).Find(&ownedItems)
+	result := manager.baseServices.Database.
+		Where("virtual_card_id = ?", virtualCard.ID).
+		Where("public_id in ?", ids).
+		Find(&ownedItems)
 	if err := result.GetError(); err != nil {
 		return nil, err
 	}
@@ -206,9 +223,22 @@ func verifyPrice(db GormDB, virtualCard *VirtualCard, itemDefinition *ItemDefini
 	return nil
 }
 
-func (manager *VirtualCardManagerImpl) BuyItem(virtualCard *VirtualCard, itemDefinition *ItemDefinition) (*OwnedItem, error) {
+func (manager *VirtualCardManagerImpl) BuyItem(virtualCard *VirtualCard, itemDefinitionId string) (*OwnedItem, error) {
 	var ownedItem OwnedItem
 	err := manager.baseServices.Database.Transaction(func(db GormDB) error {
+		// Find itemDefinition by id, handle errors
+		var itemDefinition ItemDefinition
+		itemDefinitionResult := db.First(&itemDefinition, &ItemDefinition{
+			PublicId:   itemDefinitionId,
+			BusinessId: virtualCard.BusinessId,
+		})
+		err := itemDefinitionResult.GetError()
+		if err == gorm.ErrRecordNotFound {
+			return ErrNoSuchItemDefinition
+		} else if err != nil {
+			return fmt.Errorf("tx.First returned an error: %+v", err)
+		}
+
 		// Updates itemDefinition
 		result := db.First(itemDefinition, "id = ?", itemDefinition.ID)
 		if err := result.GetError(); err != nil {
@@ -224,9 +254,9 @@ func (manager *VirtualCardManagerImpl) BuyItem(virtualCard *VirtualCard, itemDef
 			return ErrBeforeStartDate
 		} else if itemDefinition.EndDate.Valid && time.Now().After(itemDefinition.EndDate.Time) {
 			return ErrAfterEndDate
-		} else if err := verifyMaxAmount(db, virtualCard, itemDefinition); err != nil {
+		} else if err := verifyMaxAmount(db, virtualCard, &itemDefinition); err != nil {
 			return err
-		} else if err := verifyPrice(db, virtualCard, itemDefinition); err != nil {
+		} else if err := verifyPrice(db, virtualCard, &itemDefinition); err != nil {
 			return err
 		}
 
@@ -235,7 +265,7 @@ func (manager *VirtualCardManagerImpl) BuyItem(virtualCard *VirtualCard, itemDef
 			PublicId:       shortuuid.New(),
 			Used:           sql.NullTime{Valid: false},
 			Status:         OwnedItemStatusOwned,
-			ItemDefinition: itemDefinition,
+			ItemDefinition: &itemDefinition,
 			VirtualCard:    virtualCard,
 		}
 

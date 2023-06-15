@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	api "github.com/StampWallet/backend/internal/api/models"
+	apiUtils "github.com/StampWallet/backend/internal/api/utils"
 	"github.com/StampWallet/backend/internal/database"
 	. "github.com/StampWallet/backend/internal/database/accessors"
 	. "github.com/StampWallet/backend/internal/managers"
@@ -74,20 +75,6 @@ func CreateUserHandlers(
 	}
 }
 
-// Converts database.Business to api.ShortBusinessDetailsApiModel
-// Most data is lost in conversion - api.ShortBusinessDetailsApiModel does not contain all
-// data from model
-func convertBusinessToShortApiModel(business *database.Business) api.ShortBusinessDetailsApiModel {
-	return api.ShortBusinessDetailsApiModel{
-		PublicId:       business.PublicId,
-		Name:           business.Name,
-		Description:    business.Description,
-		GpsCoordinates: business.GPSCoordinates.ToString(),
-		BannerImageId:  business.BannerImageId,
-		IconImageId:    business.IconImageId,
-	}
-}
-
 // Handles local and virtual cards retrieval request
 func (handler *UserHandlers) getUserCards(c *gin.Context) {
 	// Get user object from middleware
@@ -132,7 +119,7 @@ func (handler *UserHandlers) getUserCards(c *gin.Context) {
 	for _, v := range virtualCards {
 		card := v.(*database.VirtualCard)
 		result.VirtualCards = append(result.VirtualCards, api.ShortVirtualCardApiModel{
-			BusinessDetails: convertBusinessToShortApiModel(card.Business),
+			BusinessDetails: apiUtils.ConvertBusinessToShortApiModel(card.Business),
 			Points:          int32(card.Points),
 		})
 	}
@@ -141,7 +128,6 @@ func (handler *UserHandlers) getUserCards(c *gin.Context) {
 }
 
 // Handles business search request
-// Requires middleware that will insert user object into the context under "user".
 func (handler *UserHandlers) getSearchBusinesses(c *gin.Context) {
 	// Text search
 	textQuery := c.Query("text")
@@ -224,11 +210,29 @@ func (handler *UserHandlers) getSearchBusinesses(c *gin.Context) {
 	// Convert results to api model
 	result := api.GetUserBusinessesSearchResponse{}
 	for _, v := range businesses {
-		result.Businesses = append(result.Businesses, convertBusinessToShortApiModel(&v))
+		result.Businesses = append(result.Businesses, apiUtils.ConvertBusinessToShortApiModel(&v))
 	}
 
 	c.JSON(200, result)
 	return
+}
+
+// Handles get business info request
+// Requires businessId path parameter
+func (handler *UserHandlers) getBusiness(c *gin.Context) {
+	businessId := c.Param("businessId")
+
+	// Execute the query, handle errors
+	businesses, err := handler.businessManager.GetById(businessId, true)
+	if err != nil {
+		handler.logger.Printf("%s unknown error after businessManager.Search %+v", CallerFilename(), err)
+		c.JSON(500, api.DefaultResponse{Status: api.UNKNOWN_ERROR})
+		return
+	}
+
+	// Respond with business data
+	response := apiUtils.ConvertBusinessToApiModel(businesses, businesses.ItemDefinitions, businesses.MenuImages)
+	c.JSON(200, response)
 }
 
 // Connects handler to gin router
@@ -238,8 +242,14 @@ func (handler *UserHandlers) Connect(rg *gin.RouterGroup) {
 		cards.GET("", handler.getUserCards)
 		handler.localCardHandlers.Connect(cards.Group("/local"))
 	}
-	rg.GET("/businesses", handler.getSearchBusinesses)
+	businesses := rg.Group("/businesses")
+	{
+		businesses.GET("", handler.getSearchBusinesses)
+		businesses.GET("/:businessId", handler.getBusiness)
+	}
 }
+
+//		UserVirtualCardHandlers
 
 type UserVirtualCardHandlers struct {
 	virtualCardManager            VirtualCardManager
@@ -250,33 +260,349 @@ type UserVirtualCardHandlers struct {
 	logger                        *log.Logger
 }
 
+// Not a request handler. Tries to find virtual card from business with businessId for user.
+// Responds with an appropriate error or returns the card.
+func (handler *UserVirtualCardHandlers) getVirtualCardOfUser(c *gin.Context,
+	user *database.User, businessId string) *database.VirtualCard {
+
+	// Get virtual card, handle errors
+	cardTmp, err := handler.userAuthorizedAcessor.Get(user, &database.VirtualCard{
+		Business: &database.Business{PublicId: businessId}})
+
+	if err == ErrNotFound {
+		c.JSON(404, api.DefaultResponse{Status: api.NOT_FOUND, Message: "VIRTUAL_CARD_NOT_FOUND"})
+		return nil
+	} else if err != nil {
+		handler.logger.Printf("%s unknown error after userAuthorizedAcessor.Get: %+v", CallerFilename(), err)
+		c.JSON(500, api.DefaultResponse{Status: api.UNKNOWN_ERROR})
+		return nil
+	}
+
+	return cardTmp.(*database.VirtualCard)
+}
+
+// Handles add virtual card request
+// Requires businessId path parameter
 func (handler *UserVirtualCardHandlers) postCard(c *gin.Context) {
+	businessId := c.Param("businessId")
 
+	// Get user from context (should be inserted by authMiddleware)
+	user := getUserFromContext(handler.logger, c)
+	if user == nil {
+		return
+	}
+
+	// Create virtual card, handle errors
+	_, err := handler.virtualCardManager.Create(user, businessId)
+	if err == ErrVirtualCardAlreadyExists {
+		c.JSON(409, api.DefaultResponse{Status: api.ALREADY_EXISTS})
+		return
+	} else if err == ErrNoSuchBusiness {
+		c.JSON(404, api.DefaultResponse{Status: api.NOT_FOUND, Message: "BUSINESS_NOT_FOUND"})
+		return
+	} else if err != nil {
+		handler.logger.Printf("%s unknown error after virutalCardManager.Create: %+v", CallerFilename(), err)
+		c.JSON(500, api.DefaultResponse{Status: api.UNKNOWN_ERROR})
+		return
+	}
+
+	c.JSON(201, api.DefaultResponse{Status: api.CREATED})
 }
 
+// Handles delete virtual card request
+// Requires businessId path parameter
 func (handler *UserVirtualCardHandlers) deleteCard(c *gin.Context) {
+	businessId := c.Param("businessId")
 
+	// Get user from context (should be inserted by authMiddleware)
+	user := getUserFromContext(handler.logger, c)
+	if user == nil {
+		return
+	}
+
+	// Get virtual card of user
+	virtualCard := handler.getVirtualCardOfUser(c, user, businessId)
+	if virtualCard == nil {
+		return
+	}
+
+	// Create virtual card, handle errors
+	err := handler.virtualCardManager.Remove(virtualCard)
+	if err == ErrNoSuchVirtualCard {
+		c.JSON(404, api.DefaultResponse{Status: api.NOT_FOUND, Message: "VIRTUAL_CARD_NOT_FOUND"})
+		return
+	} else if err != nil {
+		handler.logger.Printf("%s unknown error after virutalCardManager.Remove: %+v", CallerFilename(), err)
+		c.JSON(500, api.DefaultResponse{Status: api.UNKNOWN_ERROR})
+		return
+	}
+
+	c.JSON(200, api.DefaultResponse{Status: api.OK})
 }
 
+// Handles get virtual card info request
+// Requires businessId path parameter
 func (handler *UserVirtualCardHandlers) getCard(c *gin.Context) {
+	businessId := c.Param("businessId")
 
+	// Get user from context (should be inserted by authMiddleware)
+	user := getUserFromContext(handler.logger, c)
+	if user == nil {
+		return
+	}
+
+	// Get virtual card, handle errors
+	// TODO replace with GetOwnedItems
+	cardTmp, err := handler.userAuthorizedAcessor.GetAll(user,
+		&database.VirtualCard{Business: &database.Business{PublicId: businessId}},
+		[]string{"Business", "Business.OwnedItems", "Business.MenuImages.FileId",
+			"OwnedItems", "OwnedItems.ItemDefinition.PublicId"})
+
+	if err != nil && err != ErrNotFound {
+		handler.logger.Printf("%s unknown error after userAuthorizedAcessor.Get: %+v", CallerFilename(), err)
+		c.JSON(500, api.DefaultResponse{Status: api.UNKNOWN_ERROR})
+		return
+	} else if err == ErrNotFound {
+		c.JSON(404, api.DefaultResponse{Status: api.NOT_FOUND, Message: "VIRTUAL_CARD_NOT_FOUND"})
+		return
+	}
+
+	virtualCard := cardTmp[0].(*database.VirtualCard)
+
+	// Convert data, return response
+	var ownedItems []api.OwnedItemApiModel
+	for _, v := range virtualCard.OwnedItems {
+		ownedItems = append(ownedItems, api.OwnedItemApiModel{
+			PublicId:     v.PublicId,
+			DefinitionId: v.ItemDefinition.PublicId,
+		})
+	}
+
+	response := api.GetUserVirtualCardResponse{
+		Points: int32(virtualCard.Points),
+		BusinessDetails: apiUtils.ConvertBusinessToApiModel(
+			virtualCard.Business,
+			virtualCard.Business.ItemDefinitions,
+			virtualCard.Business.MenuImages),
+		OwnedItems: ownedItems,
+	}
+	c.JSON(200, response)
 }
 
-func (handler *UserVirtualCardHandlers) postItem(c *gin.Context) {
+// Handles buy item request
+// Requires businessId (matches the virtual card) and itemDefinitionId (public id of item to buy) path parameters
+func (handler *UserVirtualCardHandlers) postItemDefinition(c *gin.Context) {
+	businessId := c.Param("businessId")
+	itemDefinitionId := c.Param("itemDefinitionId")
 
+	// Get user from context (should be inserted by authMiddleware)
+	user := getUserFromContext(handler.logger, c)
+	if user == nil {
+		return
+	}
+
+	// Get virtual card of user
+	virtualCard := handler.getVirtualCardOfUser(c, user, businessId)
+	if virtualCard == nil {
+		return
+	}
+
+	// Pass to manager, handle errors
+	ownedItem, err := handler.virtualCardManager.BuyItem(virtualCard, itemDefinitionId)
+	if err == ErrNoSuchItemDefinition {
+		c.JSON(404, api.DefaultResponse{Status: api.NOT_FOUND})
+		return
+	} else if err == ErrWithdrawnItem {
+		c.JSON(401, api.DefaultResponse{Status: api.INVALID_REQUEST, Message: "ITEM_WITHDRAWN"})
+		return
+	} else if err == ErrUnavailableItem {
+		c.JSON(401, api.DefaultResponse{Status: api.INVALID_REQUEST, Message: "ITEM_UNAVAILABLE"})
+		return
+	} else if err == ErrBeforeStartDate {
+		c.JSON(401, api.DefaultResponse{Status: api.INVALID_REQUEST, Message: "BEFORE_START_DATE"})
+		return
+	} else if err == ErrAfterEndDate {
+		c.JSON(401, api.DefaultResponse{Status: api.INVALID_REQUEST, Message: "AFTER_END_DATE"})
+		return
+	} else if err != nil {
+		handler.logger.Printf("%s unknown error after virtualCardManager.BuyItem : %+v", CallerFilename(), err)
+		c.JSON(500, api.DefaultResponse{Status: api.UNKNOWN_ERROR})
+		return
+	}
+
+	c.JSON(201, api.PostUserVirtualCardItemResponse{
+		ItemId: ownedItem.PublicId,
+	})
 }
 
+// Handles delete (return) item request
+// Requires businessId (matches the virtual card) and itemId (public id of ownedItem to return) path parameters
 func (handler *UserVirtualCardHandlers) deleteItem(c *gin.Context) {
+	businessId := c.Param("businessId")
+	itemId := c.Param("itemId")
 
+	// Get user from context (should be inserted by authMiddleware)
+	user := getUserFromContext(handler.logger, c)
+	if user == nil {
+		return
+	}
+
+	// Get virtual card of user
+	virtualCard := handler.getVirtualCardOfUser(c, user, businessId)
+	if virtualCard == nil {
+		return
+	}
+
+	// Get owned item, handle errors
+	ownedItem, err := handler.userAuthorizedAcessor.Get(user, &database.OwnedItem{
+		PublicId:      itemId,
+		VirtualCardId: virtualCard.ID,
+	})
+
+	if err == ErrNoAccess || err == ErrNotFound {
+		c.JSON(404, api.DefaultResponse{Status: api.NOT_FOUND})
+		return
+	} else if err != nil {
+		handler.logger.Printf("%s unknown error after handler.userAuthorizedAcessor.Get in deleteItem: %+v",
+			CallerFilename(), err)
+		c.JSON(500, api.DefaultResponse{Status: api.UNKNOWN_ERROR})
+		return
+	}
+
+	// Return item, handle errors
+	err = handler.virtualCardManager.ReturnItem(ownedItem.(*database.OwnedItem))
+	if err == ErrItemCantBeReturned {
+		c.JSON(401, api.DefaultResponse{Status: api.INVALID_REQUEST, Message: "ITEM_CANNOT_BE_RETURNED"})
+		return
+	} else if err != nil {
+		handler.logger.Printf("%s unknown error after handler.virtualCardManager.ReturnItem in deleteItem: %+v",
+			CallerFilename(), err)
+		c.JSON(500, api.DefaultResponse{Status: api.UNKNOWN_ERROR})
+		return
+	}
+
+	c.JSON(200, api.DefaultResponse{Status: api.OK})
 }
 
+// Handles start transaction request
+// Requires businessId (matches the virtual card) path parameter
 func (handler *UserVirtualCardHandlers) postTransaction(c *gin.Context) {
+	businessId := c.Param("businessId")
 
+	// Parse request
+	req := api.PostUserVirtualCardTransactionRequest{}
+	if err := c.BindJSON(&req); err != nil {
+		handler.logger.Printf("failed to parse in postTransaction %+v", err)
+		c.JSON(400, api.DefaultResponse{Status: api.INVALID_REQUEST})
+		return
+	}
+
+	// Get user from context (should be inserted by authMiddleware)
+	user := getUserFromContext(handler.logger, c)
+	if user == nil {
+		return
+	}
+
+	// Get virtual card of user
+	virtualCard := handler.getVirtualCardOfUser(c, user, businessId)
+	if virtualCard == nil {
+		return
+	}
+
+	// Get items owned by card and present in the request
+	ownedItems, err := handler.virtualCardManager.FilterOwnedItems(virtualCard, req.ItemIds)
+	if err != nil {
+		handler.logger.Printf("unknown error virtualCardManager.FilterOwnedItems in postTransaction %+v", err)
+		c.JSON(500, api.DefaultResponse{Status: api.UNKNOWN_ERROR})
+		return
+	}
+
+	// TODO deduplication
+	if len(ownedItems) != len(req.ItemIds) {
+		c.JSON(401, api.DefaultResponse{Status: api.INVALID_REQUEST, Message: "INVALID_ITEM"})
+		return
+	}
+
+	// Start transaction, handle errors
+	transaction, err := handler.transactionManager.Start(virtualCard, ownedItems)
+	if err == ErrInvalidItem {
+		// TODO how to identify the item?
+		c.JSON(401, api.DefaultResponse{Status: api.INVALID_REQUEST, Message: "INVALID_ITEM"})
+		return
+	} else if err != nil {
+		handler.logger.Printf("unknown error virtualCardManager.FilterOwnedItems in postTransaction %+v", err)
+		c.JSON(500, api.DefaultResponse{Status: api.UNKNOWN_ERROR})
+		return
+	}
+
+	c.JSON(201, api.PostUserVirtualCardTransactionResponse{
+		PublicId: transaction.PublicId,
+		Code:     transaction.Code,
+	})
+}
+
+// Handles get transaction info request
+// Requires businessId (matches the virtual card) and transactionCode path parameter
+func (handler *UserVirtualCardHandlers) getTransaction(c *gin.Context) {
+	_ = c.Param("businessId") // TODO this is unused
+	transactionCode := c.Param("transactionCode")
+
+	// Get user from context (should be inserted by authMiddleware)
+	user := getUserFromContext(handler.logger, c)
+	if user == nil {
+		return
+	}
+
+	// TODO (code,user) and (code,businses) has to be unique, both separately and at once
+	// Get transaction data, handle errors
+	transaction, err := handler.authorizedTransactionAccessor.GetForUser(user, transactionCode)
+	if err == ErrNotFound || err == ErrNoAccess {
+		c.JSON(404, api.DefaultResponse{Status: api.NOT_FOUND})
+		return
+	} else if err != nil {
+		handler.logger.Printf("unknown error authorizedTransactionAccessor.GetForUser in getTransaction %+v",
+			err)
+		c.JSON(500, api.DefaultResponse{Status: api.UNKNOWN_ERROR})
+		return
+	}
+
+	// Convert transaction data to HTTP response
+	var itemActions []api.ItemActionApiModel
+	for _, v := range transaction.TransactionDetails {
+		itemActions = append(itemActions, api.ItemActionApiModel{
+			ItemId: v.OwnedItem.PublicId,
+			Action: apiUtils.ConvertDbItemAction(v.Action),
+		})
+	}
+
+	c.JSON(200, api.GetUserVirtualCardTransactionResponse{
+		PublicId:    transaction.PublicId,
+		State:       apiUtils.ConvertDbTransactionState(transaction.State),
+		AddedPoints: int32(transaction.AddedPoints),
+		ItemActions: itemActions,
+	})
 }
 
 func (handler *UserVirtualCardHandlers) Connect(rg *gin.RouterGroup) {
+	card := rg.Group("/:businessId")
+	{
+		card.POST("", handler.postCard)
+		card.DELETE("", handler.deleteCard)
+		card.GET("", handler.getCard)
 
+		card.POST("/itemsDefinitions/:itemDefinitionId", handler.postItemDefinition)
+
+		card.DELETE("/items/:itemId", handler.deleteItem)
+
+		transactions := card.Group("/transactions")
+		{
+			transactions.POST("", handler.postTransaction)
+			transactions.GET("/:transactionCode", handler.postTransaction)
+		}
+	}
 }
+
+//		UserLocalCardHandlers
 
 // UserLocalCardHandlers implements API handlers for requests related to
 // managing local cards (creating, deleting, retrieving types of cards).

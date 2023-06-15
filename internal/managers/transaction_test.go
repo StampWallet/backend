@@ -229,6 +229,7 @@ func testTransactionManagerFinalizeWithChnagedItemStatusTemplate(t *testing.T, i
 		{ownedItemToRedeem, RedeemedActionType},
 		{ownedItemToRedeemNewStatus, RedeemedActionType},
 	}, 10)
+  
 	//require.Nilf(t, transaction, "transaction finalize should not return a transaction")
 	require.ErrorIsf(t, err, ErrInvalidItem, "transaction should return a InvalidItem error")
 

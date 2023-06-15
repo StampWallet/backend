@@ -20,7 +20,9 @@ type BusinessManager interface {
 	AddMenuImage(user *User, business *Business) (*MenuImage, error)
 	RemoveMenuImage(menuImage *MenuImage) error
 
-	Search(name *string, location *GPSCoordinates, proximityInMeters uint, offset uint, limit uint) ([]Business, error) //? not a fan
+	//? not a fan
+	Search(name *string, location *GPSCoordinates, proximityInMeters uint, offset uint, limit uint) ([]Business, error)
+	GetById(businessId string, preloadDetails bool) (*Business, error)
 }
 
 type BusinessDetails struct {
@@ -206,4 +208,23 @@ func (manager *BusinessManagerImpl) Search(name *string, location *GPSCoordinate
 		return nil, err
 	}
 	return businesses, nil
+}
+
+func (manager *BusinessManagerImpl) GetById(businessId string, preloadDetails bool) (*Business, error) {
+	var business Business
+	db := manager.baseServices.Database
+
+	if preloadDetails {
+		db = db.Preload("ItemDefinitions").Preload("MenuImages")
+	}
+
+	r := db.First(&business, &Business{PublicId: businessId})
+	err := r.GetError()
+	if err == gorm.ErrRecordNotFound {
+		return nil, ErrNoSuchBusiness
+	} else if err != gorm.ErrRecordNotFound && err != nil {
+		return nil, fmt.Errorf("tx.First returned an error: %+v", err)
+	}
+
+	return &business, nil
 }
