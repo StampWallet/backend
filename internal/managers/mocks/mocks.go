@@ -512,6 +512,21 @@ func (mr *MockVirtualCardManagerMockRecorder) FilterOwnedItems(arg0, arg1 interf
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FilterOwnedItems", reflect.TypeOf((*MockVirtualCardManager)(nil).FilterOwnedItems), arg0, arg1)
 }
 
+// GetForUser mocks base method.
+func (m *MockVirtualCardManager) GetForUser(arg0 *database.User, arg1 string) (*database.VirtualCard, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetForUser", arg0, arg1)
+	ret0, _ := ret[0].(*database.VirtualCard)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetForUser indicates an expected call of GetForUser.
+func (mr *MockVirtualCardManagerMockRecorder) GetForUser(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetForUser", reflect.TypeOf((*MockVirtualCardManager)(nil).GetForUser), arg0, arg1)
+}
+
 // GetOwnedItems mocks base method.
 func (m *MockVirtualCardManager) GetOwnedItems(arg0 *database.VirtualCard) ([]database.OwnedItem, error) {
 	m.ctrl.T.Helper()

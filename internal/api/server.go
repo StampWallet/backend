@@ -51,9 +51,11 @@ func CreateAPIServer(
 		server.authMiddleware,
 		server.requireValidEmailMiddleware)
 
+	server.router.Static("/static", config.StaticPath)
+
 	return server
 }
 
 func (server *APIServer) Start() error {
-	return server.router.Run(server.config.ServerUrl)
+	return server.router.Run(server.config.ListenIP)
 }

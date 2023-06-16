@@ -8,3 +8,5 @@ services:
       STAMPWALLET_SMTPCONFIG_USERNAME: 
       STAMPWALLET_SMTPCONFIG_PASSWORD: 
       STAMPWALLET_SMTPCONFIG_SENDEREMAIL: 
+      STAMPWALLET_VERIFICATIONEMAILSUBJECT: "email subject"
+      STAMPWALLET_vERIFICATIONeMAILBODYTEMPLATE: "<a href='http://localhost:8080/static/emailVerification.html?token={{ .Token}}'>Click here to verify email</a>"

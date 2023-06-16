@@ -19,12 +19,18 @@ var CardTypes = []CardType{
 		PublicId: "biedronka",
 		Name:     "Moja Biedronka",
 		Code:     Ean13,
-		ImageUrl: "https://prowly-uploads.s3.eu-west-1.amazonaws.com/uploads/8222/assets/132267/original-190120148b33da12ed35edc531508409.jpg",
+		ImageUrl: "biedronka.png",
 	},
 	{
 		PublicId: "kaufland",
 		Name:     "Kaufland Card",
 		Code:     Qr,
-		ImageUrl: "https://upload.wikimedia.org/wikipedia/commons/f/fc/Kaufland_supermarket2.jpg",
+		ImageUrl: "kaufland.png",
 	},
+}
+
+func InitUrls(baseUrl string) {
+	for i := 0; i != len(CardTypes); i++ {
+		CardTypes[i].ImageUrl = baseUrl + CardTypes[i].ImageUrl
+	}
 }

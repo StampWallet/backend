@@ -48,7 +48,8 @@ func createServer(config config.Config) (*api.APIServer, error) {
 	requireValidEmailMiddleware := middleware.CreateRequireValidEmailMiddleware(
 		services.NewPrefix(logger, "RequireValidEmailMiddleware"))
 
-	authManager := managers.CreateAuthManagerImpl(baseServices, emailService, tokenService)
+	authManager := managers.CreateAuthManagerImpl(baseServices, emailService, tokenService,
+		config.VerificationEmailSubject, config.VerificationEmailBodyTemplate)
 	virtualCardManager := managers.CreateVirtualCardManagerImpl(baseServices)
 	itemDefinitionManager := managers.CreateItemDefinitionManagerImpl(baseServices, fileStorageService)
 	localCardManager := managers.CreateLocalCardManagerImpl(baseServices)
@@ -82,6 +83,7 @@ func createServer(config config.Config) (*api.APIServer, error) {
 			userAuthorizedAcessor,
 			authorizedTransactionAccessor,
 			services.NewPrefix(logger, "UserHandlers"),
+			config.BackendURL,
 		),
 		FileHandlers: handlers.CreateFileHandlers(
 			fileStorageService,

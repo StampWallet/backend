@@ -1,8 +1,10 @@
 package managers
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
+	"html/template"
 	"net/mail"
 	"regexp"
 	"time"
@@ -64,14 +66,24 @@ type AuthManagerImpl struct {
 	baseServices BaseServices
 	emailService EmailService
 	tokenService TokenService
+	emailSubject string
+	emailBody    *template.Template
 }
 
 func CreateAuthManagerImpl(baseServices BaseServices,
-	emailService EmailService, tokenService TokenService) *AuthManagerImpl {
+	emailService EmailService, tokenService TokenService,
+	emailSubject string, emailBodyTemplate string) *AuthManagerImpl {
+
+	tmpl, err := template.New("email_verification_body").Parse(emailBodyTemplate)
+	if err != nil {
+		panic(err)
+	}
 	return &AuthManagerImpl{
 		baseServices: baseServices,
 		emailService: emailService,
 		tokenService: tokenService,
+		emailSubject: emailSubject,
+		emailBody:    tmpl,
 	}
 }
 
@@ -164,7 +176,6 @@ func (manager *AuthManagerImpl) Create(userDetails UserDetails) (*User, *Token, 
 			CallerFilename(), err)
 	}
 
-	fmt.Printf("%+v\n", user)
 	// Create token for email verification
 	emailToken, emailSecret, err := tokenTx.Create(&user, TokenPurposeEmail, time.Now().Add(24*time.Hour))
 	if err != nil {
@@ -183,7 +194,18 @@ func (manager *AuthManagerImpl) Create(userDetails UserDetails) (*User, *Token, 
 	}
 
 	// Send email verification token
-	mailErr := manager.emailService.Send(userDetails.Email, "test", "test "+emailToken.TokenId+":"+emailSecret)
+	buf := new(bytes.Buffer)
+	templateErr := manager.emailBody.Execute(buf, struct {
+		Token string
+	}{
+		Token: emailToken.TokenId + ":" + emailSecret,
+	})
+	if err != nil {
+		tx.Rollback()
+		return nil, nil, "", fmt.Errorf("%s failed to get email body: %+v", CallerFilename(), templateErr)
+	}
+	println(buf.String())
+	mailErr := manager.emailService.Send(userDetails.Email, manager.emailSubject, buf.String())
 	if mailErr != nil {
 		tx.Rollback()
 		return nil, nil, "", fmt.Errorf("%s failed to send email, emailservice error: %+v", CallerFilename(), mailErr)

@@ -24,12 +24,14 @@ type SMTPConfig struct {
 }
 
 type Config struct {
-	DatabaseUrl                  string     // Database URL
-	SmtpConfig                   SMTPConfig // SMTP Client config
-	ServerUrl                    string     // Hostname:port this server will listen on
-	StoragePath                  string     // File storage path
-	BackendDomain                string     // Public DNS domain this server is reachable from
-	EmailVerificationFrontendURL string     // URL of the email verification site
+	DatabaseUrl                   string     // Database URL
+	SmtpConfig                    SMTPConfig // SMTP Client config
+	ListenIP                      string     // Hostname:port this server will listen on
+	StoragePath                   string     // File storage path
+	BackendURL                    string     // Public DNS domain this server is reachable from
+	VerificationEmailSubject      string     // String with verification email subject
+	VerificationEmailBodyTemplate string     // Template that receives the email verification token
+	StaticPath                    string     // Static file path
 }
 
 // Returns config with default values
@@ -43,10 +45,12 @@ func GetDefaultConfig() Config {
 			Password:       "test",
 			SenderEmail:    "test@localhost",
 		},
-		ServerUrl:                    "localhost:8080",
-		StoragePath:                  "/tmp/",
-		BackendDomain:                "localhost",
-		EmailVerificationFrontendURL: "localhost",
+		ListenIP:                      "localhost:8080",
+		StoragePath:                   "/tmp/",
+		StaticPath:                    "static",
+		BackendURL:                    "http://localhost:8080/",
+		VerificationEmailSubject:      "email subject",
+		VerificationEmailBodyTemplate: "http://localhost:8080/static/emailVerification.html?token={{ .Token}}",
 	}
 }
 

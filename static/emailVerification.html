@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Email vertification</title>
+        <meta charset="UTF-8"/>
+        <style>
+h1 {
+    font-family: helvetica;
+}
+
+.error {
+    color: red;
+}
+
+.ok {
+    color: green;
+}
+        </style>
+        <script>
+            async function main() {
+                const params = new URLSearchParams(window.location.search);
+                const el = document.getElementById("status");
+                el.innerText = "Loading";
+
+                try {
+                    let result = await fetch("../auth/account/emailConfirmation", {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            "token": params.get("token"),
+                        }),
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                    });
+
+                    if(result.status == 200){
+                        el.classList.add("ok");
+                        el.innerText = "Email verified";
+                    } else {
+                        el.classList.add("error");
+                        el.innerText = "Failed to verify email";
+                    }
+                } catch(e) {
+                    console.log(e);
+                    el.classList.add("error");
+                    el.innerText = "Failed to verify email";
+                }
+            }
+
+            document.addEventListener("DOMContentLoaded", _ => main());
+        </script>
+    </head>
+    <body>
+        <h1 id="status">
+        </h1>
+    </body>
+</html>

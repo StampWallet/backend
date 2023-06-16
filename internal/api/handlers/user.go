@@ -50,7 +50,11 @@ func CreateUserHandlers(
 	userAuthorizedAcessor UserAuthorizedAccessor,
 	authorizedTransactionAccessor AuthorizedTransactionAccessor,
 	logger *log.Logger,
+	baseURL string,
 ) *UserHandlers {
+	//TODO this is not very good
+	InitUrls(baseURL + "static/")
+
 	return &UserHandlers{
 		virtualCardManager: virtualCardManager,
 		localCardManager:   localCardManager,
